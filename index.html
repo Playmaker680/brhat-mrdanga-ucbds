@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Bṛhat Mṛdaṅga Database</title>
+<link rel="icon" href="logo.jpg">
+<link rel="apple-touch-icon" href="logo.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
@@ -43,7 +45,10 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .wrap.wide{max-width:980px}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:10px;min-height:58px;padding-block:6px}
-.bar .title{flex:1;min-width:0;font-weight:700;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;padding:0;color:var(--ink);text-align:left;font-family:inherit;cursor:pointer}
+.bar .title{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;background:none;border:0;padding:0;color:var(--ink);text-align:left;font-family:inherit;cursor:pointer}
+.bar .title span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--marigold)}
+.gate .logo{width:96px;height:96px;margin:0 auto}
 .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 6px;border:0;border-radius:10px;background:var(--blue-soft);color:var(--blue);font:700 .95rem var(--font);cursor:pointer}
 .back svg{width:20px;height:20px}
 .avatar-sm{width:32px;height:32px;border-radius:50%}
@@ -142,6 +147,13 @@ td.wrap{white-space:normal;min-width:160px}
 .chart{width:100%;height:auto;display:block}
 .chart text{fill:var(--muted);font:12px var(--font)}
 .banner{padding:12px 16px;border-radius:12px;background:var(--marigold-soft);margin-bottom:18px}
+.me-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin-bottom:20px}
+.me-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:700}
+.opt{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font:700 1.08rem var(--font);color:var(--ink);cursor:pointer;text-align:left}
+.opt:hover{border-color:var(--blue)}
+.opt[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.opt .ck{margin-left:auto;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:var(--blue-ink);font-size:.95rem}
+.opt[aria-pressed="true"] .ck{background:var(--blue);border-color:var(--blue)}
 .confirm{padding:14px;border-radius:12px;background:var(--alert-soft);display:flex;flex-direction:column;gap:10px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
 .empty{padding:22px 4px;color:var(--muted)}
@@ -189,7 +201,10 @@ const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2400); }
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
-const SCREENS=["home","meeting","add","people","meetings","insights","team"];
+const SCREENS=["home","meeting","add","people","meetings","insights","team","me"];
+const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
+const initials=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
+function signOutNow(){ if(window.FB&&window.FB.signOut) window.FB.signOut(); else toast("In this preview, sign out from your Claude account. On your live site this signs you out."); }
 
 // ---------- state ----------
 const S={ members:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
@@ -281,7 +296,7 @@ function render(){
   const club=S.config.clubName||"Bṛhat Mṛdaṅga Database";
   const bar=document.getElementById("bar"); bar.replaceChildren();
   if(S.screen!=="home") bar.append(h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back}),"Back"));
-  bar.append(h("button",{class:"title",onclick:home,title:"Home"},club));
+  bar.append(h("button",{class:"title",onclick:home,title:"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",null,club)));
   if(S.avatar) bar.append(h("img",{class:"avatar-sm",src:S.avatar,alt:"Signed in as "+memberName(S.myId)}));
   const wide=["insights","people","meetings"].includes(S.screen);
   main.classList.toggle("wide",wide); document.getElementById("barWrap").classList.toggle("wide",wide);
@@ -291,7 +306,7 @@ function render(){
   const top=[];
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
-  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam}[S.screen]||vHome;
+  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe}[S.screen]||vHome;
   main.replaceChildren(...top, fn());
   for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
   if(aid){ const el=document.getElementById(aid); if(el){ el.focus({preventScroll:true}); try{ if(sel!=null) el.setSelectionRange(sel,sel); }catch(e){} } }
@@ -307,6 +322,7 @@ function vHome(){
   const follow=S.people.filter(p=>stats(p).followUp).length;
   const bdays=S.people.filter(p=>{const b=nextBirthday(p.birthday); return b&&b.days<=14;}).length;
   return h("div",null,
+    meBar(),
     h("h1",null, first?`Hare Kṛṣṇa, ${first}`:"Hare Kṛṣṇa"),
     h("p",{class:"lead"}, !S.ready?"Loading the roster…":`${plural(S.people.length,"person","people")} on the roster`),
     h("div",{class:"tiles"},
@@ -334,6 +350,39 @@ function vHome(){
       h("button",{onclick:()=>nav("meetings")},h("b",null,"View Past Meetings"),h("span",null,plural(S.meetings.length,"meeting")+" recorded")),
       h("button",{onclick:()=>nav("insights")},h("b",null,"View Insights"),h("span",null,"Attendance, follow-ups, export")),
       h("button",{onclick:()=>nav("team")},h("b",null,"View Our Team"),h("span",null,"Who's logging, your name"))));
+}
+
+function meBar(){
+  if(!S.myId) return null;
+  const t=S.team.find(x=>x.id===S.myId), name=memberName(S.myId), role=t&&TEAM_ROLES.includes(t.title)?t.title:null;
+  const edit=()=>nav("me",{meRole:undefined});
+  return h("div",{class:"box me-bar"},
+    h("div",{class:"row grow",style:"flex-wrap:nowrap;min-width:200px"},
+      S.avatar?h("img",{class:"me-av",src:S.avatar,alt:""}):h("span",{class:"me-av"},initials(name)),
+      h("div",{style:"min-width:0"},h("div",{style:"font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"},name),
+        role?h("span",{class:"pill"},role):h("button",{class:"link small",style:"padding:0",onclick:edit},"Choose your role"))),
+    h("div",{class:"row",style:"gap:8px"},
+      h("button",{class:"btn small",onclick:edit},"Edit my profile"),
+      h("button",{class:"btn small",onclick:signOutNow},"Sign out")));
+}
+function vMe(){
+  const t=S.team.find(x=>x.id===S.myId);
+  if(!t) return h("div",{class:"empty"},h("b",null,S.ready?"Your profile isn't set up yet":"Loading…"),"Reload the page in a moment.");
+  if(S.meRole===undefined) S.meRole=TEAM_ROLES.includes(t.title)?t.title:"";
+  const f=h("form",{class:"stack",style:"gap:18px",onsubmit:async e=>{
+    e.preventDefault(); const name=document.getElementById("me_name2").value.trim();
+    if(!name){ toast("Add your name"); return; }
+    if(!S.meRole){ toast("Choose what you do on the team"); return; }
+    if(await write(db=>db.doc("team/"+S.myId).update({name,title:S.meRole}),"Profile saved")){ clearDirty(f); S.meRole=undefined; back(); }
+  }},
+    h("h1",null,"Your profile"),
+    h("label",{class:"f"},"Your name",h("input",{id:"me_name2",class:"big",value:t.name||S.meName||"",required:true,autocomplete:"off"})),
+    h("div",{class:"stack",style:"gap:10px",role:"group","aria-label":"What do you do on the team?"},
+      h("p",{style:"margin:0;font-weight:700"},"What do you do on the team?"),
+      TEAM_ROLES.map(r=>h("button",{type:"button",class:"opt","aria-pressed":String(S.meRole===r),onclick:()=>{S.meRole=r; render();}},
+        h("span",null,r),h("span",{class:"ck","aria-hidden":"true"},S.meRole===r?"✓":"")))),
+    h("button",{class:"btn primary block",type:"submit"},"Save"));
+  return f;
 }
 
 // ---------- Add person ----------
@@ -463,7 +512,7 @@ function vMeeting(){
   const pick=p=>{ setPresent(m,p.id,true); toast(`${p.name} checked in`); S.attQ=""; S.attHl=0; S.dirty.delete("att_q"); render(); document.getElementById("att_q")?.focus(); };
   const teamNames=S.team.map(t=>memberName(t.id)).filter(n=>n&&n!=="A teammate");
   const peopleNames=S.people.map(p=>p.name).filter(Boolean);
-  const speakers=[...new Set([...S.people.filter(p=>p.role==="Speaker").map(p=>p.name),...teamNames,...peopleNames])];
+  const speakers=[...new Set([...S.people.filter(p=>p.role==="Speaker").map(p=>p.name),...S.team.filter(t=>t.title==="Speaker").map(t=>memberName(t.id)),...teamNames,...peopleNames])];
   const cooks=[...new Set([...teamNames,...peopleNames])];
   const pr=Array.isArray(m.prasadam)?m.prasadam:[];
 
@@ -656,7 +705,7 @@ function vTeam(){
         S.canWrite&&t.id!==S.myId?(S.confirm==="t:"+t.id?h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},h("button",{class:"btn small danger",onclick:async()=>{ if(await write(db=>db.doc("team/"+t.id).delete(),"Removed")){ S.confirm=null; render(); } }},"Remove"),h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Keep"))
           :h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>{S.confirm="t:"+t.id; render();}},"Remove")):null); }))
       :h("div",{class:"empty"},"No one has joined yet."),
-    meForm, clubForm,
+    S.myId?h("button",{class:"btn",style:"align-self:flex-start",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"):null, clubForm,
     accessBox(),
     h("div",{class:"box row",style:"justify-content:space-between"},
       h("span",{class:"muted small"},"Signed in as ",h("b",{style:"color:var(--ink)"},(window.FB&&window.FB.email)||"")),
@@ -690,6 +739,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js"></script>
+<script type="module" src="./app-firebase.js?v=3"></script>
 </body>
 </html>
