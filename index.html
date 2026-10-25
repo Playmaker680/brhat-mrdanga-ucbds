@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bṛhat Mṛdaṅga Database</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: one narrow column, one task per screen. Home = two big actions + search; deeper screens behind a back button */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#1c2631; --muted:#5b6674; --line:#dde2e8;
+  --blue:#1d5a86; --blue-ink:#ffffff; --blue-soft:#e5eef6;
+  --marigold:#b97c06; --marigold-soft:#fbf0d6;
+  --alert:#b23a2a; --alert-soft:#fbe8e4; --good:#2e7d4f;
+  --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --surface:#19212a; --ink:#e8edf2; --muted:#9ba7b4; --line:#2c3642;
+  --blue:#82b8df; --blue-ink:#0d1a26; --blue-soft:#1b3044;
+  --marigold:#f0c060; --marigold-soft:#372c12;
+  --alert:#f0927f; --alert-soft:#3c221d; --good:#7cc79a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#19212a; --ink:#e8edf2; --muted:#9ba7b4; --line:#2c3642;
+  --blue:#82b8df; --blue-ink:#0d1a26; --blue-soft:#1b3044;
+  --marigold:#f0c060; --marigold-soft:#372c12;
+  --alert:#f0927f; --alert-soft:#3c221d; --good:#7cc79a; color-scheme:dark}
+*{box-sizing:border-box}
+html{color-scheme:light}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+input[type=checkbox]{width:22px;height:22px;min-height:0;padding:0;accent-color:var(--blue)}
+.gate{min-height:80vh;display:grid;place-items:center;padding-block:40px}
+.gate .card{max-width:420px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:14px;text-align:center}
+.gate .card h1{font-size:1.5rem}
+.gbtn{display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.gbtn svg{width:20px;height:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap.wide{max-width:980px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:10px;min-height:58px;padding-block:6px}
+.bar .title{flex:1;min-width:0;font-weight:700;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;padding:0;color:var(--ink);text-align:left;font-family:inherit;cursor:pointer}
+.back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 6px;border:0;border-radius:10px;background:var(--blue-soft);color:var(--blue);font:700 .95rem var(--font);cursor:pointer}
+.back svg{width:20px;height:20px}
+.avatar-sm{width:32px;height:32px;border-radius:50%}
+main{padding-block:24px 60px}
+h1{font-size:1.75rem;line-height:1.2;margin:0;text-wrap:balance}
+h2{font-size:1.35rem;line-height:1.25;margin:0;text-wrap:balance}
+.lead{color:var(--muted);margin:6px 0 0}
+.stack{display:flex;flex-direction:column;gap:14px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}
+@media (max-width:480px){.tiles{grid-template-columns:minmax(0,1fr)}}
+.tile{display:flex;flex-direction:column;gap:10px;align-items:flex-start;text-align:left;min-height:170px;padding:20px;border-radius:var(--r);border:2px solid var(--line);font:inherit;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--line);transition:transform .12s,box-shadow .12s}
+.tile .go{margin-top:auto;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.95rem;padding:6px 12px;border-radius:99px;color:var(--surface)}
+.tile.meet{border-color:var(--blue)} .tile.meet .go{background:var(--blue);color:var(--blue-ink)}
+.tile.add{border-color:var(--marigold)} .tile.add .go{background:var(--marigold);color:var(--surface)}
+.tile:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--line)}
+.tile svg{width:34px;height:34px}
+.tile b{font-size:1.3rem}
+.tile span{color:var(--muted);font-size:.95rem}
+.tile.meet{background:var(--blue-soft)} .tile.meet svg{color:var(--blue)}
+.tile.add{background:var(--marigold-soft)} .tile.add svg{color:var(--marigold)}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.95rem}
+label.f small{font-weight:400;color:var(--muted)}
+input,select,textarea{font:inherit;font-size:1.02rem;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:11px 12px;width:100%;min-height:48px}
+textarea{min-height:96px;resize:vertical;line-height:1.5}
+input.big{font-size:1.15rem;min-height:56px;padding:12px 14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
+button:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;font:700 1rem var(--font);border-radius:10px;padding:10px 18px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.block{width:100%}
+.btn.small{min-height:38px;padding:6px 12px;font-size:.9rem}
+.btn.danger{color:var(--alert);border-color:var(--alert)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;padding:6px 0;font:inherit;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.x{background:none;border:0;min-width:44px;min-height:44px;border-radius:10px;color:var(--muted);cursor:pointer;font:700 1.2rem var(--font)}
+.x:hover{background:var(--alert-soft);color:var(--alert)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 0;min-width:0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.results{margin-top:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.res{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;min-height:54px;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.res:last-child{border-bottom:0}
+.res:hover,.res.hl{background:var(--blue-soft)}
+.res .name{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.res .meta{color:var(--muted);font-size:.88rem;white-space:nowrap}
+.res.new{color:var(--blue);font-weight:700}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.85rem;background:var(--blue-soft);color:var(--blue);font-weight:700;white-space:nowrap}
+.pill.warn{background:var(--alert-soft);color:var(--alert)}
+.pill.gold{background:var(--marigold-soft);color:var(--marigold)}
+.shortcuts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.shortcuts button{border:0;cursor:pointer;font:700 .9rem var(--font);min-height:40px;padding:6px 14px}
+.more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.more button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 40px 14px 14px;border:2px solid color-mix(in srgb,var(--blue) 45%,var(--line));border-radius:12px;background:var(--surface);font:inherit;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.more button::after{content:"";position:absolute;right:16px;top:50%;width:9px;height:9px;border-right:2.5px solid var(--blue);border-top:2.5px solid var(--blue);transform:translateY(-50%) rotate(45deg)}
+.more button b{color:var(--blue)}
+.more button b{font-size:1rem} .more button span{font-size:.85rem;color:var(--muted)}
+.more button:hover{border-color:var(--blue);background:var(--blue-soft)}
+.checked{display:flex;flex-direction:column;margin-top:10px}
+.checked div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0 4px 2px;border-bottom:1px solid var(--line)}
+.checked div:last-child{border-bottom:0}
+.checked .name{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+details.sec > summary{list-style:none;display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;min-height:60px}
+details.sec > summary::-webkit-details-marker{display:none}
+details.sec > summary b{font-size:1.08rem}
+details.sec > summary .sum{margin-left:auto;color:var(--muted);font-size:.9rem;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.sec > summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 4px 0 0;flex:none}
+details.sec[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
+details.sec > .in{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.facts dt{font-size:.85rem;color:var(--muted)}
+.facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.note{border-left:3px solid var(--blue-soft);padding:2px 0 2px 12px}
+.note .by{font-size:.9rem;color:var(--muted)} .note .by b{color:var(--ink)}
+.note p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.dots{display:flex;gap:6px;flex-wrap:wrap}
+.dots i{width:18px;height:18px;border-radius:5px;background:var(--line)}
+.dots i.on{background:var(--blue)}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:.82rem;color:var(--muted);font-weight:700}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.wrap{white-space:normal;min-width:160px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font-size:2rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:.88rem;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.chart{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font:12px var(--font)}
+.banner{padding:12px 16px;border-radius:12px;background:var(--marigold-soft);margin-bottom:18px}
+.confirm{padding:14px;border-radius:12px;background:var(--alert-soft);display:flex;flex-direction:column;gap:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
+.empty{padding:22px 4px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:1.1rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap gate" id="gate"><div class="card" id="gateCard"><p class="muted">Loading…</p></div></div>
+<header hidden><div class="wrap" id="barWrap"><div class="bar" id="bar"></div></div></header>
+<main class="wrap" id="main" hidden></main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+"use strict";
+// ---------- helpers ----------
+function h(tag, attrs, ...kids){
+  const el=document.createElement(tag);
+  if (attrs) for (const [k,v] of Object.entries(attrs)){
+    if (v==null||v===false) continue;
+    if (k.startsWith("on")) el.addEventListener(k.slice(2),v);
+    else if (k==="class") el.className=v;
+    else if (k==="value") el.value=v;
+    else if (k==="html") el.innerHTML=v; // only used for static icons
+    else el.setAttribute(k, v===true?"":v);
+  }
+  for (const k of kids.flat()){ if(k==null||k===false) continue; el.append(k.nodeType?k:String(k)); }
+  return el;
+}
+const ICON = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+  meet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.4"/><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><path d="M15 14.6c2.6-.4 4.8 1 5.5 4"/></svg>',
+  add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 19.5c.7-3.3 3.3-5.2 6.5-5.2 1.3 0 2.5.3 3.5.9"/><path d="M18 13v7M14.5 16.5h7"/></svg>'
+};
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today=()=>iso(new Date());
+const parse=s=>{ if(!s) return null; const [y,m,d]=s.slice(0,10).split("-").map(Number); return new Date(y,m-1,d); };
+const fmt=s=>{ const d=parse(s); return d?d.toLocaleDateString(undefined,{weekday:"short",month:"long",day:"numeric"}):"—"; };
+const fmtShort=s=>{ const d=parse(s); return d?d.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"—"; };
+const fmtWhen=s=>s?new Date(s).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
+const daysBetween=(a,b)=>Math.round((parse(b)-parse(a))/86400000);
+const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2400); }
+
+const ROLES=["Student","Volunteer","Student Leader","Speaker"];
+const SCREENS=["home","meeting","add","people","meetings","insights","team"];
+
+// ---------- state ----------
+const S={ members:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
+  screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
+  personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
+  homeQ:"", attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
+  db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, ready:false, offline:false, profiles:{}, dirty:new Set() };
+document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
+document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
+const clearDirty=el=>{ if(el) el.querySelectorAll("[id]").forEach(x=>S.dirty.delete(x.id)); };
+function nav(screen, patch){ S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:""},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function back(){ const p=S.stack.pop()||{screen:"home"}; Object.assign(S,p,{editing:false,confirm:null,quickAdd:null}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function home(){ S.stack=[]; Object.assign(S,{screen:"home",editing:false,confirm:null,quickAdd:null,homeQ:""}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+
+// ---------- names & stats ----------
+function memberName(uid){
+  if(!uid) return "Someone";
+  const t=S.team.find(x=>x.id===uid);
+  return (t&&t.name)||S.profiles[uid]||(uid===S.myId?(S.meName||"You"):"A teammate");
+}
+const personById=id=>S.people.find(p=>p.id===id);
+const pendingRoll={};
+const presentOf=m=>pendingRoll[m.id]?[...pendingRoll[m.id].set]:(m.present||[]);
+function stats(p){
+  const att=S.meetings.filter(m=>presentOf(m).includes(p.id)).map(m=>m.date).sort();
+  const first=att[0]||(p.createdAt||"").slice(0,10)||today();
+  const ms=S.meetings.filter(m=>m.date>=first).sort((a,b)=>a.date<b.date?-1:1);
+  let streak=0; for(let i=ms.length-1;i>=0;i--){ if(presentOf(ms[i]).includes(p.id)) streak++; else break; }
+  const last=att[att.length-1]||null, gap=last?daysBetween(last,today()):null;
+  const rate=ms.length?Math.round(100*att.length/ms.length):null;
+  const followUp=last?gap>21:daysBetween(first,today())>21;
+  const prog=S.progress.filter(x=>x.personId===p.id).sort((a,b)=>(a.date+(a.createdAt||""))<(b.date+(b.createdAt||""))?1:-1);
+  return {attended:att.length,eligible:ms.length,rate,streak,last,gap,first:att[0]||null,followUp,prog,recent:ms.slice(-12)};
+}
+function nextBirthday(b){
+  if(!b) return null; const d=parse(b), now=parse(today());
+  let n=new Date(now.getFullYear(),d.getMonth(),d.getDate()); if(n<now) n=new Date(now.getFullYear()+1,d.getMonth(),d.getDate());
+  return {date:n,days:Math.round((n-now)/86400000)};
+}
+const todaysMeeting=()=>S.meetings.filter(m=>m.date===today()).sort((a,b)=>(a.createdAt||"")<(b.createdAt||"")?1:-1)[0]||null;
+function searchPeople(q,exclude){ q=q.trim().toLowerCase(); if(!q) return [];
+  return S.people.filter(p=>!(exclude&&exclude.has(p.id))&&[p.name,p.phone,p.email].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=>{ const as=(a.name||"").toLowerCase().startsWith(q), bs=(b.name||"").toLowerCase().startsWith(q); return as!==bs?(as?-1:1):(a.name||"").localeCompare(b.name||""); }).slice(0,6); }
+
+// ---------- data ----------
+async function init(){
+  const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+  S.db=db; S.user=user;
+  if(user){ const me=await user.me(); S.myId=me.id; S.meName=me.name||""; S.avatar=me.avatarUrl; if((await user.can("data.write"))===false) S.canWrite=false; }
+  if(!db){ S.ready=true; S.offline=true; render(); return; }
+  const sub=(name)=>db.collection(name).onSnapshot(snap=>{ S[name]=snap.docs.map(d=>({id:d.id,...d.data()})); S.ready=true; render(); },
+    err=>{ if(err.code==="revoked"){ S.offline=true; render(); } });
+  ["people","meetings","progress","notes","team"].forEach(sub);
+  if(window.FB&&window.FB.isAdmin) sub("members");
+  db.doc("config/app").onSnapshot(s=>{ S.config=s.exists?s.data():{}; render(); },()=>{});
+  if(S.myId&&S.canWrite){ try{ const ref=db.doc("team/"+S.myId), s=await ref.get(); if(!s.exists) await ref.set({name:S.meName,title:"",account:true,joinedAt:new Date().toISOString()}); }catch(e){ if(e&&e.code==="invalid_argument"){ S.canWrite=false; render(); } } }
+}
+async function write(fn,ok){
+  if(!S.db){ toast("Sign in to make changes"); return false; }
+  try{ await fn(S.db); if(ok) toast(ok); return true; }
+  catch(e){
+    if(e&&e.code==="invalid_argument"){ S.canWrite=false; render(); toast("That change wasn't allowed. Ask an admin to check your access."); }
+    else if(e&&e.code==="quota_exceeded") toast("The roster is full. Delete old records to add more.");
+    else toast("That didn't save. Check your connection and try again.");
+    return false;
+  }
+}
+const stamp=()=>({updatedAt:new Date().toISOString(),updatedBy:S.myId||null});
+async function resolveIds(ids){
+  if(!S.user) return; const want=[...new Set(ids.filter(Boolean))].filter(id=>!(id in S.profiles)); if(!want.length) return;
+  want.forEach(id=>S.profiles[id]=""); const ps=await S.user.profiles(want); let any=false;
+  for(const id of want){ const n=ps[id]?.name||""; if(n){ S.profiles[id]=n; any=true; } } if(any) render();
+}
+function setPresent(m,pid,on){
+  const st=pendingRoll[m.id]||(pendingRoll[m.id]={set:new Set(m.present||[]),timer:null,busy:false,v:0});
+  on?st.set.add(pid):st.set.delete(pid); st.v++;
+  clearTimeout(st.timer);
+  st.timer=setTimeout(async function flush(){
+    if(st.busy){ st.timer=setTimeout(flush,300); return; }
+    const v=st.v; st.busy=true; const ok=await write(db=>db.doc("meetings/"+m.id).update({present:[...st.set],...stamp()})); st.busy=false;
+    if(pendingRoll[m.id]===st&&st.v===v) delete pendingRoll[m.id]; if(!ok) render();
+  },450);
+  render();
+}
+
+// ---------- shell ----------
+const main=document.getElementById("main");
+function render(){
+  const club=S.config.clubName||"Bṛhat Mṛdaṅga Database";
+  const bar=document.getElementById("bar"); bar.replaceChildren();
+  if(S.screen!=="home") bar.append(h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back}),"Back"));
+  bar.append(h("button",{class:"title",onclick:home,title:"Home"},club));
+  if(S.avatar) bar.append(h("img",{class:"avatar-sm",src:S.avatar,alt:"Signed in as "+memberName(S.myId)}));
+  const wide=["insights","people","meetings"].includes(S.screen);
+  main.classList.toggle("wide",wide); document.getElementById("barWrap").classList.toggle("wide",wide);
+
+  const keep={}; S.dirty.forEach(id=>{ const el=document.getElementById(id); if(el) keep[id]=el.value; });
+  const a=document.activeElement, aid=a&&a.id; let sel=null; try{ sel=a&&a.selectionStart; }catch(e){}
+  const top=[];
+  if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
+  else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
+  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam}[S.screen]||vHome;
+  main.replaceChildren(...top, fn());
+  for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
+  if(aid){ const el=document.getElementById(aid); if(el){ el.focus({preventScroll:true}); try{ if(sel!=null) el.setSelectionRange(sel,sel); }catch(e){} } }
+  resolveIds([...S.team.map(t=>t.id),...S.notes.map(x=>x.by),...S.progress.map(x=>x.by),...S.people.flatMap(p=>[p.createdBy,p.updatedBy]),...S.meetings.flatMap(m=>[m.by,m.updatedBy,m.talkBy])]);
+}
+const sec=(key,title,summary,body)=>h("details",{class:"sec","data-key":key,open:S.open.has(key)||null},h("summary",null,h("b",null,title),h("span",{class:"sum"},summary||"")),h("div",{class:"in"},body));
+
+// ---------- Home ----------
+function vHome(){
+  const tm=todaysMeeting();
+  const myT=S.team.find(t=>t.id===S.myId); const first=((myT&&myT.name)||S.meName||"").split(" ")[0];
+  const res=searchPeople(S.homeQ);
+  const follow=S.people.filter(p=>stats(p).followUp).length;
+  const bdays=S.people.filter(p=>{const b=nextBirthday(p.birthday); return b&&b.days<=14;}).length;
+  return h("div",null,
+    h("h1",null, first?`Hare Kṛṣṇa, ${first}`:"Hare Kṛṣṇa"),
+    h("p",{class:"lead"}, !S.ready?"Loading the roster…":`${plural(S.people.length,"person","people")} on the roster`),
+    h("div",{class:"tiles"},
+      h("button",{class:"tile meet",onclick:()=>nav("meeting",{meetingId:tm?tm.id:null})},
+        h("span",{html:ICON.meet}), h("b",null,"Log a Club Meeting"),
+        h("span",null, tm?`Today · ${plural(presentOf(tm).filter(id=>personById(id)).length,"person","people")} checked in. Tap to continue.`:"Start today's meeting and check people in."),
+        h("span",{class:"go"},tm?"Continue →":"Start →")),
+      h("button",{class:"tile add",onclick:()=>nav("add",{addMore:false})},
+        h("span",{html:ICON.add}), h("b",null,"Add a person"), h("span",null,"Just a name and phone number. Everything else is optional."),
+        h("span",{class:"go"},"Add →"))),
+    h("div",{style:"margin-top:26px"},
+      h("label",{class:"f",for:"home_q"},"Find someone"),
+      h("input",{id:"home_q",class:"big",type:"search",autocomplete:"off",placeholder:"Type a name or phone number",value:S.homeQ,style:"margin-top:6px",
+        oninput:e=>{S.homeQ=e.target.value; render();},
+        onkeydown:e=>{ if(e.key==="Enter"&&res[0]){ e.preventDefault(); nav("person",{personId:res[0].id}); } }}),
+      S.homeQ.trim() ? h("div",{class:"results"},
+        res.map(p=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"meta"},p.role||"Student"))),
+        !res.length?h("div",{class:"res",style:"cursor:default"},h("span",{class:"muted"},"No one by that name.")):null) : null),
+    (follow||bdays) ? h("div",{class:"shortcuts"},
+      follow?h("button",{class:"pill warn",onclick:()=>nav("people",{filter:"follow"})},`${plural(follow,"person","people")} to call`):null,
+      bdays?h("button",{class:"pill gold",onclick:()=>nav("insights")},`${plural(bdays,"birthday")} in the next 2 weeks`):null) : null,
+    h("h2",{style:"margin-top:34px;font-size:1.05rem;color:var(--muted)"},"More"),
+    h("div",{class:"more"},
+      h("button",{onclick:()=>nav("people",{filter:"all"})},h("b",null,"View Everyone"),h("span",null,"Full roster and filters")),
+      h("button",{onclick:()=>nav("meetings")},h("b",null,"View Past Meetings"),h("span",null,plural(S.meetings.length,"meeting")+" recorded")),
+      h("button",{onclick:()=>nav("insights")},h("b",null,"View Insights"),h("span",null,"Attendance, follow-ups, export")),
+      h("button",{onclick:()=>nav("team")},h("b",null,"View Our Team"),h("span",null,"Who's logging, your name"))));
+}
+
+// ---------- Add person ----------
+function teamOptions(selected){
+  const team=S.team.slice().sort((a,b)=>memberName(a.id).localeCompare(memberName(b.id)));
+  return [h("option",{value:""},"Not assigned yet"),...team.map(t=>h("option",{value:t.id,selected:selected===t.id?"selected":null},memberName(t.id)+(t.id===S.myId?" (you)":"")))];
+}
+function vAdd(){ return personForm(null); }
+function personForm(p){
+  const v=p||{role:"Student",contactId:S.myId||""};
+  const showMore = !!p || S.addMore;
+  const form=h("form",{class:"stack",onsubmit:async e=>{
+    e.preventDefault(); const g=id=>{ const el=document.getElementById("f_"+id); return el?el.value.trim():(v[id]||""); };
+    const data={name:g("name"),phone:g("phone"),email:g("email"),schedule:g("schedule"),birthday:g("birthday"),role:g("role")||"Student",contactId:g("contactId"),...stamp()};
+    if(!data.name||!data.phone){ toast("Name and phone number are needed"); return; }
+    if(p){ if(await write(db=>db.doc("people/"+p.id).update(data),"Saved")){ clearDirty(form); S.editing=false; render(); } }
+    else{
+      const note=g("notes"); let ref;
+      const ok=await write(async db=>{ ref=await db.collection("people").add({...data,createdAt:new Date().toISOString(),createdBy:S.myId||null});
+        if(note) await db.collection("notes").add({personId:ref.id,text:note,by:S.myId||null,createdAt:new Date().toISOString()}); },`${data.name} added`);
+      if(ok){ clearDirty(form); S.screen="person"; S.personId=ref.id; render(); window.scrollTo(0,0); }
+    }
+  }},
+    h("div",null,h("h1",null,p?`Edit ${p.name}`:"Add a person"), p?null:h("p",{class:"lead"},"Only add people who are happy to be on the roster.")),
+    h("label",{class:"f"},"Name",h("input",{id:"f_name",class:"big",value:v.name||"",required:true,autocomplete:"off"})),
+    h("label",{class:"f"},"Phone number",h("input",{id:"f_phone",class:"big",type:"tel",inputmode:"tel",value:v.phone||"",required:true,autocomplete:"off"})),
+    showMore ? [
+      h("label",{class:"f"},h("span",null,"Email ",h("small",null,"optional")),h("input",{id:"f_email",type:"email",value:v.email||"",autocomplete:"off"})),
+      h("label",{class:"f"},h("span",null,"Birthday ",h("small",null,"optional")),h("input",{id:"f_birthday",type:"date",value:v.birthday||""})),
+      h("label",{class:"f"},h("span",null,"Class schedule ",h("small",null,"optional")),h("textarea",{id:"f_schedule",style:"min-height:70px",placeholder:"e.g. Mon/Wed 10–12, free after 3 on Thursdays"},v.schedule||"")),
+      h("label",{class:"f"},"Role",h("select",{id:"f_role"},ROLES.map(r=>h("option",{value:r,selected:(v.role||"Student")===r?"selected":null},r)))),
+      h("label",{class:"f"},"Primary contact on our team",h("select",{id:"f_contactId"},teamOptions(v.contactId))),
+      p?null:h("label",{class:"f"},h("span",null,"Notes ",h("small",null,`optional · signed as ${memberName(S.myId)}`)),h("textarea",{id:"f_notes",placeholder:"How you met, interests, anything the team should know"}))
+    ] : h("div",{class:"box",style:"padding:14px 16px"},
+        h("p",{class:"small",style:"margin:0"},`Role: Student · Primary contact: ${S.myId?memberName(S.myId)+" (you)":"not assigned"}`),
+        h("button",{type:"button",class:"link",onclick:()=>{S.addMore=true; render(); setTimeout(()=>document.getElementById("f_email")?.focus(),0);}},"Add email, birthday, schedule, notes, or change role")),
+    h("div",{class:"row",style:"margin-top:6px"},
+      h("button",{class:"btn primary block",type:"submit",disabled:!S.canWrite||!S.db||null},p?"Save changes":"Add to roster"),
+      p?h("button",{class:"btn block",type:"button",onclick:()=>{S.editing=false; S.dirty.clear(); render();}},"Cancel"):null));
+  return form;
+}
+
+// ---------- Person ----------
+function vPerson(){
+  const p=personById(S.personId);
+  if(!p) return h("div",{class:"empty"},h("b",null,S.ready?"This person isn't on the roster anymore":"Loading…"));
+  if(S.editing) return personForm(p);
+  const s=stats(p), bd=nextBirthday(p.birthday);
+  const notes=S.notes.filter(n=>n.personId===p.id).sort((a,b)=>a.createdAt<b.createdAt?1:-1);
+  const dd=(k,v)=>h("div",null,h("dt",null,k),h("dd",null,v||h("span",{class:"muted",style:"font-weight:400"},"—")));
+  const noteForm=h("form",{class:"stack",style:"gap:8px",onsubmit:async e=>{
+    e.preventDefault(); const t=document.getElementById("noteText"), text=t.value.trim(); if(!text) return;
+    if(await write(db=>db.collection("notes").add({personId:p.id,text,by:S.myId||null,createdAt:new Date().toISOString()}),"Note added")){ t.value=""; S.dirty.delete("noteText"); }
+  }}, h("textarea",{id:"noteText","aria-label":"New note",placeholder:`Write a note as ${memberName(S.myId)}`}), h("button",{class:"btn primary",type:"submit",style:"align-self:flex-start"},"Add note"));
+
+  const pg=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
+    e.preventDefault(); const g=id=>document.getElementById(id).value.trim(), num=v=>v===""?null:Number(v);
+    const entry={personId:p.id,date:g("pg_date")||today(),reading:g("pg_reading"),chanting:num(g("pg_chant")),meditation:num(g("pg_med")),by:S.myId||null,createdAt:new Date().toISOString()};
+    if(entry.chanting==null&&entry.meditation==null&&!entry.reading){ toast("Fill in at least one field"); return; }
+    if(await write(db=>db.collection("progress").add(entry),"Check-in logged")){ ["pg_chant","pg_med","pg_reading"].forEach(id=>document.getElementById(id).value=""); clearDirty(pg); }
+  }},
+    h("div",{class:"row"},
+      h("label",{class:"f",style:"flex:1 1 140px"},"Date",h("input",{id:"pg_date",type:"date",value:today()})),
+      h("label",{class:"f",style:"flex:2 1 200px"},"Reading",h("input",{id:"pg_reading",placeholder:"Book and chapter"}))),
+    h("div",{class:"row"},
+      h("label",{class:"f",style:"flex:1 1 120px"},"Rounds a day",h("input",{id:"pg_chant",type:"number",min:"0",inputmode:"numeric"})),
+      h("label",{class:"f",style:"flex:1 1 120px"},"Meditation minutes",h("input",{id:"pg_med",type:"number",min:"0",inputmode:"numeric"}))),
+    h("button",{class:"btn",type:"submit",style:"align-self:flex-start"},"Log check-in"));
+
+  return h("div",{class:"stack"},
+    h("div",null, h("h1",null,p.name),
+      h("div",{class:"row",style:"margin-top:8px"}, h("span",{class:"pill"},p.role||"Student"), s.followUp?h("span",{class:"pill warn"},s.last?`Not seen in ${s.gap} days`:"Hasn't come back yet"):null),
+      h("p",{class:"lead"}, p.contactId?["Primary contact: ",h("b",{style:"color:var(--ink)"},memberName(p.contactId))]:"No primary contact yet")),
+    h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
+      dd("Phone",p.phone?h("span",{style:"user-select:all"},p.phone):null), dd("Email",p.email?h("span",{style:"user-select:all"},p.email):null),
+      dd("Birthday",p.birthday?`${fmtShort(p.birthday)}${bd?(bd.days===0?" · today!":` · in ${plural(bd.days,"day")}`):""}`:null),
+      dd("Class schedule",p.schedule?h("span",{style:"white-space:pre-wrap;font-weight:400"},p.schedule):null)),
+      S.canWrite?h("button",{class:"btn small",style:"margin-top:14px",onclick:()=>{S.editing=true; S.dirty.clear(); render(); window.scrollTo(0,0);}},"Edit details"):null),
+    sec("notes","Team notes",plural(notes.length,"note"),[
+      S.canWrite?noteForm:null,
+      notes.length?notes.map(n=>h("div",{class:"note"},
+        h("div",{class:"by row",style:"justify-content:space-between"},h("span",null,h("b",null,memberName(n.by))," · "+fmtWhen(n.createdAt)),
+          S.canWrite&&(n.by===S.myId||!n.by)?h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>write(db=>db.doc("notes/"+n.id).delete(),"Note removed")},"Remove"):null),
+        h("p",null,n.text))):h("p",{class:"muted",style:"margin:0"},"No notes yet.")]),
+    sec("att","Club attendance", s.attended?`${plural(s.attended,"meeting")} · last ${fmtShort(s.last)}`:"Not yet",[
+      h("p",{style:"margin:0"}, s.attended?`Came to ${s.attended} of ${s.eligible} meetings since ${fmtShort(s.first)} (${s.rate}%).${s.streak>1?` ${s.streak} in a row.`:""}`:"Hasn't been checked in at a meeting yet."),
+      s.recent.length?h("div",null,h("div",{class:"dots"},s.recent.map(m=>h("i",{class:presentOf(m).includes(p.id)?"on":"",title:`${fmtShort(m.date)} · ${m.title||"Meeting"}`}))),h("p",{class:"muted small",style:"margin:6px 0 0"},"Recent meetings, oldest to newest. Blue means they came.")):null]),
+    sec("sadhana","Sadhana", s.prog[0]?`last check-in ${fmtShort(s.prog[0].date)}`:"No check-ins",[
+      h("p",{class:"muted small",style:"margin:0"},"Reading, chanting and meditation check-ins."),
+      S.canWrite?pg:null,
+      s.prog.length?h("div",{class:"tablewrap"},h("table",null,
+        h("thead",null,h("tr",null,h("th",null,"Date"),h("th",null,"Reading"),h("th",{class:"num"},"Rounds"),h("th",{class:"num"},"Meditation"),h("th",null,"Logged by"),h("th",null,""))),
+        h("tbody",null,s.prog.slice(0,15).map(x=>h("tr",null,h("td",null,fmtShort(x.date)),h("td",{class:"wrap"},x.reading||"—"),h("td",{class:"num"},x.chanting??"—"),h("td",{class:"num"},x.meditation!=null?x.meditation+" min":"—"),h("td",null,memberName(x.by)),
+          h("td",null,S.canWrite?h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>write(db=>db.doc("progress/"+x.id).delete(),"Removed")},"Remove"):null)))))):null]),
+    h("p",{class:"muted small",style:"margin:4px 0 0"},`Added by ${memberName(p.createdBy)}${p.createdAt?" on "+fmtShort(p.createdAt):""}`,p.updatedBy&&p.updatedAt&&p.updatedAt!==p.createdAt?` · last edited by ${memberName(p.updatedBy)}`:""),
+    S.canWrite?(S.confirm==="del"?h("div",{class:"confirm"},h("span",null,`Delete ${p.name}, their notes and sadhana entries? This can't be undone.`),
+      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{
+        const ok=await write(async db=>{ for(const n of S.notes.filter(x=>x.personId===p.id)) await db.doc("notes/"+n.id).delete();
+          for(const x of S.progress.filter(x=>x.personId===p.id)) await db.doc("progress/"+x.id).delete(); await db.doc("people/"+p.id).delete(); },`${p.name} removed`);
+        if(ok) back(); }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
+      :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="del"; render();}},"Remove from roster")):null);
+}
+
+// ---------- Meeting (check-in) ----------
+function vMeeting(){
+  let m=S.meetingId&&S.meetings.find(x=>x.id===S.meetingId);
+  if(!m){
+    const tm=todaysMeeting();
+    if(tm&&!S.meetingId){ S.meetingId=tm.id; m=tm; }
+  }
+  if(!m){
+    const f=h("form",{class:"stack",onsubmit:async e=>{
+      e.preventDefault(); const date=document.getElementById("m_date").value||today(), title=document.getElementById("m_title").value.trim()||"Club meeting";
+      let ref; if(await write(async db=>{ ref=await db.collection("meetings").add({date,title,present:[],prasadam:[],createdAt:new Date().toISOString(),by:S.myId||null}); },"Meeting started")){ clearDirty(f); S.meetingId=ref.id; render(); setTimeout(()=>document.getElementById("att_q")?.focus(),0); }
+    }},
+      h("div",null,h("h1",null,"Start a club meeting"),h("p",{class:"lead"},"Then check people in as they arrive.")),
+      h("label",{class:"f"},h("span",null,"What's the meeting? ",h("small",null,"optional")),h("input",{id:"m_title",class:"big",placeholder:"e.g. Wednesday Gita class",autocomplete:"off"})),
+      h("label",{class:"f"},"Date",h("input",{id:"m_date",type:"date",value:today()})),
+      h("button",{class:"btn primary block",type:"submit",disabled:!S.canWrite||!S.db||null},"Start meeting"),
+      S.meetings.length?h("button",{type:"button",class:"link",style:"align-self:flex-start",onclick:()=>nav("meetings")},"Open a past meeting instead"):null);
+    return f;
+  }
+  const present=presentOf(m).filter(id=>personById(id)), set=new Set(present);
+  const res=searchPeople(S.attQ,set);
+  const q=S.attQ.trim();
+  const already=q&&S.people.filter(p=>set.has(p.id)&&(p.name||"").toLowerCase().includes(q.toLowerCase()));
+  const pick=p=>{ setPresent(m,p.id,true); toast(`${p.name} checked in`); S.attQ=""; S.attHl=0; S.dirty.delete("att_q"); render(); document.getElementById("att_q")?.focus(); };
+  const teamNames=S.team.map(t=>memberName(t.id)).filter(n=>n&&n!=="A teammate");
+  const peopleNames=S.people.map(p=>p.name).filter(Boolean);
+  const speakers=[...new Set([...S.people.filter(p=>p.role==="Speaker").map(p=>p.name),...teamNames,...peopleNames])];
+  const cooks=[...new Set([...teamNames,...peopleNames])];
+  const pr=Array.isArray(m.prasadam)?m.prasadam:[];
+
+  const talk=h("form",{class:"stack",onsubmit:async e=>{
+    e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
+    if(await write(db=>db.doc("meetings/"+m.id).update({speaker:g("m_speaker"),topic:g("m_topic"),notes:g("m_notes"),talkBy:S.myId||null,talkAt:new Date().toISOString(),...stamp()}),"Saved")) clearDirty(talk);
+  }},
+    h("label",{class:"f"},"Speaker",h("input",{id:"m_speaker",list:"speakerList",value:m.speaker||"",placeholder:"Who gave the talk",autocomplete:"off",disabled:!S.canWrite||null})),
+    h("datalist",{id:"speakerList"},speakers.map(n=>h("option",{value:n}))),
+    h("label",{class:"f"},"Topic",h("input",{id:"m_topic",value:m.topic||"",placeholder:"e.g. Bhagavad-gītā 2.13",autocomplete:"off",disabled:!S.canWrite||null})),
+    h("label",{class:"f"},"Meeting notes",h("textarea",{id:"m_notes",placeholder:"Key points, questions, announcements",disabled:!S.canWrite||null},m.notes||"")),
+    h("div",{class:"row",style:"justify-content:space-between"},S.canWrite?h("button",{class:"btn primary",type:"submit"},"Save"):h("span"),
+      m.talkBy?h("span",{class:"muted small"},`Saved by ${memberName(m.talkBy)} · ${fmtWhen(m.talkAt)}`):null));
+
+  const prf=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
+    e.preventDefault(); const dish=document.getElementById("pr_dish").value.trim(), cook=document.getElementById("pr_cook").value.trim();
+    if(!dish){ toast("Add what was made"); return; }
+    if(await write(db=>db.doc("meetings/"+m.id).update({prasadam:[...pr,{dish,cook,by:S.myId||null,at:new Date().toISOString()}],...stamp()}),"Prasadam added")){ document.getElementById("pr_dish").value=""; document.getElementById("pr_cook").value=""; clearDirty(prf); }
+  }},
+    h("div",{class:"row"},
+      h("label",{class:"f",style:"flex:2 1 200px"},"What was made",h("input",{id:"pr_dish",placeholder:"e.g. Khichdi",autocomplete:"off"})),
+      h("label",{class:"f",style:"flex:1 1 160px"},"Cooked by",h("input",{id:"pr_cook",list:"cookList",placeholder:"Name",autocomplete:"off"}))),
+    h("datalist",{id:"cookList"},cooks.map(n=>h("option",{value:n}))),
+    h("button",{class:"btn",type:"submit",style:"align-self:flex-start"},"Add prasadam"));
+
+  return h("div",{class:"stack"},
+    h("div",null,h("h1",null,m.title||"Club meeting"),
+      h("p",{class:"lead"},`${fmt(m.date)} · started by ${memberName(m.by)} · `,h("button",{class:"link",style:"padding:0",onclick:()=>nav("meetings")},"switch meeting"))),
+    h("div",{class:"box stack",style:"gap:10px"},
+      h("label",{class:"f",for:"att_q",style:"font-size:1.1rem"},"Check someone in"),
+      S.canWrite?h("input",{id:"att_q",class:"big",type:"search",autocomplete:"off",placeholder:"Start typing their name",value:S.attQ,
+        oninput:e=>{S.attQ=e.target.value; S.attHl=0; S.quickAdd=null; render();},
+        onkeydown:e=>{
+          if(e.key==="ArrowDown"){ e.preventDefault(); S.attHl=Math.min(S.attHl+1,Math.max(0,res.length-1)); render(); }
+          else if(e.key==="ArrowUp"){ e.preventDefault(); S.attHl=Math.max(0,S.attHl-1); render(); }
+          else if(e.key==="Enter"){ e.preventDefault(); if(res[S.attHl]) pick(res[S.attHl]); else if(q){ S.quickAdd={name:q}; render(); } }
+        }}):null,
+      q&&!S.quickAdd?h("div",{class:"results",style:"margin-top:0"},
+        res.map((p,i)=>h("button",{class:"res"+(i===S.attHl?" hl":""),onclick:()=>pick(p)},h("span",{class:"name"},p.name),h("span",{class:"meta"},"Check in"))),
+        already&&already.length&&!res.length?h("div",{class:"res",style:"cursor:default"},h("span",{class:"muted"},`${already[0].name} is already checked in.`)):null,
+        h("button",{class:"res new",onclick:()=>{S.quickAdd={name:q}; render(); setTimeout(()=>document.getElementById("np_phone")?.focus(),0);}},h("span",null,`+ New person: “${q}”`),h("span",{class:"meta"},"Add and check in"))):null,
+      S.quickAdd?quickAdd(m):null,
+      h("div",null,
+        h("p",{style:"margin:6px 0 0;font-weight:700"},`Checked in · ${present.length}`),
+        present.length?h("div",{class:"checked"},present.map(id=>personById(id)).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>h("div",null,
+          h("span",{class:"name"},p.name),
+          h("span",{class:"row",style:"gap:4px;flex-wrap:nowrap"},h("span",{class:"muted small"},p.role||"Student"),
+            S.canWrite?h("button",{class:"x","aria-label":`Remove ${p.name} from this meeting`,onclick:()=>setPresent(m,p.id,false)},"×"):null))))
+          :h("p",{class:"muted",style:"margin:4px 0 0"},"No one yet."))),
+    sec("talk","Talk and notes", m.speaker?`${m.speaker}${m.topic?" · "+m.topic:""}`:"Speaker, topic, notes", talk),
+    sec("prasadam","Prasadam", pr.length?pr.map(x=>x.dish).join(", "):"What was made, who cooked",[
+      pr.length?h("div",{class:"list"},pr.map((x,i)=>h("div",{class:"res",style:"cursor:default"},
+        h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},x.dish),h("span",{class:"meta"},`${x.cook?"Cooked by "+x.cook:"Cook not noted"} · logged by ${memberName(x.by)}`)),
+        S.canWrite?h("button",{class:"x","aria-label":`Remove ${x.dish}`,onclick:()=>write(db=>db.doc("meetings/"+m.id).update({prasadam:pr.filter((_,j)=>j!==i),...stamp()}),"Removed")},"×"):null))):null,
+      S.canWrite?prf:null]),
+    S.canWrite?(S.confirm==="mdel"?h("div",{class:"confirm"},h("span",null,"Delete this meeting, its attendance, notes and prasadam?"),
+      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc("meetings/"+m.id).delete(),"Meeting deleted")){ S.meetingId=null; back(); } }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
+      :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="mdel"; render();}},"Delete this meeting")):null);
+}
+function quickAdd(m){
+  const f=h("form",{class:"stack",style:"gap:12px;background:var(--blue-soft);padding:16px;border-radius:12px",onsubmit:async e=>{
+    e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
+    const data={name:g("np_name"),phone:g("np_phone"),email:"",schedule:"",birthday:"",role:g("np_role"),contactId:S.myId||"",createdAt:new Date().toISOString(),createdBy:S.myId||null,...stamp()};
+    if(!data.name){ toast("Add a name"); return; }
+    let ref; if(await write(async db=>{ ref=await db.collection("people").add(data); },`${data.name} added and checked in`)){
+      clearDirty(f); S.quickAdd=null; S.attQ=""; S.dirty.delete("att_q"); setPresent(m,ref.id,true); }
+  }},
+    h("b",null,"New to the club"),
+    h("label",{class:"f"},"Name",h("input",{id:"np_name",value:S.quickAdd.name,required:true,autocomplete:"off"})),
+    h("label",{class:"f"},h("span",null,"Phone number ",h("small",null,"can add later")),h("input",{id:"np_phone",type:"tel",inputmode:"tel",autocomplete:"off"})),
+    h("label",{class:"f"},"Role",h("select",{id:"np_role"},ROLES.map(r=>h("option",{value:r},r)))),
+    h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"Add and check in"),h("button",{class:"btn",type:"button",onclick:()=>{S.quickAdd=null; render();}},"Cancel")));
+  return f;
+}
+
+// ---------- People list ----------
+function vPeople(){
+  const q=S.peopleQ.trim().toLowerCase();
+  let rows=S.people.map(p=>({p,s:stats(p)}));
+  if(q) rows=rows.filter(({p})=>[p.name,p.phone,p.email,memberName(p.contactId)].join(" ").toLowerCase().includes(q));
+  if(S.filter==="follow") rows=rows.filter(r=>r.s.followUp);
+  else if(S.filter==="mine") rows=rows.filter(r=>r.p.contactId===S.myId);
+  else if(S.filter!=="all") rows=rows.filter(r=>(r.p.role||"Student")===S.filter);
+  rows.sort((a,b)=>(a.p.name||"").localeCompare(b.p.name||""));
+  return h("div",{class:"stack"},
+    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"Everyone"),S.canWrite?h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false})},"Add a person"):null),
+    h("div",{class:"row"},
+      h("input",{id:"pq",type:"search",class:"grow",style:"flex:2 1 220px",placeholder:"Search name, phone, contact",value:S.peopleQ,oninput:e=>{S.peopleQ=e.target.value; render();}}),
+      h("select",{id:"pf",style:"flex:1 1 180px;width:auto","aria-label":"Show",onchange:e=>{S.filter=e.target.value; render();}},
+        [["all","Everyone"],["mine","People I look after"],["follow","Needs a call"],...ROLES.map(r=>[r,r+"s"])].map(([v,l])=>h("option",{value:v,selected:S.filter===v?"selected":null},l)))),
+    rows.length?h("div",{class:"list"},rows.map(({p,s})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},
+      h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},p.name),h("span",{class:"meta"},[p.role||"Student",p.contactId?"with "+memberName(p.contactId):null].filter(Boolean).join(" · "))),
+      s.followUp?h("span",{class:"pill warn"},s.last?`${s.gap} days`:"not back"):h("span",{class:"meta"},s.last?"came "+fmtShort(s.last):"new"))))
+      :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search or filter.":"Add the first person from the home screen."));
+}
+
+// ---------- Past meetings ----------
+function vMeetings(){
+  const ms=S.meetings.slice().sort((a,b)=>a.date<b.date?1:-1);
+  return h("div",{class:"stack"},
+    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"Club meetings"),S.canWrite?h("button",{class:"btn primary",onclick:()=>{S.stack.push({screen:S.screen}); Object.assign(S,{screen:"meeting",meetingId:"new"}); render();}},"Start a new meeting"):null),
+    ms.length?h("div",{class:"list"},ms.map(m=>h("button",{class:"res",onclick:()=>nav("meeting",{meetingId:m.id})},
+      h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.title||"Club meeting"),h("span",{class:"meta"},[fmt(m.date),m.speaker?"talk by "+m.speaker:null].filter(Boolean).join(" · "))),
+      h("span",{class:"pill"},`${presentOf(m).filter(id=>personById(id)).length} came`))))
+      :h("div",{class:"empty"},h("b",null,"No meetings yet"),"Start one from the home screen."));
+}
+
+// ---------- Insights ----------
+function vInsights(){
+  const rows=S.people.map(p=>({p,s:stats(p)}));
+  const ms=S.meetings.slice().sort((a,b)=>a.date<b.date?-1:1);
+  const countOf=m=>presentOf(m).filter(id=>personById(id)).length;
+  const last4=ms.slice(-4), avg4=last4.length?Math.round(last4.reduce((a,m)=>a+countOf(m),0)/last4.length):null;
+  const monthStart=today().slice(0,8)+"01";
+  const newThisMonth=rows.filter(r=>(r.s.first||(r.p.createdAt||"").slice(0,10))>=monthStart).length;
+  const active30=rows.filter(r=>r.s.last&&r.s.gap<=30).length;
+  const follow=rows.filter(r=>r.s.followUp).sort((a,b)=>(b.s.gap??999)-(a.s.gap??999));
+  const bdays=S.people.map(p=>({p,b:nextBirthday(p.birthday)})).filter(x=>x.b&&x.b.days<=30).sort((a,b)=>a.b.days-b.b.days);
+  const cooks={}; ms.forEach(m=>(m.prasadam||[]).forEach(x=>{ if(x.cook) cooks[x.cook]=(cooks[x.cook]||0)+1; }));
+  const cookList=Object.entries(cooks).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const recent=ms.slice(-8).reverse();
+  const card=(title,sub,items,empty)=>h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},title),sub?h("p",{class:"muted small",style:"margin:0"},sub):null,items.length?h("div",{class:"list"},items):h("p",{class:"muted",style:"margin:0"},empty));
+  return h("div",{class:"stack",style:"gap:28px"},
+    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"Insights"),h("button",{class:"btn",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)")),
+    h("div",{class:"stats"},stat(S.people.length,"on the roster"),stat(active30,"came in the last 30 days"),stat(avg4==null?"—":avg4,"average, last 4 meetings"),stat(newThisMonth,"new this month")),
+    h("p",{class:"muted",style:"margin:-14px 0 0"},ROLES.map(r=>plural(S.people.filter(p=>(p.role||"Student")===r).length,r)).join(" · ")),
+    h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Attendance by meeting"),ms.length?chart(ms.slice(-16),countOf):h("p",{class:"muted"},"Record meetings to see the trend.")),
+    h("div",{class:"cols"},
+      card("Needs a call","Not seen in three weeks or more.",follow.map(({p,s})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},p.name),h("span",{class:"meta"},p.contactId?"Contact: "+memberName(p.contactId):"No primary contact")),h("span",{class:"pill warn"},s.last?`${s.gap} days`:"not back"))),"Everyone has been by recently."),
+      card("Birthdays coming up","Next 30 days.",bdays.map(({p,b})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"pill gold"},b.days===0?"today":fmtShort(iso(b.date))))),"No birthdays soon."),
+      card("Who has been cooking","Times cooked across all meetings.",cookList.map(([n,c])=>h("div",{class:"res",style:"cursor:default"},h("span",{class:"name"},n),h("span",{class:"meta"},plural(c,"time")))),"No prasadam recorded yet.")),
+    h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Recent meetings"),
+      recent.length?h("div",{class:"tablewrap"},h("table",null,
+        h("thead",null,h("tr",null,h("th",null,"Date"),h("th",null,"Meeting"),h("th",null,"Speaker"),h("th",null,"Topic"),h("th",{class:"num"},"Came"),h("th",null,"Prasadam"))),
+        h("tbody",null,recent.map(m=>h("tr",null,h("td",null,fmtShort(m.date)),h("td",null,m.title||"Club meeting"),h("td",null,m.speaker||"—"),h("td",{class:"wrap"},m.topic||"—"),h("td",{class:"num"},countOf(m)),
+          h("td",{class:"wrap"},(m.prasadam||[]).map(x=>x.cook?`${x.dish} (${x.cook})`:x.dish).join(", ")||"—")))))):h("p",{class:"muted",style:"margin:0"},"No meetings yet.")),
+    h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Everyone"),
+      rows.length?h("div",{class:"tablewrap"},h("table",null,
+        h("thead",null,h("tr",null,h("th",null,"Name"),h("th",null,"Role"),h("th",null,"Primary contact"),h("th",{class:"num"},"Meetings"),h("th",{class:"num"},"Rate"),h("th",{class:"num"},"In a row"),h("th",null,"Last came"))),
+        h("tbody",null,rows.sort((a,b)=>(a.p.name||"").localeCompare(b.p.name||"")).map(({p,s})=>h("tr",null,h("td",{style:"font-weight:700"},p.name),h("td",null,p.role||"Student"),h("td",null,p.contactId?memberName(p.contactId):"—"),
+          h("td",{class:"num"},s.attended),h("td",{class:"num"},s.rate==null?"—":s.rate+"%"),h("td",{class:"num"},s.streak),h("td",null,s.last?fmtShort(s.last):"—")))))):h("p",{class:"muted",style:"margin:0"},"Add people to see everyone here.")));
+}
+const stat=(v,l)=>h("div",{class:"stat"},h("b",null,v),h("span",null,l));
+function chart(ms,countOf){
+  const NS="http://www.w3.org/2000/svg",W=720,H=210,L=30,R=8,T=18,B=30;
+  const vals=ms.map(countOf),max=Math.max(4,...vals),step=Math.ceil(max/4),top=step*4,bw=(W-L-R)/ms.length;
+  const s=document.createElementNS(NS,"svg"); s.setAttribute("viewBox",`0 0 ${W} ${H}`); s.setAttribute("class","chart"); s.setAttribute("role","img"); s.setAttribute("aria-label","People present at each meeting");
+  const el=(t,a,txt)=>{const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); if(txt!=null) e.textContent=txt; s.append(e); return e;};
+  const y=v=>T+(H-T-B)*(1-v/top);
+  for(let i=0;i<=4;i++){const v=step*i; el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:"var(--line)","stroke-width":1}); el("text",{x:L-6,y:y(v)+4,"text-anchor":"end"},v);}
+  vals.forEach((v,i)=>{ const w=Math.min(30,bw*.6),x=L+i*bw+(bw-w)/2,last=i===vals.length-1;
+    const r=el("rect",{x,y:y(v),width:w,height:Math.max(0,y(0)-y(v)),rx:4,fill:"var(--blue)","fill-opacity":last?1:.4});
+    const t=document.createElementNS(NS,"title"); t.textContent=`${fmt(ms[i].date)} · ${ms[i].title||"Meeting"}: ${v} came`; r.append(t);
+    if(bw>36||i%2===0||last) el("text",{x:x+w/2,y:H-10,"text-anchor":"middle"},fmtShort(ms[i].date));
+    el("text",{x:x+w/2,y:y(v)-6,"text-anchor":"middle",style:last?"fill:var(--ink);font-weight:700":""},v); });
+  return h("div",{style:"overflow-x:auto;margin-top:12px"},s);
+}
+async function exportCsv(){
+  const dl=await claude.use("downloads"); if(!dl){ toast("Downloads aren't available in this view"); return; }
+  const esc=v=>{v=v==null?"":String(v); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;};
+  const head=["Name","Role","Phone","Email","Birthday","Class schedule","Primary contact","Meetings attended","Attendance rate %","In a row","Last came","Added by"];
+  const lines=[head.join(",")].concat(S.people.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(p=>{const s=stats(p);
+    return [p.name,p.role||"Student",p.phone,p.email,p.birthday,p.schedule,p.contactId?memberName(p.contactId):"",s.attended,s.rate??"",s.streak,s.last||"",memberName(p.createdBy)].map(esc).join(",");}));
+  try{ await dl.save({filename:`club-roster-${today()}.csv`,data:lines.join("\n")}); }
+  catch(e){ if(e&&e.code!=="declined"&&e.code!=="cancelled") toast("The export didn't go through"); }
+}
+
+// ---------- Team ----------
+function vTeam(){
+  const team=S.team.slice().sort((a,b)=>memberName(a.id).localeCompare(memberName(b.id)));
+  const meDoc=S.team.find(t=>t.id===S.myId);
+  const meForm=meDoc&&S.canWrite?h("form",{class:"box stack",onsubmit:async e=>{
+    e.preventDefault(); const name=document.getElementById("me_name").value.trim(), title=document.getElementById("me_title").value.trim();
+    if(!name){ toast("Add your name"); return; }
+    if(await write(db=>db.doc("team/"+S.myId).update({name,title}),"Saved")) clearDirty(meForm);
+  }}, h("h2",{style:"font-size:1.1rem"},"Your name on the team"), h("p",{class:"muted small",style:"margin:-8px 0 0"},"It's shown on every note, check-in and record you log."),
+    h("label",{class:"f"},"Name",h("input",{id:"me_name",value:meDoc.name||S.meName||"",required:true})),
+    h("label",{class:"f"},h("span",null,"Role on the team ",h("small",null,"optional")),h("input",{id:"me_title",value:meDoc.title||"",placeholder:"e.g. Club president, Brahmacari"})),
+    h("button",{class:"btn primary",type:"submit",style:"align-self:flex-start"},"Save")):null;
+  let clubForm=null;
+  if(S.canWrite){ clubForm=h("form",{class:"box stack",onsubmit:async e=>{ e.preventDefault(); const v=document.getElementById("c_name").value.trim();
+    if(await write(db=>db.doc("config/app").set({...S.config,clubName:v,...stamp()}),"Saved")) clearDirty(clubForm); }},
+    h("label",{class:"f"},"Club name shown at the top",h("input",{id:"c_name",value:S.config.clubName||"",placeholder:"Bṛhat Mṛdaṅga Database"})),
+    h("button",{class:"btn",type:"submit",style:"align-self:flex-start"},"Save")); }
+  return h("div",{class:"stack",style:"gap:22px"},
+    h("div",null,h("h1",null,"Our team"),h("p",{class:"lead"},"Teammates appear here the first time they sign in.")),
+    team.length?h("div",{class:"list"},team.map(t=>{ const c=S.people.filter(p=>p.contactId===t.id).length, logged=S.notes.filter(n=>n.by===t.id).length+S.progress.filter(x=>x.by===t.id).length;
+      return h("div",{class:"res",style:"cursor:default"},
+        h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},memberName(t.id)+(t.id===S.myId?" (you)":"")),h("span",{class:"meta"},[t.title,`contact for ${plural(c,"person","people")}`,`${logged} logged`].filter(Boolean).join(" · "))),
+        S.canWrite&&t.id!==S.myId?(S.confirm==="t:"+t.id?h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},h("button",{class:"btn small danger",onclick:async()=>{ if(await write(db=>db.doc("team/"+t.id).delete(),"Removed")){ S.confirm=null; render(); } }},"Remove"),h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Keep"))
+          :h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>{S.confirm="t:"+t.id; render();}},"Remove")):null); }))
+      :h("div",{class:"empty"},"No one has joined yet."),
+    meForm, clubForm,
+    accessBox(),
+    h("div",{class:"box row",style:"justify-content:space-between"},
+      h("span",{class:"muted small"},"Signed in as ",h("b",{style:"color:var(--ink)"},(window.FB&&window.FB.email)||"")),
+      h("button",{class:"btn small",onclick:()=>window.FB&&window.FB.signOut()},"Sign out")));
+}
+function accessBox(){
+  const FB=window.FB||{};
+  if(!FB.isAdmin) return h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Adding a teammate"),
+    h("p",{style:"margin:8px 0 0"},"Ask an admin to add the person's Google email under Our Team. Once added, they sign in with Google and appear on this page."));
+  const f=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
+    e.preventDefault(); const em=document.getElementById("acc_email").value.trim().toLowerCase(), adm=document.getElementById("acc_admin").checked;
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ toast("Enter a valid email address"); return; }
+    if(await write(db=>db.doc("members/"+em).set({admin:adm,addedBy:S.myId||null,addedAt:new Date().toISOString()}),`${em} can now sign in`)){ document.getElementById("acc_email").value=""; document.getElementById("acc_admin").checked=false; clearDirty(f); }
+  }},
+    h("label",{class:"f"},"Google email",h("input",{id:"acc_email",type:"email",autocomplete:"off",placeholder:"name@gmail.com"})),
+    h("label",{class:"row",style:"gap:10px;font-weight:400"},h("input",{id:"acc_admin",type:"checkbox"}),"Admin (can add and remove people from this list)"),
+    h("button",{class:"btn primary",type:"submit",style:"align-self:flex-start"},"Give access"));
+  const list=S.members.slice().sort((a,b)=>a.id.localeCompare(b.id));
+  return h("div",{class:"box stack"},
+    h("div",null,h("h2",{style:"font-size:1.1rem"},"Who can sign in"),h("p",{class:"muted small",style:"margin:4px 0 0"},"Only these Google accounts can open the database. Add someone here, then send them the link.")),
+    f,
+    list.length?h("div",{class:"list"},list.map(m=>h("div",{class:"res",style:"cursor:default"},
+      h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.id),h("span",{class:"meta"},m.admin?"Admin":"Team member")),
+      m.id===FB.email?h("span",{class:"meta"},"you"):(S.confirm==="acc:"+m.id
+        ?h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},h("button",{class:"btn small danger",onclick:async()=>{ if(await write(db=>db.doc("members/"+m.id).delete(),"Access removed")){ S.confirm=null; render(); } }},"Remove"),h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Keep"))
+        :h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>{S.confirm="acc:"+m.id; render();}},"Remove access"))))):null);
+}
+
+// ---------- boot ----------
+let started=false;
+window.startApp=()=>{ if(started) return; started=true; render(); init(); };
+})();
+</script>
+<script type="module" src="./app-firebase.js"></script>
+</body>
+</html>
