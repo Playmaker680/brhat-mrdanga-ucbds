@@ -17,7 +17,7 @@ function gate(html){
 }
 
 if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("PASTE")) {
-  gate(`<h1>${CLUB}</h1><p>Almost there. Paste your Firebase settings into <b>firebase-config.js</b> (step 3 of the setup guide), then reload this page.</p>`);
+  gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1><p>Almost there. Paste your Firebase settings into <b>firebase-config.js</b> (step 3 of the setup guide), then reload this page.</p>`);
   throw new Error("firebase-config.js is not filled in yet");
 }
 
@@ -28,7 +28,7 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
 function showSignIn(message){
-  gate(`<h1>${CLUB}</h1>
+  gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1>
     <p class="muted" style="margin:0">Hare Kṛṣṇa. Sign in with the Google account your team added.</p>
     ${message ? `<p style="margin:0;color:var(--alert)">${message}</p>` : ""}
     <button class="btn primary block gbtn" id="signIn"><span style="background:#fff;border-radius:50%;padding:3px;display:inline-flex">${GOOGLE}</span>Sign in with Google</button>`);
@@ -97,7 +97,7 @@ onAuthStateChanged(auth, async u => {
   try { member = await getDoc(doc(fs, "members/" + email)); }
   catch (e) { member = null; }
   if (!member || !member.exists()) {
-    gate(`<h1>${CLUB}</h1><p style="margin:0">The account <b>${email.replace(/[<>&"]/g, "")}</b> isn't on the team list yet.</p>
+    gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1><p style="margin:0">The account <b>${email.replace(/[<>&"]/g, "")}</b> isn't on the team list yet.</p>
       <p class="muted" style="margin:0">Ask an admin to add this Google email under Our Team, then sign in again.</p>
       <button class="btn block" id="out">Use a different account</button>`);
     document.getElementById("out").onclick = () => signOut(auth);
