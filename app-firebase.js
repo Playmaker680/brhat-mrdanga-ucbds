@@ -104,7 +104,7 @@ onAuthStateChanged(auth, async u => {
     return;
   }
   started = true;
-  window.FB = { email, isAdmin: member.data().admin === true, signOut: () => signOut(auth) };
+  window.FB = { email, isAdmin: member.data().admin === true, role: member.data().role || "", signOut: () => signOut(auth) };
   window.claude = { use: async name => ({ db, user: userApi(u), downloads })[name] || null };
   document.getElementById("gate").hidden = true;
   document.querySelector("header").hidden = false;
