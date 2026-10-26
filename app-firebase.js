@@ -45,6 +45,15 @@ function mapErr(e){
   if (c === "resource-exhausted") return { code: "quota_exceeded", message: e.message };
   return { code: "unavailable", message: (e && e.message) || "Unavailable" };
 }
+// {att:{p1:true}} becomes {"att.p1":true} so only that one entry changes, never the whole map
+const isPlain = v => v && typeof v === "object" && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
+function flatten(obj, prefix = "", out = {}) {
+  for (const [k, v] of Object.entries(obj)) {
+    const key = prefix ? prefix + "." + k : k;
+    if (isPlain(v) && Object.keys(v).length) flatten(v, key, out); else out[key] = v;
+  }
+  return out;
+}
 const wrap = d => ({ id: d.id, exists: d.exists(), data: () => d.data() });
 const guard = p => p.catch(e => { throw mapErr(e); });
 
@@ -54,7 +63,7 @@ function docRef(path){
     id: d.id, path,
     get: () => guard(getDoc(d)).then(wrap),
     set: data => guard(setDoc(d, data)),
-    update: data => guard(updateDoc(d, data)),
+    update: data => guard(updateDoc(d, flatten(data))),
     delete: () => guard(deleteDoc(d)),
     onSnapshot: (next, err) => onSnapshot(d, s => next(wrap(s)), e => err && err(mapErr(e))),
     collection: sub => colRef(path + "/" + sub)
