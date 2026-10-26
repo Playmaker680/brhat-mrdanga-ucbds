@@ -215,7 +215,7 @@ const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2400); }
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
-const SCREENS=["home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member"];
+const SCREENS=["home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import"];
 const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
 const initials=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 function signOutNow(){ if(window.FB&&window.FB.signOut) window.FB.signOut(); else toast("In this preview, sign out from your Claude account. On your live site this signs you out."); }
@@ -225,7 +225,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySele
 const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
   screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
   personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
-  homeQ:"", backingUp:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
+  homeQ:"", backingUp:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
   db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, ready:false, offline:false, profiles:{}, dirty:new Set() };
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
@@ -259,8 +259,13 @@ function stats(p){
   let streak=0; for(let i=ms.length-1;i>=0;i--){ if(presentOf(ms[i]).includes(p.id)) streak++; else break; }
   const last=att[att.length-1]||null, gap=last?daysBetween(last,today()):null;
   const rate=ms.length?Math.round(100*att.length/ms.length):null;
-  const followUp=last?gap>21:daysBetween(first,today())>21;
-  return {attended:att.length,eligible:ms.length,rate,streak,last,gap,first:att[0]||null,followUp,recent:ms.slice(-12)};
+  const replies=S.messages.filter(w=>respondedOf(w).includes(p.id)).map(w=>w.date).sort();
+  const lastReply=replies[replies.length-1]||null;
+  const lastEngaged=[last,lastReply].filter(Boolean).sort().pop()||null;
+  const quietDays=lastEngaged?daysBetween(lastEngaged,today()):null;
+  const addedDays=p.createdAt?daysBetween(iso(new Date(p.createdAt)),today()):999;
+  const bucket=!lastEngaged?(addedDays>=7?"never":null):(quietDays>21?"quiet":null);
+  return {attended:att.length,eligible:ms.length,rate,streak,last,gap,first:att[0]||null,replies:replies.length,lastReply,lastEngaged,quietDays,bucket,followUp:!!bucket,recent:ms.slice(-12)};
 }
 function nextBirthday(b){
   if(!b) return null; const d=parse(b), now=parse(today());
@@ -268,8 +273,11 @@ function nextBirthday(b){
   return {date:n,days:Math.round((n-now)/86400000)};
 }
 const todaysMeeting=()=>S.meetings.filter(m=>m.date===today()).sort((a,b)=>(a.createdAt||"")<(b.createdAt||"")?1:-1)[0]||null;
+const digitsOf=v=>String(v||"").replace(/\D/g,"");
+function matches(p,q,extra){ q=q.trim().toLowerCase(); if(!q) return true; const qd=digitsOf(q);
+  return [p.name,p.phone,p.email,extra||""].join(" ").toLowerCase().includes(q)||(qd.length>=3&&digitsOf(p.phone).includes(qd)); }
 function searchPeople(q,exclude){ q=q.trim().toLowerCase(); if(!q) return [];
-  return S.people.filter(p=>!(exclude&&exclude.has(p.id))&&[p.name,p.phone,p.email].join(" ").toLowerCase().includes(q))
+  return S.people.filter(p=>!(exclude&&exclude.has(p.id))&&matches(p,q))
     .sort((a,b)=>{ const as=(a.name||"").toLowerCase().startsWith(q), bs=(b.name||"").toLowerCase().startsWith(q); return as!==bs?(as?-1:1):(a.name||"").localeCompare(b.name||""); }).slice(0,6); }
 
 // ---------- data ----------
@@ -352,7 +360,7 @@ function render(){
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
   need(keysFor());
-  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember}[S.screen]||vHome;
+  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport}[S.screen]||vHome;
   main.replaceChildren(...top, fn());
   for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
   if(aid){ const el=document.getElementById(aid); if(el){ el.focus({preventScroll:true}); try{ if(sel!=null) el.setSelectionRange(sel,sel); }catch(e){} } }
@@ -420,7 +428,7 @@ function myPeopleBox(){
           h("span",{class:"name",style:"display:block"},p.name),
           h("span",{class:"meta"},[p.role||"Student", s.last?"came "+fmtShort(s.last):"not at a meeting yet", contactsOf(p).length>1?"also "+contactsOf(p).filter(x=>x!==S.myId).map(memberName).join(", "):null].filter(Boolean).join(" · "))),
         h("div",{class:"row",style:"gap:6px;flex-wrap:nowrap"},
-          s.followUp?h("span",{class:"pill warn"},"call"):null,
+          s.followUp?h("span",{class:"pill warn"},s.bucket==="never"?"never engaged":"quiet"):null,
           S.canWrite?h("button",{class:"btn small",onclick:()=>nav("person",{personId:p.id,editing:true,fc:undefined})},"Edit"):null)); }))
       :h("p",{class:"muted",style:"margin:0"},"No one assigned to you yet. Tap “+ Add someone” to pick from the roster."));
 }
@@ -566,7 +574,7 @@ function vPerson(){
 
   return h("div",{class:"stack"},
     h("div",null, h("h1",null,p.name),
-      h("div",{class:"row",style:"margin-top:8px"}, h("span",{class:"pill"},p.role||"Student"), s.followUp?h("span",{class:"pill warn"},s.last?`Not seen in ${s.gap} days`:"Hasn't come back yet"):null),
+      h("div",{class:"row",style:"margin-top:8px"}, h("span",{class:"pill"},p.role||"Student"), s.bucket==="never"?h("span",{class:"pill warn"},"Never engaged"):s.bucket==="quiet"?h("span",{class:"pill warn"},`Quiet for ${s.quietDays} days`):null),
       h("p",{class:"lead"}, contactsOf(p).length?["Looked after by ",h("b",{style:"color:var(--ink)"},contactNames(p))]:"No one assigned yet"),
       S.myId&&S.canWrite?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":"+ I'll look after them too"):null),
     h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
@@ -733,32 +741,56 @@ function quickAdd(m){
 }
 
 // ---------- People list ----------
+const blooperText=s=>s.bucket==="never"?"never engaged":s.bucket==="quiet"?`quiet ${s.quietDays} days`:"";
+const blooperPill=s=>s.bucket?h("span",{class:"pill warn"},blooperText(s)):null;
+function engagedLine(s){
+  const bits=[]; if(s.last) bits.push(`came ${fmtShort(s.last)}`); if(s.lastReply) bits.push(`replied ${fmtShort(s.lastReply)}`);
+  return bits.length?"Last: "+bits.join(", "):"No meetings or replies yet";
+}
+function vBloopers(rows){
+  const never=rows.filter(r=>r.s.bucket==="never").sort((a,b)=>a.name.localeCompare(b.name));
+  const quiet=rows.filter(r=>r.s.bucket==="quiet").sort((a,b)=>b.s.quietDays-a.s.quietDays);
+  const item=r=>h("button",{class:"res",onclick:()=>nav("person",{personId:r.p.id})},
+    h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.p.name),
+      h("span",{class:"meta"},[engagedLine(r.s),contactsOf(r.p).length?"with "+contactNames(r.p):"no one assigned"].join(" · "))),
+    blooperPill(r.s));
+  return [
+    h("div",{class:"stack",style:"gap:8px"},
+      h("h2",{style:"font-size:1.15rem"},`1. Never engaged · ${never.length}`),
+      h("p",{class:"muted small",style:"margin:0"},"Never replied to a message and never came to a meeting. People added in the last week aren't listed yet."),
+      never.length?h("div",{class:"list"},never.map(item)):h("p",{class:"muted",style:"margin:0"},"No one here.")),
+    h("div",{class:"stack",style:"gap:8px;margin-top:10px"},
+      h("h2",{style:"font-size:1.15rem"},`2. Engaged before, now quiet · ${quiet.length}`),
+      h("p",{class:"muted small",style:"margin:0"},"Replied or came at least once, but nothing in the last 3 weeks. Longest quiet first."),
+      quiet.length?h("div",{class:"list"},quiet.map(item)):h("p",{class:"muted",style:"margin:0"},"No one here."))
+  ];
+}
 function vPeople(){
   const q=S.peopleQ.trim().toLowerCase();
   let rows=S.people.map(p=>({kind:"p",p,s:stats(p),name:p.name||"",role:p.role||"Student"}));
   const teamRows=activeTeam().map(t=>({kind:"t",t,name:memberName(t.id),role:t.title||"Team"}));
   if(!["follow","mine"].includes(S.filter)) rows=rows.concat(teamRows);
-  if(q) rows=rows.filter(r=>(r.kind==="p"?[r.p.name,r.p.phone,r.p.email,contactNames(r.p)]:[r.name,r.role]).join(" ").toLowerCase().includes(q));
+  if(q) rows=rows.filter(r=>r.kind==="p"?matches(r.p,q,contactNames(r.p)):[r.name,r.role].join(" ").toLowerCase().includes(q));
   if(S.filter==="follow") rows=rows.filter(r=>r.s.followUp);
   else if(S.filter==="mine") rows=rows.filter(r=>contactsOf(r.p).includes(S.myId));
   else if(S.filter!=="all") rows=rows.filter(r=>r.role===S.filter);
   rows.sort((a,b)=>a.name.localeCompare(b.name));
   return h("div",{class:"stack"},
-    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,S.filter==="follow"?"Potential bloopers":"Everyone"),S.canWrite?h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"Add a person"):null),
-    S.filter==="follow"?h("p",{class:"lead",style:"margin:0"},"People who haven't been checked in at a club meeting in over 3 weeks. Someone who has never been checked in shows up here 3 weeks after they were added."):null,
+    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,S.filter==="follow"?"Potential bloopers":"Everyone"),S.canWrite?h("div",{class:"row",style:"gap:8px"},window.FB&&window.FB.isAdmin||!window.FB?h("button",{class:"btn",onclick:()=>nav("import",{importText:""})},"Import from a sheet"):null,h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"Add a person")):null),
+    S.filter==="follow"?h("p",{class:"lead",style:"margin:0"},"People to reach out to, based on meeting check-ins and message replies."):null,
     h("div",{class:"row"},
       h("input",{id:"pq",type:"search",class:"grow",style:"flex:2 1 220px",placeholder:"Search name, phone, contact",value:S.peopleQ,oninput:e=>{S.peopleQ=e.target.value; render();}}),
       h("select",{id:"pf",style:"flex:1 1 180px;width:auto","aria-label":"Show",onchange:e=>{S.filter=e.target.value; render();}},
         [["all","Everyone (all roles)"],["mine","People I look after"],["follow","Potential bloopers"],...ROLES.map(r=>[r,r+"s"])].map(([v,l])=>h("option",{value:v,selected:S.filter===v?"selected":null},l)))),
-    h("p",{class:"muted small",style:"margin:0"},plural(rows.length,"person","people")),
+    S.filter==="follow"?vBloopers(rows):[h("p",{class:"muted small",style:"margin:0"},plural(rows.length,"person","people")),
     rows.length?h("div",{class:"list"},rows.map(r=>r.kind==="p"
       ? h("button",{class:"res",onclick:()=>nav("person",{personId:r.p.id})},
           h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.p.name),h("span",{class:"meta"},[r.role,contactsOf(r.p).length?"with "+contactNames(r.p):null].filter(Boolean).join(" · "))),
-          r.s.followUp?h("span",{class:"pill warn"},r.s.last?`${r.s.gap} days`:"not back"):h("span",{class:"meta"},r.s.last?"came "+fmtShort(r.s.last):"new"))
+          r.s.followUp?blooperPill(r.s):h("span",{class:"meta"},r.s.last?"came "+fmtShort(r.s.last):r.s.lastReply?"replied "+fmtShort(r.s.lastReply):"new"))
       : h("div",{class:"res",style:"cursor:default"},
           h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.name+(r.t.id===S.myId?" (you)":"")),h("span",{class:"meta"},`${r.role} · team member · looks after ${plural(S.people.filter(p=>contactsOf(p).includes(r.t.id)).length,"person","people")}`)),
           h("span",{class:"pill"},"Team"))))
-      :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search or filter.":"Add the first person from the home screen."));
+      :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search or filter.":"Add the first person from the home screen.")]);
 }
 
 // ---------- Messages ----------
@@ -819,7 +851,7 @@ function vMessage(){
   const hist=id=>others.filter(x=>respondedOf(x).includes(id)).length;
   const q=S.msgQ.trim().toLowerCase();
   let list=S.people.map(p=>({p,n:hist(p.id),r:resp.has(p.id)}));
-  if(q) list=list.filter(x=>[x.p.name,x.p.phone].join(" ").toLowerCase().includes(q));
+  if(q) list=list.filter(x=>matches(x.p,q));
   if(S.msgFilter==="yes") list=list.filter(x=>x.r); else if(S.msgFilter==="no") list=list.filter(x=>!x.r);
   list.sort((a,b)=>b.n-a.n||byName(a.p,b.p));
   const count=[...resp].filter(id=>personById(id)).length;
@@ -862,7 +894,7 @@ function vInsights(){
   const monthStart=today().slice(0,8)+"01";
   const newThisMonth=rows.filter(r=>(r.s.first||(r.p.createdAt||"").slice(0,10))>=monthStart).length;
   const active30=rows.filter(r=>r.s.last&&r.s.gap<=30).length;
-  const follow=rows.filter(r=>r.s.followUp).sort((a,b)=>(b.s.gap??999)-(a.s.gap??999));
+  const follow=rows.filter(r=>r.s.followUp).sort((a,b)=>(a.s.bucket===b.s.bucket?0:a.s.bucket==="never"?-1:1)||((b.s.quietDays??0)-(a.s.quietDays??0)));
   const bdays=S.people.map(p=>({p,b:nextBirthday(p.birthday)})).filter(x=>x.b&&x.b.days<=30).sort((a,b)=>a.b.days-b.b.days);
   const cooks={}; ms.forEach(m=>(m.prasadam||[]).forEach(x=>{ if(x.cook) cooks[x.cook]=(cooks[x.cook]||0)+1; }));
   const cookList=Object.entries(cooks).sort((a,b)=>b[1]-a[1]).slice(0,8);
@@ -875,7 +907,7 @@ function vInsights(){
     h("p",{class:"muted",style:"margin:-14px 0 0"},ROLES.map(r=>plural(S.people.filter(p=>(p.role||"Student")===r).length,r)).join(" · ")),
     h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Attendance by meeting"),ms.length?chart(ms.slice(-16),countOf):h("p",{class:"muted"},"Record meetings to see the trend.")),
     h("div",{class:"cols"},
-      card("Needs a call","Not seen in three weeks or more.",follow.map(({p,s})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},p.name),h("span",{class:"meta"},contactsOf(p).length?"Looked after by "+contactNames(p):"No one assigned")),h("span",{class:"pill warn"},s.last?`${s.gap} days`:"not back"))),"Everyone has been by recently."),
+      card("Potential bloopers",`${follow.filter(r=>r.s.bucket==="never").length} never engaged · ${follow.filter(r=>r.s.bucket==="quiet").length} gone quiet`,follow.slice(0,8).map(({p,s})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},p.name),h("span",{class:"meta"},contactsOf(p).length?"Looked after by "+contactNames(p):"No one assigned")),blooperPill(s))).concat(follow.length>8?[h("button",{class:"res",onclick:()=>nav("people",{filter:"follow"})},h("span",{class:"name",style:"color:var(--blue)"},`See all ${follow.length} →`))]:[]),"Everyone is engaged right now."),
       card("Birthdays coming up","Next 30 days.",bdays.map(({p,b})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"pill gold"},b.days===0?"today":fmtShort(iso(b.date))))),"No birthdays soon."),
       card("Who has been cooking","Times cooked across all meetings.",cookList.map(([n,c])=>h("div",{class:"res",style:"cursor:default"},h("span",{class:"name"},n),h("span",{class:"meta"},plural(c,"time")))),"No prasadam recorded yet.")),
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Recent meetings"),
@@ -912,6 +944,73 @@ async function exportCsv(){
     return [p.name,p.role||"Student",p.phone,p.email,p.birthday,p.schedule,contactNames(p),s.attended,s.rate??"",s.streak,s.last||"",memberName(p.createdBy)].map(esc).join(",");}));
   try{ await dl.save({filename:`club-roster-${today()}.csv`,data:lines.join("\n")}); }
   catch(e){ if(e&&e.code!=="declined"&&e.code!=="cancelled") toast("The export didn't go through"); }
+}
+
+// ---------- Import from a sheet ----------
+const fmtPhone=v=>{ let d=digitsOf(v); if(d.length===11&&d[0]==="1") d=d.slice(1); return d.length===10?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:String(v||"").trim(); };
+const phoneKey=v=>{ const d=digitsOf(v); return d.length>=10?d.slice(-10):""; };
+const tidyName=n=>String(n||"").replace(/\s+/g," ").trim().split(" ").map(w=>w&&(w===w.toLowerCase()||(w===w.toUpperCase()&&w.length>1))?w[0].toUpperCase()+w.slice(1).toLowerCase():w).join(" ");
+function parseSheetDate(v){ const m=String(v||"").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/); if(!m) return null;
+  const y=+m[3]<100?2000+ +m[3]:+m[3]; const d=new Date(y,+m[1]-1,+m[2],+(m[4]||12),+(m[5]||0),+(m[6]||0)); return isNaN(d)?null:d; }
+function parseImport(text){
+  const existing=new Map(S.people.map(p=>[phoneKey(p.phone),p]).filter(([k])=>k));
+  const seen=new Set(), rows=[];
+  for(const raw of text.split(/\r?\n/)){
+    if(!raw.trim()) continue;
+    const cells=(raw.includes("\t")?raw.split("\t"):raw.split(",")).map(c=>c.trim());
+    const pi=cells.findIndex(c=>digitsOf(c).length>=10&&digitsOf(c).length<=11&&!/\d{1,2}\/\d{1,2}\/\d{2,4}/.test(c));
+    if(pi<0) continue;
+    const di=cells.findIndex(c=>parseSheetDate(c));
+    const texts=cells.map((c,i)=>({c,i})).filter(x=>x.i!==pi&&x.i!==di&&x.c&&!/^\d+$/.test(x.c));
+    const before=texts.filter(x=>x.i<pi);
+    const nameCell=before.length?before[before.length-1]:texts[0];
+    const collector=before.length>1?before.slice(0,-1).map(x=>x.c).join(" "):"";
+    const key=phoneKey(cells[pi]);
+    const row={name:tidyName(nameCell?nameCell.c:""),phone:fmtPhone(cells[pi]),key,date:di>=0?parseSheetDate(cells[di]):null,collector:collector.replace(/\s+/g," ").trim()};
+    row.status=existing.has(key)?"exists":seen.has(key)?"repeat":"new";
+    if(row.status==="exists") row.match=existing.get(key).name;
+    seen.add(key); rows.push(row);
+  }
+  return rows;
+}
+function teamByName(n){ if(!n) return null; const q=n.toLowerCase();
+  return activeTeam().find(t=>{ const tn=memberName(t.id).toLowerCase(); return tn&&(tn===q||tn.startsWith(q)||q.startsWith(tn)); })||null; }
+async function runImport(rows){
+  const todo=rows.filter(r=>r.status==="new"); if(!todo.length) return;
+  S.importing={done:0,total:todo.length}; render();
+  let ok=0;
+  for(const r of todo){
+    const t=teamByName(r.collector), at=(r.date||new Date()).toISOString();
+    const person={name:r.name||`Unknown (${r.phone.replace(/[()]/g,"").replace(" ","-")})`,phone:r.phone,email:"",schedule:"",birthday:"",role:"Student",contactIds:t?[t.id]:[],contactId:"",
+      createdAt:at,createdBy:S.myId||null,importedAt:new Date().toISOString(),signupBy:r.collector||"",...stamp()};
+    const noteText=[r.date?`Signed up ${fmtShort(iso(r.date))}, ${r.date.getFullYear()} via sign-up sheet`:"Imported from sign-up sheet (no signup date)",r.collector?`collected by ${r.collector}`:null,!r.name?"name was missing on the sheet":null].filter(Boolean).join(" · ");
+    const done=await write(async db=>{ const ref=await db.collection("people").add(person);
+      await db.collection("notes").add({personId:ref.id,text:noteText,by:S.myId||null,createdAt:new Date().toISOString()}); });
+    if(!done) break; ok++; S.importing.done=ok; render();
+  }
+  S.importing=null; S.importText=""; S.dirty.delete("imp_text"); render();
+  toast(ok===todo.length?`${ok} people added to the roster`:`Stopped after ${ok} of ${todo.length}. Paste the same rows again to finish; anyone already added is skipped.`);
+}
+function vImport(){
+  const rows=S.importText.trim()?parseImport(S.importText):[];
+  const n=k=>rows.filter(r=>r.status===k).length;
+  const label={new:"Will be added",exists:"Already on roster",repeat:"Repeated in sheet"};
+  return h("div",{class:"stack",style:"gap:16px"},
+    h("div",null,h("h1",null,"Import from a sheet"),h("p",{class:"lead"},"Copy the rows from Google Sheets (including the date, name and phone columns) and paste them below. Nothing is saved until you press Add.")),
+    h("textarea",{id:"imp_text",style:"min-height:150px;font-family:ui-monospace,Menlo,monospace;font-size:.85rem",placeholder:"8/27/2026 18:54:15\t\tLarissa\t2099003559",value:S.importText,"aria-label":"Paste rows from your sheet",oninput:e=>{S.importText=e.target.value; render();}}),
+    rows.length?h("div",{class:"stack",style:"gap:10px"},
+      h("div",{class:"row"},h("span",{class:"pill"},`${n("new")} new`),n("exists")?h("span",{class:"pill gold"},`${n("exists")} already on roster`):null,n("repeat")?h("span",{class:"pill gold"},`${n("repeat")} repeated`):null,
+        rows.some(r=>!r.name)?h("span",{class:"pill warn"},`${rows.filter(r=>!r.name).length} missing a name`):null),
+      h("p",{class:"muted small",style:"margin:0"},"People already on the roster (same phone number) and repeats are skipped. Collectors who match a team member's name become that person's contact."),
+      h("div",{class:"tablewrap"},h("table",null,
+        h("thead",null,h("tr",null,h("th",null,"Name"),h("th",null,"Phone"),h("th",null,"Signed up"),h("th",null,"Collected by"),h("th",null,"Status"))),
+        h("tbody",null,rows.map(r=>{ const t=teamByName(r.collector); return h("tr",{style:r.status!=="new"?"opacity:.55":null},
+          h("td",{style:"font-weight:700"},r.name||h("span",{style:"color:var(--alert)"},"(no name)")),h("td",null,r.phone),h("td",null,r.date?fmtShort(iso(r.date)):"—"),
+          h("td",null,r.collector?(t?`${r.collector} → contact`:r.collector):"—"),
+          h("td",null,label[r.status]+(r.match?` (${r.match})`:""))); })))),
+      S.importing?h("p",{style:"font-weight:700"},`Adding ${S.importing.done} of ${S.importing.total}…`)
+        :h("button",{class:"btn primary block",disabled:!n("new")||!S.canWrite||null,onclick:()=>runImport(rows)},n("new")?`Add ${plural(n("new"),"person","people")} to the roster`:"Nothing new to add"))
+    :S.importText.trim()?h("p",{class:"muted"},"No rows with a phone number found. Make sure you copied the phone column."):null);
 }
 
 // ---------- Full backup ----------
@@ -1009,7 +1108,7 @@ function vMember(){
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},`Looks after · ${people.length}`),
       people.length?h("div",{class:"list"},people.map(p=>{ const s=stats(p); return h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},p.name),h("span",{class:"meta"},[p.role||"Student",s.last?"came "+fmtShort(s.last):"not at a meeting yet"].join(" · "))),
-        s.followUp?h("span",{class:"pill warn"},"call"):h("span",{class:"meta"},"View →")); }))
+        s.followUp?blooperPill(s):h("span",{class:"meta"},"View →")); }))
         :h("p",{class:"muted",style:"margin:0"},"No one assigned yet.")),
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Recent activity"),
       !loaded()?h("p",{class:"muted",style:"margin:0"},"Loading activity…"):act.length?h("div",{class:"list"},act.slice(0,12).map(x=>h("button",{class:"res",onclick:()=>x.pid&&personById(x.pid)?nav("person",{personId:x.pid}):x.mid?nav("meeting",{meetingId:x.mid}):x.msg?nav("message",{msgId:x.msg,msgQ:"",msgFilter:"all"}):null},
@@ -1080,6 +1179,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=6"></script>
+<script type="module" src="./app-firebase.js?v=7"></script>
 </body>
 </html>
