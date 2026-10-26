@@ -305,7 +305,7 @@ const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[]
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
 const clearDirty=el=>{ if(el) el.querySelectorAll("[id]").forEach(x=>S.dirty.delete(x.id)); };
-function nav(screen, patch){ S.menu=false; S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId,memberId:S.memberId,msgId:S.msgId,filter:S.filter}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null,allAct:false},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function nav(screen, patch){ S.menu=false; S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId,memberId:S.memberId,msgId:S.msgId,filter:S.filter}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null,allAct:false,editMeeting:null},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function back(){ const p=S.stack.pop()||{screen:"home"}; Object.assign(S,p,{editing:false,confirm:null,quickAdd:null}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function goTab(t){ S.stack=[]; Object.assign(S,{screen:t,editing:false,confirm:null,quickAdd:null,menu:false,homeQ:"",peopleQ:"",assigning:false},t==="people"?{filter:"all"}:{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function home(){ S.stack=[]; Object.assign(S,{screen:"home",editing:false,confirm:null,quickAdd:null,homeQ:""}); S.dirty.clear(); render(); window.scrollTo(0,0); }
@@ -824,7 +824,18 @@ function vMeeting(){
     h("button",{class:"btn",type:"submit",style:"align-self:flex-start"},"Add prasadam"));
 
   return h("div",{class:"stack"},
-    h("div",null,h("h1",null,m.title||"Club meeting"),
+    S.editMeeting===m.id&&S.canWrite?(()=>{ const f=h("form",{class:"card",style:"border:2px solid var(--blue)",onsubmit:async e=>{
+        e.preventDefault(); const title=document.getElementById("em_title").value.trim()||"Club meeting", date=document.getElementById("em_date").value;
+        if(!date){ toast("Pick a date"); return; }
+        if(await write(db=>db.doc("meetings/"+m.id).update({title,date,...stamp()}),"Meeting updated")){ S.editMeeting=null; clearDirty(f); render(); } }},
+        h("h2",{style:"font-size:1.1rem"},"Edit meeting"),
+        h("label",{class:"f"},"Name of the meeting",h("input",{id:"em_title",class:"big",value:m.title||"",placeholder:"e.g. Wednesday Gita class",autocomplete:"off"})),
+        h("label",{class:"f"},"Date",h("input",{id:"em_date",type:"date",value:m.date||today()})),
+        h("p",{class:"muted small",style:"margin:0"},"Check-ins, the talk, notes and prasadam stay with this meeting."),
+        h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"Save"),h("button",{class:"btn",type:"button",onclick:()=>{ S.editMeeting=null; S.dirty.delete("em_title"); S.dirty.delete("em_date"); render(); }},"Cancel")));
+      return f; })()
+    :h("div",null,h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("h1",null,m.title||"Club meeting"),
+        S.canWrite?h("button",{class:"btn small",onclick:()=>{ S.editMeeting=m.id; render(); setTimeout(()=>document.getElementById("em_title")?.focus(),0); }},"Edit name or date"):null),
       h("p",{class:"lead"},`${fmt(m.date)} · started by ${memberName(m.by)} · `,h("button",{class:"link",style:"padding:0",onclick:()=>nav("meetings")},"switch meeting"))),
     h("div",{class:"box stack",style:"gap:10px"},
       h("label",{class:"f",for:"att_q",style:"font-size:1.1rem"},"Check someone in"),
@@ -1426,6 +1437,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=10"></script>
+<script type="module" src="./app-firebase.js?v=11"></script>
 </body>
 </html>
