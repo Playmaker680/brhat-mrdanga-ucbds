@@ -225,7 +225,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySele
 const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
   screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
   personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
-  homeQ:"", assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
+  homeQ:"", backingUp:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
   db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, ready:false, offline:false, profiles:{}, dirty:new Set() };
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
@@ -260,8 +260,7 @@ function stats(p){
   const last=att[att.length-1]||null, gap=last?daysBetween(last,today()):null;
   const rate=ms.length?Math.round(100*att.length/ms.length):null;
   const followUp=last?gap>21:daysBetween(first,today())>21;
-  const prog=S.progress.filter(x=>x.personId===p.id).sort((a,b)=>(a.date+(a.createdAt||""))<(b.date+(b.createdAt||""))?1:-1);
-  return {attended:att.length,eligible:ms.length,rate,streak,last,gap,first:att[0]||null,followUp,prog,recent:ms.slice(-12)};
+  return {attended:att.length,eligible:ms.length,rate,streak,last,gap,first:att[0]||null,followUp,recent:ms.slice(-12)};
 }
 function nextBirthday(b){
   if(!b) return null; const d=parse(b), now=parse(today());
@@ -281,7 +280,7 @@ async function init(){
   if(!db){ S.ready=true; S.offline=true; render(); return; }
   const sub=(name)=>db.collection(name).onSnapshot(snap=>{ S[name]=snap.docs.map(d=>({id:d.id,...d.data()})); S.ready=true; render(); },
     err=>{ if(err.code==="revoked"){ S.offline=true; render(); } });
-  ["people","meetings","progress","notes","team","messages"].forEach(sub);
+  ["people","meetings","team","messages"].forEach(sub);
   if(window.FB&&window.FB.isAdmin) sub("members");
   db.doc("config/app").onSnapshot(s=>{ S.config=s.exists?s.data():{}; render(); },()=>{});
   if(S.myId&&S.canWrite){ try{ const ref=db.doc("team/"+S.myId), s=await ref.get(); const role=(window.FB&&TEAM_ROLES.includes(window.FB.role))?window.FB.role:""; if(!s.exists) await ref.set({name:S.meName,title:role,account:true,joinedAt:new Date().toISOString()}); else if(role&&!TEAM_ROLES.includes((s.data()||{}).title)) await ref.update({title:role});
@@ -312,6 +311,30 @@ function setPresent(m,pid,on){
     if(pendingRoll[m.id]&&pendingRoll[m.id][pid]===on) delete pendingRoll[m.id][pid]; if(!ok) render(); });
 }
 
+// ---------- on-demand loading ----------
+// Notes and reading/chanting logs are the biggest collections, so they load only for the
+// person or teammate on screen. This keeps database reads low as the club grows.
+const watches={}, cache={};
+function rebuildLazy(){
+  const n=new Map(), g=new Map();
+  for(const [k,docs] of Object.entries(cache)){ const m=k.startsWith("notes|")?n:g; for(const d of docs) m.set(d.id,d); }
+  S.notes=[...n.values()]; S.progress=[...g.values()];
+}
+function keysFor(){
+  if((S.screen==="person"||S.screen==="notes")&&S.personId) return ["notes|personId|"+S.personId,"progress|personId|"+S.personId];
+  if(S.screen==="member"&&S.memberId) return ["notes|by|"+S.memberId,"progress|by|"+S.memberId];
+  return [];
+}
+function need(keys){
+  if(!S.db) return;
+  for(const k of Object.keys(watches)) if(!keys.includes(k)){ try{ watches[k](); }catch(e){} delete watches[k]; delete cache[k]; }
+  for(const k of keys){ if(watches[k]) continue;
+    const [coll,field,val]=k.split("|");
+    watches[k]=S.db.collection(coll).where(field,"==",val).onSnapshot(snap=>{ cache[k]=snap.docs.map(d=>({id:d.id,...d.data()})); rebuildLazy(); render(); },()=>{ cache[k]=cache[k]||[]; render(); }); }
+  rebuildLazy();
+}
+const loaded=()=>keysFor().every(k=>k in cache);
+
 // ---------- shell ----------
 const main=document.getElementById("main");
 function render(){
@@ -328,6 +351,7 @@ function render(){
   const top=[];
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
+  need(keysFor());
   const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember}[S.screen]||vHome;
   main.replaceChildren(...top, fn());
   for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
@@ -366,7 +390,8 @@ function vHome(){
         !res.length?h("div",{class:"res",style:"cursor:default"},h("span",{class:"muted"},"No one by that name.")):null) : null),
     (follow||bdays) ? h("div",{class:"shortcuts"},
       follow?h("button",{class:"pill warn",onclick:()=>nav("people",{filter:"follow"})},`${plural(follow,"potential blooper")} to call`):null,
-      bdays?h("button",{class:"pill gold",onclick:()=>nav("insights")},`${plural(bdays,"birthday")} in the next 2 weeks`):null) : null,
+      bdays?h("button",{class:"pill gold",onclick:()=>nav("insights")},`${plural(bdays,"birthday")} in the next 2 weeks`):null,
+      S.ready&&backupDue()?h("button",{class:"pill gold",onclick:()=>nav("insights")},"Monthly backup due"):null) : (S.ready&&backupDue()?h("div",{class:"shortcuts"},h("button",{class:"pill gold",onclick:()=>nav("insights")},"Monthly backup due")):null),
     h("h2",{style:"margin-top:34px;font-size:1.05rem;color:var(--muted)"},"More"),
     h("div",{class:"more"},
       h("button",{onclick:()=>nav("people",{filter:"all"})},h("b",null,"View Everyone"),h("span",null,"Roster and team, all roles")),
@@ -552,7 +577,7 @@ function vPerson(){
     h("div",{class:"box stack",style:"gap:10px"},
       h("div",{class:"row",style:"justify-content:space-between"},h("h2",{style:"font-size:1.1rem"},`Team notes · ${notes.length}`),
         h("button",{class:"btn primary small",onclick:()=>nav("notes",{personId:p.id})},notes.length?"Open notes":"Add a note")),
-      notes.length?h("ul",{class:"bullets"},notes.slice(0,3).map(n=>h("li",null,h("span",null,n.text),h("span",{class:"by"},`${memberName(n.by)} · ${fmtWhen(n.createdAt)}`))))
+      !loaded()?h("p",{class:"muted",style:"margin:0"},"Loading notes…"):notes.length?h("ul",{class:"bullets"},notes.slice(0,3).map(n=>h("li",null,h("span",null,n.text),h("span",{class:"by"},`${memberName(n.by)} · ${fmtWhen(n.createdAt)}`))))
         :h("p",{class:"muted",style:"margin:0"},"No notes yet."),
       notes.length>3?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>nav("notes",{personId:p.id})},`See all ${notes.length} notes`):null),
     sec("att","Club attendance", s.attended?`${plural(s.attended,"meeting")} · last ${fmtShort(s.last)}`:"Not yet",[
@@ -597,7 +622,7 @@ function vNotes(){
   return h("div",{class:"stack",style:"gap:20px"},
     h("div",null,h("h1",null,`Notes on ${p.name}`),h("p",{class:"lead"},"Each point shows who added it and when. Newest first.")),
     S.canWrite?f:null,
-    days.length?days.map(g=>h("section",{class:"stack",style:"gap:6px"},
+    !loaded()?h("p",{class:"muted"},"Loading notes…"):days.length?days.map(g=>h("section",{class:"stack",style:"gap:6px"},
       h("h2",{style:"font-size:1rem;color:var(--muted)"},g.d==="—"?"Undated":parse(g.d).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})),
       h("ul",{class:"bullets"},g.items.map(n=>h("li",null,h("span",null,n.text),
         h("span",{class:"by"},`${memberName(n.by)} · ${n.createdAt?new Date(n.createdAt).toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}):""}`,
@@ -845,6 +870,7 @@ function vInsights(){
   const card=(title,sub,items,empty)=>h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},title),sub?h("p",{class:"muted small",style:"margin:0"},sub):null,items.length?h("div",{class:"list"},items):h("p",{class:"muted",style:"margin:0"},empty));
   return h("div",{class:"stack",style:"gap:28px"},
     h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"Insights"),h("button",{class:"btn",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)")),
+    backupBox(),
     h("div",{class:"stats"},stat(S.people.length,"on the roster"),stat(active30,"came in the last 30 days"),stat(avg4==null?"—":avg4,"average, last 4 meetings"),stat(newThisMonth,"new this month")),
     h("p",{class:"muted",style:"margin:-14px 0 0"},ROLES.map(r=>plural(S.people.filter(p=>(p.role||"Student")===r).length,r)).join(" · ")),
     h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Attendance by meeting"),ms.length?chart(ms.slice(-16),countOf):h("p",{class:"muted"},"Record meetings to see the trend.")),
@@ -888,6 +914,72 @@ async function exportCsv(){
   catch(e){ if(e&&e.code!=="declined"&&e.code!=="cancelled") toast("The export didn't go through"); }
 }
 
+// ---------- Full backup ----------
+const BACKUP_COLLECTIONS=["people","notes","progress","meetings","messages","team","members","config"];
+async function fetchEverything(){
+  const out={};
+  for(const c of BACKUP_COLLECTIONS){
+    try{ const snap=await S.db.collection(c).get(); out[c]=snap.docs.map(d=>({id:d.id,...d.data()})); }
+    catch(e){ out[c]=[]; }
+  }
+  return out;
+}
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve(window.XLSX);
+  return new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; sc.onload=()=>res(window.XLSX); sc.onerror=()=>rej(new Error("load")); document.head.append(sc); });
+}
+async function backup(kind){
+  if(!S.db){ toast("Sign in to back up"); return; }
+  const dl=await claude.use("downloads"); if(!dl){ toast("Downloads aren't available in this view"); return; }
+  S.backingUp=kind; render();
+  try{
+    const D=await fetchEverything(), stamp8=today();
+    const pname=id=>((D.people.find(p=>p.id===id)||{}).name)||"(removed)";
+    const tname=id=>{ const t=D.team.find(x=>x.id===id); return (t&&t.name)||memberName(id); };
+    if(kind==="json"){
+      const body=JSON.stringify({app:"Bṛhat Mṛdaṅga Database",exportedAt:new Date().toISOString(),exportedBy:tname(S.myId),collections:D},null,2);
+      await dl.save({filename:`brhat-mrdanga-full-backup-${stamp8}.json`,data:new Blob([body],{type:"application/json"})});
+    } else {
+      const X=await loadXLSX();
+      const pres=m=>applyMap(m.present,m.att), repl=m=>applyMap(m.responded,m.replies);
+      const ms=D.meetings.slice().sort((a,b)=>a.date<b.date?-1:1), ws=D.messages.slice().sort((a,b)=>a.date<b.date?-1:1);
+      const contacts=p=>(Array.isArray(p.contactIds)?p.contactIds:(p.contactId?[p.contactId]:[])).map(tname).join(", ");
+      const sheets={
+        "People":D.people.slice().sort(byName).map(p=>({ID:p.id,Name:p.name,Role:p.role||"Student",Phone:p.phone||"",Email:p.email||"",Birthday:p.birthday||"","Class schedule":p.schedule||"","Looked after by":contacts(p),
+          "Meetings attended":ms.filter(m=>pres(m).includes(p.id)).length,"Added by":tname(p.createdBy),"Added on":(p.createdAt||"").slice(0,10)})),
+        "Notes":D.notes.slice().sort((a,b)=>(a.createdAt||"")<(b.createdAt||"")?-1:1).map(n=>({When:n.createdAt?new Date(n.createdAt).toLocaleString():"",Person:pname(n.personId),Note:n.text,"Added by":tname(n.by)})),
+        "Reading":D.progress.filter(x=>x.kind==="reading"||(!x.kind&&x.reading)).map(x=>({Date:x.date,Person:pname(x.personId),Book:x.book||x.reading||"",Pages:x.pages??"",Note:x.note||"","Logged by":tname(x.by)})),
+        "Chanting":D.progress.filter(x=>x.kind==="chanting"||(!x.kind&&x.chanting!=null)).map(x=>({Date:x.date,Person:pname(x.personId),"Rounds a day":x.rounds??x.chanting,"Logged by":tname(x.by)})),
+        "Meetings":ms.map(m=>({Date:m.date,Meeting:m.title||"Club meeting",Speaker:m.speaker||"",Topic:m.topic||"",Notes:m.notes||"",Came:pres(m).length,"Started by":tname(m.by)})),
+        "Attendance":ms.flatMap(m=>pres(m).map(id=>({Date:m.date,Meeting:m.title||"Club meeting",Person:pname(id)}))),
+        "Prasadam":ms.flatMap(m=>(m.prasadam||[]).map(x=>({Date:m.date,Meeting:m.title||"Club meeting",Prasadam:x.dish,"Cooked by":x.cook||"","Logged by":tname(x.by)}))),
+        "Message weeks":ws.map(w=>({Date:w.date,Name:w.title,Replied:repl(w).length,"Created by":tname(w.by)})),
+        "Message replies":D.people.slice().sort(byName).map(p=>{ const row={Name:p.name}; let n=0; ws.forEach(w=>{ const y=repl(w).includes(p.id); if(y) n++; row[`${w.date} ${w.title}`.slice(0,60)]=y?"Yes":"No"; }); row["Times replied"]=n; return row; }),
+        "Team":D.team.map(t=>({Name:t.name||"",Role:t.title||"",Email:t.email||"","Last signed in":(t.lastSeen||"").slice(0,10),Status:t.removed?"Removed":"Active"})),
+        "Access list":D.members.map(m=>({Email:m.id,Role:m.role||"",Admin:m.admin?"Yes":"No"}))
+      };
+      const wb=X.utils.book_new();
+      for(const [name,rows] of Object.entries(sheets)) X.utils.book_append_sheet(wb, rows.length?X.utils.json_to_sheet(rows):X.utils.aoa_to_sheet([["(nothing yet)"]]), name);
+      const buf=X.write(wb,{bookType:"xlsx",type:"array"});
+      await dl.save({filename:`brhat-mrdanga-full-backup-${stamp8}.xlsx`,data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})});
+    }
+    await write(db=>db.doc("config/app").set({...S.config,lastBackup:{at:new Date().toISOString(),by:S.myId||null,kind}}),"Backup downloaded");
+  }catch(e){ if(!(e&&(e.code==="declined"||e.code==="cancelled"))) toast("The backup didn't finish. Check your connection and try again."); }
+  S.backingUp=null; render();
+}
+const backupDue=()=>{ const b=S.config.lastBackup; return !b||!b.at||(Date.now()-new Date(b.at))>30*86400000; };
+function backupBox(){
+  const b=S.config.lastBackup;
+  return h("div",{class:"box stack",style:"gap:10px;border:2px solid "+(backupDue()?"var(--marigold)":"var(--line)")},
+    h("h2",{style:"font-size:1.1rem"},"Monthly backup"),
+    h("p",{style:"margin:0"},b&&b.at?`Last backup ${ago(b.at)} by ${memberName(b.by)}.`:"No backup yet.",backupDue()?" A backup is due.":""),
+    h("p",{class:"muted small",style:"margin:0"},"Downloads every record: people, notes, reading and chanting logs, meetings, attendance, prasadam, message logs, team and the access list. Save the files somewhere safe, like a shared Google Drive folder."),
+    h("div",{class:"row"},
+      h("button",{class:"btn primary",disabled:S.backingUp||null,onclick:()=>backup("xlsx")},S.backingUp==="xlsx"?"Preparing…":"Download everything (Excel)"),
+      h("button",{class:"btn",disabled:S.backingUp||null,onclick:()=>backup("json")},S.backingUp==="json"?"Preparing…":"Download everything (JSON)")),
+    h("p",{class:"muted small",style:"margin:0"},"Excel is for reading. JSON is the exact copy, which is what you'd use to restore the database if something ever went wrong."));
+}
+
 // ---------- Team ----------
 function ago(isoStr){ if(!isoStr) return ""; const d=Math.floor((Date.now()-new Date(isoStr))/86400000);
   return d<=0?"today":d===1?"yesterday":d<7?`${d} days ago`:d<60?`${Math.round(d/7)} weeks ago`:fmtShort(isoStr); }
@@ -902,7 +994,7 @@ function activityOf(uid){
   S.messages.forEach(m=>{ if(m.by===uid) a.push({at:m.createdAt||m.date,text:`Created message week “${m.title}”`,msg:m.id}); });
   return a.filter(x=>x.at).sort((x,y)=>x.at<y.at?1:-1);
 }
-const lastActive=t=>{ const act=activityOf(t.id)[0]; const c=[t.lastSeen,act&&act.at].filter(Boolean).sort(); return c[c.length-1]||null; };
+const lastActive=t=>t.lastSeen||null;
 function vMember(){
   const t=S.team.find(x=>x.id===S.memberId);
   if(!t) return h("div",{class:"empty"},h("b",null,S.ready?"This team member isn't on the team":"Loading…"));
@@ -920,7 +1012,7 @@ function vMember(){
         s.followUp?h("span",{class:"pill warn"},"call"):h("span",{class:"meta"},"View →")); }))
         :h("p",{class:"muted",style:"margin:0"},"No one assigned yet.")),
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Recent activity"),
-      act.length?h("div",{class:"list"},act.slice(0,12).map(x=>h("button",{class:"res",onclick:()=>x.pid&&personById(x.pid)?nav("person",{personId:x.pid}):x.mid?nav("meeting",{meetingId:x.mid}):x.msg?nav("message",{msgId:x.msg,msgQ:"",msgFilter:"all"}):null},
+      !loaded()?h("p",{class:"muted",style:"margin:0"},"Loading activity…"):act.length?h("div",{class:"list"},act.slice(0,12).map(x=>h("button",{class:"res",onclick:()=>x.pid&&personById(x.pid)?nav("person",{personId:x.pid}):x.mid?nav("meeting",{meetingId:x.mid}):x.msg?nav("message",{msgId:x.msg,msgQ:"",msgFilter:"all"}):null},
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block;font-weight:400"},x.text)),h("span",{class:"meta"},fmtWhen(x.at)))))
         :h("p",{class:"muted",style:"margin:0"},"Nothing logged yet.")),
     isAdmin&&t.id!==S.myId?(S.confirm==="rm:"+t.id?h("div",{class:"confirm"},
@@ -950,7 +1042,7 @@ function vTeam(){
     team.length?h("div",{class:"list"},team.map(t=>{ const c=S.people.filter(p=>contactsOf(p).includes(t.id)).length, last=lastActive(t);
       return h("button",{class:"res",onclick:()=>nav("member",{memberId:t.id})},
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},memberName(t.id)+(t.id===S.myId?" (you)":"")),
-          h("span",{class:"meta"},[t.title||"No role yet",`looks after ${plural(c,"person","people")}`,last?"active "+ago(last):null].filter(Boolean).join(" · "))),
+          h("span",{class:"meta"},[t.title||"No role yet",`looks after ${plural(c,"person","people")}`,last?"signed in "+ago(last):null].filter(Boolean).join(" · "))),
         h("span",{class:"meta",style:"color:var(--blue);font-weight:700"},"View →")); }))
       :h("div",{class:"empty"},"No one has joined yet."),
     S.myId?h("button",{class:"btn",style:"align-self:flex-start",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"):null, clubForm,
@@ -988,6 +1080,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=5"></script>
+<script type="module" src="./app-firebase.js?v=6"></script>
 </body>
 </html>

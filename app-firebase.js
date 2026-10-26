@@ -3,7 +3,7 @@
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const card = document.getElementById("gateCard");
 const CLUB = "Bṛhat Mṛdaṅga Database";
@@ -69,13 +69,20 @@ function docRef(path){
     collection: sub => colRef(path + "/" + sub)
   };
 }
+function queryRef(q){
+  return {
+    get: () => guard(getDocs(q)).then(s => ({ docs: s.docs.map(wrap), size: s.size, empty: s.empty })),
+    onSnapshot: (next, err) => onSnapshot(q, s => next({ docs: s.docs.map(wrap), size: s.size, empty: s.empty }), e => err && err(mapErr(e)))
+  };
+}
 function colRef(path){
   const c = collection(fs, path);
   return {
     path,
+    ...queryRef(c),
+    where: (field, op, value) => queryRef(query(c, where(field, op, value))),
     doc: id => id ? docRef(path + "/" + id) : docRef(doc(c).path),
-    add: data => guard(addDoc(c, data)).then(r => docRef(r.path)),
-    onSnapshot: (next, err) => onSnapshot(c, s => next({ docs: s.docs.map(wrap), size: s.size, empty: s.empty }), e => err && err(mapErr(e)))
+    add: data => guard(addDoc(c, data)).then(r => docRef(r.path))
   };
 }
 const db = { doc: docRef, collection: colRef };
