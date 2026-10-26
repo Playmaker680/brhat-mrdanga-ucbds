@@ -72,7 +72,7 @@ function showSignIn(message, forced){
 // Firestore errors -> the error codes the app already understands
 function mapErr(e){
   const c = e && e.code;
-  if (c === "permission-denied" || c === "invalid-argument" || c === "failed-precondition") return { code: "invalid_argument", message: e.message };
+  if (c === "permission-denied" || c === "invalid-argument") return { code: "invalid_argument", message: e.message };
   if (c === "resource-exhausted") return { code: "quota_exceeded", message: e.message };
   return { code: "unavailable", message: (e && e.message) || "Unavailable" };
 }
@@ -88,7 +88,16 @@ function flatten(obj, prefix = "", out = {}) {
 const wrap = d => ({ id: d.id, exists: d.exists(), data: () => d.data() });
 const guard = p => p.catch(e => { throw mapErr(e); });
 // Offline, writes are saved on the device and sent later, so don't wait for the server.
-const guardW = p => navigator.onLine ? guard(p) : (p.catch(() => {}), Promise.resolve());
+// Saves show on screen straight away (Firestore applies them locally first). We wait briefly for the
+// server so a refused change is reported right away, but never leave the screen hanging on slow Wi-Fi:
+// after 2.5 seconds the save carries on in the background, and a late failure is reported as a toast.
+const late = e => { try { window.__lateWriteError && window.__lateWriteError(mapErr(e)); } catch (x) {} };
+const guardW = p => {
+  if (!navigator.onLine) { p.catch(late); return Promise.resolve(); }
+  let slow = false;
+  const timer = new Promise(r => setTimeout(() => { slow = true; r(); }, 2500));
+  return Promise.race([p.then(() => {}), timer]).then(() => { if (slow) p.catch(late); }, e => { throw mapErr(e); });
+};
 
 function docRef(path){
   const d = doc(fs, path);

@@ -34,11 +34,12 @@
   --marigold:#f0c060; --marigold-soft:#372c12;
   --alert:#f0927f; --alert-soft:#3c221d; --good:#7cc79a; color-scheme:dark}
 *{box-sizing:border-box}
+button,a,label,input,select,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html{color-scheme:light}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 [hidden]{display:none!important}
 img{max-width:100%}
-input[type=checkbox]{width:22px;height:22px;min-height:0;padding:0;accent-color:var(--blue)}
+input[type=checkbox]{width:24px;height:24px;min-height:0;padding:0;accent-color:var(--blue)}
 .gate{min-height:80vh;display:grid;place-items:center;padding-block:40px}
 .gate .card{max-width:420px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;gap:14px;text-align:center}
 .gate .card h1{font-size:1.5rem}
@@ -50,8 +51,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .wrap.wide{max-width:980px}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:10px;min-height:58px;padding-block:6px}
-.bar .title{flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;background:none;border:0;padding:0;color:var(--ink);text-align:left;font-family:inherit;cursor:pointer}
-.bar .title span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title-wrap{flex:1;min-width:0}
+.bar .title{width:100%;min-height:44px;flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;background:none;border:0;padding:0;color:var(--ink);text-align:left;font-family:inherit;cursor:pointer}
+.tt{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.tt .tn{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt .ts{font-size:.72rem;color:var(--blue)}
+@media (max-width:520px){.title-wrap.nested .logo{display:none}.back{padding:0 10px 0 4px}}
 .logo{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--marigold)}
 .gate .logo{width:96px;height:96px;margin:0 auto}
 .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 6px;border:0;border-radius:10px;background:var(--blue-soft);color:var(--blue);font:700 .95rem var(--font);cursor:pointer}
@@ -72,8 +77,13 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .avbtn{display:flex;align-items:center;gap:8px;background:none;border:2px solid var(--line);border-radius:99px;padding:3px 10px 3px 3px;cursor:pointer;font:700 .9rem var(--font);color:var(--ink);min-height:44px}
 .avbtn img,.avbtn .ini{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:.8rem}
 .avbtn .nm{max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:420px){.avbtn .nm{display:none}.avbtn{padding:3px}}
+@media (max-width:560px){.avbtn .nm{display:none}.avbtn{padding:3px}}
+.bar>*{flex:none}.bar>.title-wrap{flex:1}
 .menu{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:250px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:8px;display:flex;flex-direction:column}
+.menu.left{left:0;right:auto;width:290px}
+.menu .rowflex{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%}
+.menu .sep{border-top:1px solid var(--line);border-radius:0 0 10px 10px;margin-top:4px;color:var(--blue)}
+@media (max-width:560px){.menu,.menu.left{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 66px);width:auto;max-height:calc(100dvh - 160px);overflow-y:auto}}
 .menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
 .menu button{background:none;border:0;text-align:left;font:700 .98rem var(--font);color:var(--ink);padding:12px 10px;border-radius:10px;cursor:pointer;min-height:46px}
 .menu button:hover{background:var(--blue-soft)}
@@ -105,7 +115,8 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .bitem{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}
 .bitem:last-child{border-bottom:0}
 .bitem .name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:none}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));scrollbar-width:none;scroll-padding-inline:16px}
+.card .chips{margin:0;padding:2px 0 6px}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;border:2px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;font:700 .9rem var(--font);color:var(--ink);cursor:pointer;min-height:42px;white-space:nowrap}
 .chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
@@ -113,23 +124,34 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .mrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
 .mrow:last-child{border-bottom:0}
 .mrow.on{background:var(--blue-soft)}
-.mrow label{display:flex;align-items:center;gap:12px;flex:1;min-width:180px;cursor:pointer}
+.mrow label{display:flex;align-items:center;gap:12px;flex:1;min-width:170px;cursor:pointer;min-height:44px}
+.mrow input[type=checkbox]{width:26px;height:26px;flex:none}
 .msgtext{white-space:pre-wrap;background:var(--bg);border-radius:12px;padding:12px 14px;margin:0}
-.nextup{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:4;border:2px solid var(--blue)}
-h1{font-size:1.75rem;line-height:1.2;margin:0;text-wrap:balance}
+.nextup{border:2px solid var(--blue)}
+.nextup .callrow .btn{flex:1}
+.nextup .callrow{width:100%}
+h1{font-size:1.75rem;line-height:1.2;margin:0;text-wrap:balance;overflow-wrap:anywhere}
+@media (max-width:520px){h1{font-size:1.5rem}}
+.h2s{font-size:1.02rem;color:var(--muted)}
+.progress{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);transition:width .2s}
+.seg{display:grid;gap:8px}
+.opt.sm{min-height:52px;padding:10px 14px;font-size:1rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.facts .add{grid-column:1/-1}
 h2{font-size:1.35rem;line-height:1.25;margin:0;text-wrap:balance}
 .lead{color:var(--muted);margin:6px 0 0}
 .stack{display:flex;flex-direction:column;gap:14px}
-.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}
-@media (max-width:480px){.tiles{grid-template-columns:minmax(0,1fr)}}
-.tile{display:flex;flex-direction:column;gap:10px;align-items:flex-start;text-align:left;min-height:170px;padding:20px;border-radius:var(--r);border:2px solid var(--line);font:inherit;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--line);transition:transform .12s,box-shadow .12s}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:22px}
+.tile{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;min-height:0;padding:14px;min-width:0;border-radius:var(--r);border:2px solid var(--line);font:inherit;color:var(--ink);cursor:pointer;box-shadow:0 2px 0 var(--line);transition:transform .12s,box-shadow .12s}
 .tile .go{margin-top:auto;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.95rem;padding:6px 12px;border-radius:99px;color:var(--surface)}
 .tile.meet{border-color:var(--blue)} .tile.meet .go{background:var(--blue);color:var(--blue-ink)}
 .tile.add{border-color:var(--marigold)} .tile.add .go{background:var(--marigold);color:var(--surface)}
 .tile:hover{transform:translateY(-2px);box-shadow:0 4px 0 var(--line)}
-.tile svg{width:34px;height:34px}
-.tile b{font-size:1.3rem}
-.tile span{color:var(--muted);font-size:.95rem}
+.tile svg{width:28px;height:28px}
+.tile b{font-size:1.1rem;line-height:1.2}
+.tile span{color:var(--muted);font-size:.86rem;line-height:1.35}
+.tile .go{margin-top:6px;font-size:.88rem;padding:5px 12px}
 .tile.meet{background:var(--blue-soft)} .tile.meet svg{color:var(--blue)}
 .tile.add{background:var(--marigold-soft)} .tile.add svg{color:var(--marigold)}
 .box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
@@ -150,7 +172,7 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline
 .btn:disabled{opacity:.45;cursor:not-allowed}
 a.btn{text-decoration:none}
 .callrow{display:flex;gap:6px;flex-wrap:nowrap}
-.link{background:none;border:0;padding:6px 0;font:inherit;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.link{background:none;border:0;padding:6px 0;min-height:40px;font:inherit;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .x{background:none;border:0;min-width:44px;min-height:44px;border-radius:10px;color:var(--muted);cursor:pointer;font:700 1.2rem var(--font)}
 .x:hover{background:var(--alert-soft);color:var(--alert)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -162,7 +184,9 @@ a.btn{text-decoration:none}
 .res:last-child{border-bottom:0}
 .res:hover,.res.hl{background:var(--blue-soft)}
 .res .name{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.res .meta{color:var(--muted);font-size:.88rem;white-space:nowrap}
+.res .meta{color:var(--muted);font-size:.88rem;white-space:normal}
+.res>.meta,.res>.pill,.res>.btn,.res>a.btn{flex:none;white-space:nowrap}
+.res>span:first-child,.res>.grow{flex:1;min-width:0}
 .res.new{color:var(--blue);font-weight:700}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.85rem;background:var(--blue-soft);color:var(--blue);font-weight:700;white-space:nowrap}
 .pill.warn{background:var(--alert-soft);color:var(--alert)}
@@ -187,7 +211,7 @@ details.sec > summary .sum{margin-left:auto;color:var(--muted);font-size:.9rem;t
 details.sec > summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 4px 0 0;flex:none}
 details.sec[open] > summary::after{transform:rotate(-135deg);margin-top:4px}
 details.sec > .in{padding:0 18px 18px;display:flex;flex-direction:column;gap:14px}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px}
 .facts dt{font-size:.85rem;color:var(--muted)}
 .facts dd{margin:0;font-weight:700;overflow-wrap:anywhere}
 .note{border-left:3px solid var(--blue-soft);padding:2px 0 2px 12px}
@@ -221,7 +245,7 @@ td.wrap{white-space:normal;min-width:160px}
 .opt[aria-pressed="true"] .ck{background:var(--blue);border-color:var(--blue)}
 .rowlink{flex:1;min-width:0;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .overlay{position:fixed;inset:0;z-index:30;background:rgba(10,16,24,.55);display:grid;place-items:center;padding:16px}
-.modal{max-width:460px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.modal{max-width:460px;width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,.25)}
 .checks{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
 .checks legend{font-weight:700;font-size:.95rem;margin-bottom:6px;padding:0}
 .checks legend small{font-weight:400;color:var(--muted)}
@@ -234,7 +258,7 @@ td.wrap{white-space:normal;min-width:160px}
 .bullets li > span:first-child{display:block}
 .bullets .by{display:block;font-size:.85rem;color:var(--muted)}
 .confirm{padding:14px;border-radius:12px;background:var(--alert-soft);display:flex;flex-direction:column;gap:10px}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));text-align:center;background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
 .empty{padding:22px 4px;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-size:1.1rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
@@ -247,14 +271,47 @@ td.wrap{white-space:normal;min-width:160px}
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
+/*! morphdom 2.7.4 | MIT License | (c) Patrick Steele-Idem | github.com/patrick-steele-idem/morphdom */
+(function(global,factory){typeof exports==="object"&&typeof module!=="undefined"?module.exports=factory():typeof define==="function"&&define.amd?define(factory):(global=global||self,global.morphdom=factory())})(this,function(){"use strict";var DOCUMENT_FRAGMENT_NODE=11;function morphAttrs(fromNode,toNode){var toNodeAttrs=toNode.attributes;var attr;var attrName;var attrNamespaceURI;var attrValue;var fromValue;if(toNode.nodeType===DOCUMENT_FRAGMENT_NODE||fromNode.nodeType===DOCUMENT_FRAGMENT_NODE){return}for(var i=toNodeAttrs.length-1;i>=0;i--){attr=toNodeAttrs[i];attrName=attr.name;attrNamespaceURI=attr.namespaceURI;attrValue=attr.value;if(attrNamespaceURI){attrName=attr.localName||attrName;fromValue=fromNode.getAttributeNS(attrNamespaceURI,attrName);if(fromValue!==attrValue){if(attr.prefix==="xmlns"){attrName=attr.name}fromNode.setAttributeNS(attrNamespaceURI,attrName,attrValue)}}else{fromValue=fromNode.getAttribute(attrName);if(fromValue!==attrValue){fromNode.setAttribute(attrName,attrValue)}}}var fromNodeAttrs=fromNode.attributes;for(var d=fromNodeAttrs.length-1;d>=0;d--){attr=fromNodeAttrs[d];attrName=attr.name;attrNamespaceURI=attr.namespaceURI;if(attrNamespaceURI){attrName=attr.localName||attrName;if(!toNode.hasAttributeNS(attrNamespaceURI,attrName)){fromNode.removeAttributeNS(attrNamespaceURI,attrName)}}else{if(!toNode.hasAttribute(attrName)){fromNode.removeAttribute(attrName)}}}}var range;var NS_XHTML="http://www.w3.org/1999/xhtml";var doc=typeof document==="undefined"?undefined:document;var HAS_TEMPLATE_SUPPORT=!!doc&&"content"in doc.createElement("template");var HAS_RANGE_SUPPORT=!!doc&&doc.createRange&&"createContextualFragment"in doc.createRange();function createFragmentFromTemplate(str){var template=doc.createElement("template");template.innerHTML=str;return template.content.childNodes[0]}function createFragmentFromRange(str){if(!range){range=doc.createRange();range.selectNode(doc.body)}var fragment=range.createContextualFragment(str);return fragment.childNodes[0]}function createFragmentFromWrap(str){var fragment=doc.createElement("body");fragment.innerHTML=str;return fragment.childNodes[0]}function toElement(str){str=str.trim();if(HAS_TEMPLATE_SUPPORT){return createFragmentFromTemplate(str)}else if(HAS_RANGE_SUPPORT){return createFragmentFromRange(str)}return createFragmentFromWrap(str)}function compareNodeNames(fromEl,toEl){var fromNodeName=fromEl.nodeName;var toNodeName=toEl.nodeName;var fromCodeStart,toCodeStart;if(fromNodeName===toNodeName){return true}fromCodeStart=fromNodeName.charCodeAt(0);toCodeStart=toNodeName.charCodeAt(0);if(fromCodeStart<=90&&toCodeStart>=97){return fromNodeName===toNodeName.toUpperCase()}else if(toCodeStart<=90&&fromCodeStart>=97){return toNodeName===fromNodeName.toUpperCase()}else{return false}}function createElementNS(name,namespaceURI){return!namespaceURI||namespaceURI===NS_XHTML?doc.createElement(name):doc.createElementNS(namespaceURI,name)}function moveChildren(fromEl,toEl){var curChild=fromEl.firstChild;while(curChild){var nextChild=curChild.nextSibling;toEl.appendChild(curChild);curChild=nextChild}return toEl}function syncBooleanAttrProp(fromEl,toEl,name){if(fromEl[name]!==toEl[name]){fromEl[name]=toEl[name];if(fromEl[name]){fromEl.setAttribute(name,"")}else{fromEl.removeAttribute(name)}}}var specialElHandlers={OPTION:function(fromEl,toEl){var parentNode=fromEl.parentNode;if(parentNode){var parentName=parentNode.nodeName.toUpperCase();if(parentName==="OPTGROUP"){parentNode=parentNode.parentNode;parentName=parentNode&&parentNode.nodeName.toUpperCase()}if(parentName==="SELECT"&&!parentNode.hasAttribute("multiple")){if(fromEl.hasAttribute("selected")&&!toEl.selected){fromEl.setAttribute("selected","selected");fromEl.removeAttribute("selected")}parentNode.selectedIndex=-1}}syncBooleanAttrProp(fromEl,toEl,"selected")},INPUT:function(fromEl,toEl){syncBooleanAttrProp(fromEl,toEl,"checked");syncBooleanAttrProp(fromEl,toEl,"disabled");if(fromEl.value!==toEl.value){fromEl.value=toEl.value}if(!toEl.hasAttribute("value")){fromEl.removeAttribute("value")}},TEXTAREA:function(fromEl,toEl){var newValue=toEl.value;if(fromEl.value!==newValue){fromEl.value=newValue}var firstChild=fromEl.firstChild;if(firstChild){var oldValue=firstChild.nodeValue;if(oldValue==newValue||!newValue&&oldValue==fromEl.placeholder){return}firstChild.nodeValue=newValue}},SELECT:function(fromEl,toEl){if(!toEl.hasAttribute("multiple")){var selectedIndex=-1;var i=0;var curChild=fromEl.firstChild;var optgroup;var nodeName;while(curChild){nodeName=curChild.nodeName&&curChild.nodeName.toUpperCase();if(nodeName==="OPTGROUP"){optgroup=curChild;curChild=optgroup.firstChild}else{if(nodeName==="OPTION"){if(curChild.hasAttribute("selected")){selectedIndex=i;break}i++}curChild=curChild.nextSibling;if(!curChild&&optgroup){curChild=optgroup.nextSibling;optgroup=null}}}fromEl.selectedIndex=selectedIndex}}};var ELEMENT_NODE=1;var DOCUMENT_FRAGMENT_NODE$1=11;var TEXT_NODE=3;var COMMENT_NODE=8;function noop(){}function defaultGetNodeKey(node){if(node){return node.getAttribute&&node.getAttribute("id")||node.id}}function morphdomFactory(morphAttrs){return function morphdom(fromNode,toNode,options){if(!options){options={}}if(typeof toNode==="string"){if(fromNode.nodeName==="#document"||fromNode.nodeName==="HTML"||fromNode.nodeName==="BODY"){var toNodeHtml=toNode;toNode=doc.createElement("html");toNode.innerHTML=toNodeHtml}else{toNode=toElement(toNode)}}else if(toNode.nodeType===DOCUMENT_FRAGMENT_NODE$1){toNode=toNode.firstElementChild}var getNodeKey=options.getNodeKey||defaultGetNodeKey;var onBeforeNodeAdded=options.onBeforeNodeAdded||noop;var onNodeAdded=options.onNodeAdded||noop;var onBeforeElUpdated=options.onBeforeElUpdated||noop;var onElUpdated=options.onElUpdated||noop;var onBeforeNodeDiscarded=options.onBeforeNodeDiscarded||noop;var onNodeDiscarded=options.onNodeDiscarded||noop;var onBeforeElChildrenUpdated=options.onBeforeElChildrenUpdated||noop;var skipFromChildren=options.skipFromChildren||noop;var addChild=options.addChild||function(parent,child){return parent.appendChild(child)};var childrenOnly=options.childrenOnly===true;var fromNodesLookup=Object.create(null);var keyedRemovalList=[];function addKeyedRemoval(key){keyedRemovalList.push(key)}function walkDiscardedChildNodes(node,skipKeyedNodes){if(node.nodeType===ELEMENT_NODE){var curChild=node.firstChild;while(curChild){var key=undefined;if(skipKeyedNodes&&(key=getNodeKey(curChild))){addKeyedRemoval(key)}else{onNodeDiscarded(curChild);if(curChild.firstChild){walkDiscardedChildNodes(curChild,skipKeyedNodes)}}curChild=curChild.nextSibling}}}function removeNode(node,parentNode,skipKeyedNodes){if(onBeforeNodeDiscarded(node)===false){return}if(parentNode){parentNode.removeChild(node)}onNodeDiscarded(node);walkDiscardedChildNodes(node,skipKeyedNodes)}function indexTree(node){if(node.nodeType===ELEMENT_NODE||node.nodeType===DOCUMENT_FRAGMENT_NODE$1){var curChild=node.firstChild;while(curChild){var key=getNodeKey(curChild);if(key){fromNodesLookup[key]=curChild}indexTree(curChild);curChild=curChild.nextSibling}}}indexTree(fromNode);function handleNodeAdded(el){onNodeAdded(el);var curChild=el.firstChild;while(curChild){var nextSibling=curChild.nextSibling;var key=getNodeKey(curChild);if(key){var unmatchedFromEl=fromNodesLookup[key];if(unmatchedFromEl&&compareNodeNames(curChild,unmatchedFromEl)){curChild.parentNode.replaceChild(unmatchedFromEl,curChild);morphEl(unmatchedFromEl,curChild)}else{handleNodeAdded(curChild)}}else{handleNodeAdded(curChild)}curChild=nextSibling}}function cleanupFromEl(fromEl,curFromNodeChild,curFromNodeKey){while(curFromNodeChild){var fromNextSibling=curFromNodeChild.nextSibling;if(curFromNodeKey=getNodeKey(curFromNodeChild)){addKeyedRemoval(curFromNodeKey)}else{removeNode(curFromNodeChild,fromEl,true)}curFromNodeChild=fromNextSibling}}function morphEl(fromEl,toEl,childrenOnly){var toElKey=getNodeKey(toEl);if(toElKey){delete fromNodesLookup[toElKey]}if(!childrenOnly){var beforeUpdateResult=onBeforeElUpdated(fromEl,toEl);if(beforeUpdateResult===false){return}else if(beforeUpdateResult instanceof HTMLElement){fromEl=beforeUpdateResult;indexTree(fromEl)}morphAttrs(fromEl,toEl);onElUpdated(fromEl);if(onBeforeElChildrenUpdated(fromEl,toEl)===false){return}}if(fromEl.nodeName!=="TEXTAREA"){morphChildren(fromEl,toEl)}else{specialElHandlers.TEXTAREA(fromEl,toEl)}}function morphChildren(fromEl,toEl){var skipFrom=skipFromChildren(fromEl,toEl);var curToNodeChild=toEl.firstChild;var curFromNodeChild=fromEl.firstChild;var curToNodeKey;var curFromNodeKey;var fromNextSibling;var toNextSibling;var matchingFromEl;outer:while(curToNodeChild){toNextSibling=curToNodeChild.nextSibling;curToNodeKey=getNodeKey(curToNodeChild);while(!skipFrom&&curFromNodeChild){fromNextSibling=curFromNodeChild.nextSibling;if(curToNodeChild.isSameNode&&curToNodeChild.isSameNode(curFromNodeChild)){curToNodeChild=toNextSibling;curFromNodeChild=fromNextSibling;continue outer}curFromNodeKey=getNodeKey(curFromNodeChild);var curFromNodeType=curFromNodeChild.nodeType;var isCompatible=undefined;if(curFromNodeType===curToNodeChild.nodeType){if(curFromNodeType===ELEMENT_NODE){if(curToNodeKey){if(curToNodeKey!==curFromNodeKey){if(matchingFromEl=fromNodesLookup[curToNodeKey]){if(fromNextSibling===matchingFromEl){isCompatible=false}else{fromEl.insertBefore(matchingFromEl,curFromNodeChild);if(curFromNodeKey){addKeyedRemoval(curFromNodeKey)}else{removeNode(curFromNodeChild,fromEl,true)}curFromNodeChild=matchingFromEl;curFromNodeKey=getNodeKey(curFromNodeChild)}}else{isCompatible=false}}}else if(curFromNodeKey){isCompatible=false}isCompatible=isCompatible!==false&&compareNodeNames(curFromNodeChild,curToNodeChild);if(isCompatible){morphEl(curFromNodeChild,curToNodeChild)}}else if(curFromNodeType===TEXT_NODE||curFromNodeType==COMMENT_NODE){isCompatible=true;if(curFromNodeChild.nodeValue!==curToNodeChild.nodeValue){curFromNodeChild.nodeValue=curToNodeChild.nodeValue}}}if(isCompatible){curToNodeChild=toNextSibling;curFromNodeChild=fromNextSibling;continue outer}if(curFromNodeKey){addKeyedRemoval(curFromNodeKey)}else{removeNode(curFromNodeChild,fromEl,true)}curFromNodeChild=fromNextSibling}if(curToNodeKey&&(matchingFromEl=fromNodesLookup[curToNodeKey])&&compareNodeNames(matchingFromEl,curToNodeChild)){if(!skipFrom){addChild(fromEl,matchingFromEl)}morphEl(matchingFromEl,curToNodeChild)}else{var onBeforeNodeAddedResult=onBeforeNodeAdded(curToNodeChild);if(onBeforeNodeAddedResult!==false){if(onBeforeNodeAddedResult){curToNodeChild=onBeforeNodeAddedResult}if(curToNodeChild.actualize){curToNodeChild=curToNodeChild.actualize(fromEl.ownerDocument||doc)}addChild(fromEl,curToNodeChild);handleNodeAdded(curToNodeChild)}}curToNodeChild=toNextSibling;curFromNodeChild=fromNextSibling}cleanupFromEl(fromEl,curFromNodeChild,curFromNodeKey);var specialElHandler=specialElHandlers[fromEl.nodeName];if(specialElHandler){specialElHandler(fromEl,toEl)}}var morphedNode=fromNode;var morphedNodeType=morphedNode.nodeType;var toNodeType=toNode.nodeType;if(!childrenOnly){if(morphedNodeType===ELEMENT_NODE){if(toNodeType===ELEMENT_NODE){if(!compareNodeNames(fromNode,toNode)){onNodeDiscarded(fromNode);morphedNode=moveChildren(fromNode,createElementNS(toNode.nodeName,toNode.namespaceURI))}}else{morphedNode=toNode}}else if(morphedNodeType===TEXT_NODE||morphedNodeType===COMMENT_NODE){if(toNodeType===morphedNodeType){if(morphedNode.nodeValue!==toNode.nodeValue){morphedNode.nodeValue=toNode.nodeValue}return morphedNode}else{morphedNode=toNode}}}if(morphedNode===toNode){onNodeDiscarded(fromNode)}else{if(toNode.isSameNode&&toNode.isSameNode(morphedNode)){return}morphEl(morphedNode,toNode,childrenOnly);if(keyedRemovalList){for(var i=0,len=keyedRemovalList.length;i<len;i++){var elToRemove=fromNodesLookup[keyedRemovalList[i]];if(elToRemove){removeNode(elToRemove,elToRemove.parentNode,false)}}}}if(!childrenOnly&&morphedNode!==fromNode&&fromNode.parentNode){if(morphedNode.actualize){morphedNode=morphedNode.actualize(fromNode.ownerDocument||doc)}fromNode.parentNode.replaceChild(morphedNode,fromNode)}return morphedNode}}var morphdom=morphdomFactory(morphAttrs);return morphdom});
+</script>
+<script>
 (() => {
 "use strict";
 // ---------- helpers ----------
+// Each element keeps its handlers in el._h and one dispatcher per event type, so when a screen is
+// patched in place the existing element simply picks up the new handlers. Async handlers on buttons
+// and forms ignore repeat taps until they finish (no double-adds on a slow connection).
+function on(el,type,fn){
+  if(!el._h) el._h={}; if(!el._ht) el._ht=new Set();
+  if(!el._ht.has(type)){ el._ht.add(type); el.addEventListener(type,e=>{
+    const f=el._h&&el._h[type]; if(!f) return;
+    if((type==="submit"||type==="click")&&el._busy){ e.preventDefault(); return; }
+    const r=f(e);
+    if(r&&typeof r.then==="function"&&(type==="submit"||type==="click")){ el._busy=true; r.finally(()=>{ el._busy=false; }); }
+    return r; }); }
+  el._h[type]=fn;
+}
+const isField=el=>el&&((el.tagName==="INPUT"&&!["checkbox","radio","button","submit"].includes(el.type))||el.tagName==="TEXTAREA"||el.tagName==="SELECT");
+function patch(container,children){
+  const next=container.cloneNode(false); next.append(...children.filter(Boolean));
+  morphdom(container,next,{childrenOnly:true,
+    onBeforeElUpdated(from,to){
+      const hs=to._h||{}; if(!from._ht) from._ht=new Set();
+      for(const t of Object.keys(hs)) if(!from._ht.has(t)){ from._ht.add(t); from.addEventListener(t,e=>{
+        const f=from._h&&from._h[t]; if(!f) return;
+        if((t==="submit"||t==="click")&&from._busy){ e.preventDefault(); return; }
+        const r=f(e); if(r&&typeof r.then==="function"&&(t==="submit"||t==="click")){ from._busy=true; r.finally(()=>{ from._busy=false; }); } return r; }); }
+      from._h=hs;
+      // never touch what someone is typing in
+      if(isField(from)&&(from===document.activeElement||(from.id&&S.dirty.has(from.id)))){ if(to.placeholder!==undefined&&from.placeholder!==to.placeholder) from.placeholder=to.placeholder; return false; }
+      return true;
+    }});
+}
 function h(tag, attrs, ...kids){
   const el=document.createElement(tag);
   if (attrs) for (const [k,v] of Object.entries(attrs)){
     if (v==null||v===false) continue;
-    if (k.startsWith("on")) el.addEventListener(k.slice(2),v);
+    if (k.startsWith("on")) on(el,k.slice(2),v);
     else if (k==="class") el.className=v;
     else if (k==="value") el.value=v;
     else if (k==="html") el.innerHTML=v; // only used for static icons
@@ -287,8 +344,8 @@ function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
 const TAB_SCREENS=["home","people","meetings","messages","more"];
-const TAB_OF={home:"home",people:"people",person:"people",notes:"people",add:"people",meetings:"meetings",meeting:"meetings",messages:"messages",message:"messages",more:"more",insights:"more",team:"more",member:"more",me:"more",import:"more",dupes:"more"};
-const SCREENS=["more","home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes"];
+const TAB_OF={home:"home",people:"people",person:"people",notes:"people",add:"people",meetings:"meetings",meeting:"meetings",messages:"messages",message:"messages",more:"more",insights:"more",team:"more",member:"more",me:"more",import:"more",dupes:"more",schools:"more"};
+const SCREENS=["schools","more","home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes"];
 const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
 const initials=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 function signOutNow(){ if(window.FB&&window.FB.signOut) window.FB.signOut(); else toast("In this preview, sign out from your Claude account. On your live site this signs you out."); }
@@ -297,17 +354,18 @@ function signOutNow(){ if(window.FB&&window.FB.signOut) window.FB.signOut(); els
 document.addEventListener("click",e=>{ if(S.menu&&!e.target.closest(".menu-wrap")){ S.menu=false; render(); } });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.menu){ S.menu=false; render(); } });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySelector(".overlay")) e.preventDefault(); },true);
-const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
+const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{}, schools:[], mySchools:new Set(), blocked:new Set(), schoolsChecked:false, schoolId:null, schoolDoc:{}, staff:[], loadedKeys:new Set(), loadedGlobal:new Set(), legacyCount:null, migrating:null, manageId:null, manage:{staff:[],blocked:[]}, promptSchools:null, meSchools:null,
   screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
   personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
   homeQ:"", menu:false, editMsg:false, backingUp:null, merging:null, copyText:null, dupWarn:null, dupOK:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
-  db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, ready:false, offline:false, profiles:{}, dirty:new Set() };
+  db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, offline:false, profiles:{}, dirty:new Set() };
+Object.defineProperty(S,"ready",{get(){ return S.offline||(S.schoolsChecked&&(!S.schoolId||["people","meetings","messages"].every(k=>S.loadedKeys.has(k)))); }});
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
 const clearDirty=el=>{ if(el) el.querySelectorAll("[id]").forEach(x=>S.dirty.delete(x.id)); };
-function nav(screen, patch){ S.menu=false; S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId,memberId:S.memberId,msgId:S.msgId,filter:S.filter}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null,allAct:false,editMeeting:null},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function nav(screen, patch){ S.menu=false; S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId,memberId:S.memberId,msgId:S.msgId,filter:S.filter}); Object.assign(S,{meSchools:null,screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null,allAct:false,editMeeting:null,insightsOn:false,showAllPeople:false},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function back(){ const p=S.stack.pop()||{screen:"home"}; Object.assign(S,p,{editing:false,confirm:null,quickAdd:null}); S.dirty.clear(); render(); window.scrollTo(0,0); }
-function goTab(t){ S.stack=[]; Object.assign(S,{screen:t,editing:false,confirm:null,quickAdd:null,menu:false,homeQ:"",peopleQ:"",assigning:false},t==="people"?{filter:"all"}:{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function goTab(t){ S.stack=[]; Object.assign(S,{screen:t,editing:false,confirm:null,quickAdd:null,menu:false,homeQ:"",peopleQ:"",assigning:false,insightsOn:false,showAllPeople:false},t==="people"?{filter:"all"}:{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function home(){ S.stack=[]; Object.assign(S,{screen:"home",editing:false,confirm:null,quickAdd:null,homeQ:""}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 
 // ---------- names & stats ----------
@@ -316,10 +374,10 @@ function memberName(uid){
   const t=S.team.find(x=>x.id===uid);
   return (t&&t.name)||S.profiles[uid]||(uid===S.myId?(S.meName||"You"):"A teammate");
 }
-const personById=id=>S.people.find(p=>p.id===id);
-const pendingRoll={};
+const personById=id=>idx().byId.get(id);
+const pendingRoll={}, pendingMsg={}, pendingSent={};
 const byName=(a,b)=>(a.name||"").localeCompare(b.name||"");
-const activeTeam=()=>S.team.filter(t=>!t.removed);
+const activeTeam=()=>S.team.filter(t=>!t.removed&&S.staff.includes(t.id));
 const isAdminNow=()=>!window.FB||!!window.FB.isAdmin;
 const ten=v=>{ const d=String(v||"").replace(/\D/g,""); return d.length>=10?d.slice(-10):""; };
 function callLinks(p){ const d=ten(p.phone); if(!d) return null;
@@ -342,24 +400,42 @@ const contactsOf=p=>Array.isArray(p.contactIds)?p.contactIds:(p.contactId?[p.con
 const contactNames=p=>contactsOf(p).map(memberName).join(", ");
 async function setContact(p,uid,on){
   const cur=contactsOf(p), next=on?[...new Set([...cur,uid])]:cur.filter(x=>x!==uid);
-  return write(db=>db.doc("people/"+p.id).update({contactIds:next,contactId:"",...stamp()}), on?`You now look after ${p.name}`:`Removed ${p.name} from your list`);
+  return write(db=>db.doc(SP("people")+"/"+p.id).update({contactIds:next,contactId:"",...stamp()}), on?`You now look after ${p.name}`:`Removed ${p.name} from your list`);
 }
 const applyMap=(base,map)=>{ const set=new Set(base||[]); for(const [k,v] of Object.entries(map||{})) v?set.add(k):set.delete(k); return [...set]; };
-const presentOf=m=>applyMap(m.present,{...(m.att||{}),...(pendingRoll[m.id]||{})});
+const presentRaw=m=>applyMap(m.present,{...(m.att||{}),...(pendingRoll[m.id]||{})});
+const respondedRaw=m=>applyMap(m.responded,{...(m.replies||{}),...(pendingMsg[m.id]||{})});
+let IDX=null;
+const dirtyIdx=()=>{ IDX=null; };
+function idx(){
+  if(IDX) return IDX;
+  const ms=S.meetings.slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  const pres=new Map(), presArr=new Map(), att=new Map(), rep=new Map(), repArr=new Map();
+  for(const m of ms){ const arr=presentRaw(m); presArr.set(m.id,arr); pres.set(m.id,new Set(arr)); for(const id of arr){ let l=att.get(id); if(!l) att.set(id,l=[]); l.push(m.date); } }
+  for(const w of S.messages){ const arr=respondedRaw(w); repArr.set(w.id,arr); for(const id of arr){ let l=rep.get(id); if(!l) rep.set(id,l=[]); l.push(w.date); } }
+  rep.forEach(l=>l.sort());
+  IDX={ms,dates:ms.map(m=>m.date),pres,presArr,att,rep,repArr,byId:new Map(S.people.map(p=>[p.id,p])),stats:new Map(),dupes:null};
+  return IDX;
+}
+const presentOf=m=>{ const I=idx(); return I.presArr.get(m.id)||presentRaw(m); };
+const respondedOf=m=>{ const I=idx(); return I.repArr.get(m.id)||respondedRaw(m); };
+function lowerBound(arr,v){ let lo=0,hi=arr.length; while(lo<hi){ const mid=(lo+hi)>>1; if(arr[mid]<v) lo=mid+1; else hi=mid; } return lo; }
 function stats(p){
-  const att=S.meetings.filter(m=>presentOf(m).includes(p.id)).map(m=>m.date).sort();
+  const I=idx(); let r=I.stats.get(p.id); if(r) return r;
+  const att=I.att.get(p.id)||[];
   const first=att[0]||(p.createdAt||"").slice(0,10)||today();
-  const ms=S.meetings.filter(m=>m.date>=first).sort((a,b)=>a.date<b.date?-1:1);
-  let streak=0; for(let i=ms.length-1;i>=0;i--){ if(presentOf(ms[i]).includes(p.id)) streak++; else break; }
+  const from=lowerBound(I.dates,first), eligible=I.ms.length-from;
+  let streak=0; for(let i=I.ms.length-1;i>=from;i--){ if(I.pres.get(I.ms[i].id).has(p.id)) streak++; else break; }
   const last=att[att.length-1]||null, gap=last?daysBetween(last,today()):null;
-  const rate=ms.length?Math.round(100*att.length/ms.length):null;
-  const replies=S.messages.filter(w=>respondedOf(w).includes(p.id)).map(w=>w.date).sort();
+  const rate=eligible?Math.round(100*att.length/eligible):null;
+  const replies=I.rep.get(p.id)||[];
   const lastReply=replies[replies.length-1]||null;
   const lastEngaged=[last,lastReply].filter(Boolean).sort().pop()||null;
   const quietDays=lastEngaged?daysBetween(lastEngaged,today()):null;
   const addedDays=p.createdAt?daysBetween(iso(new Date(p.createdAt)),today()):999;
   const bucket=!lastEngaged?(addedDays>=7?"never":null):(quietDays>21?"quiet":null);
-  return {attended:att.length,eligible:ms.length,rate,streak,last,gap,first:att[0]||null,replies:replies.length,lastReply,lastEngaged,quietDays,bucket,followUp:!!bucket,recent:ms.slice(-12)};
+  r={attended:att.length,eligible,rate,streak,last,gap,first:att[0]||null,replies:replies.length,lastReply,lastEngaged,quietDays,bucket,followUp:!!bucket,recent:I.ms.slice(Math.max(from,I.ms.length-12))};
+  I.stats.set(p.id,r); return r;
 }
 function nextBirthday(b){
   if(!b) return null; const d=parse(b), now=parse(today());
@@ -379,38 +455,137 @@ async function init(){
   const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
   S.db=db; S.user=user;
   if(user){ const me=await user.me(); S.myId=me.id; S.meName=me.name||""; S.avatar=me.avatarUrl; if((await user.can("data.write"))===false) S.canWrite=false; }
-  if(!db){ S.ready=true; S.offline=true; render(); return; }
-  const sub=(name)=>db.collection(name).onSnapshot(snap=>{ S[name]=snap.docs.map(d=>({id:d.id,...d.data()})); S.ready=true; render(); },
-    err=>{ if(err.code==="revoked"){ S.offline=true; render(); } });
-  ["people","meetings","team","messages"].forEach(sub);
-  if(window.FB&&window.FB.isAdmin) sub("members");
-  db.doc("config/app").onSnapshot(s=>{ S.config=s.exists?s.data():{}; render(); },()=>{});
+  if(!db){ S.offline=true; render(); return; }
+  const sub=(path,key,after)=>db.collection(path).onSnapshot(snap=>{ S[key]=snap.docs.map(d=>({id:d.id,...d.data()})); S.loadedGlobal.add(key); if(after) after(); soon(); },
+    err=>{ S.loadedGlobal.add(key); if(err.code==="revoked") S.offline=true; if(after) after(); soon(); });
+  sub("team","team");
+  sub("schools","schools",()=>{ const key=S.schools.map(x=>x.id).sort().join(","); if(key!==S._schoolKey||!S.schoolsChecked){ S._schoolKey=key; checkMemberships(); } else pickSchool(); });
+  if(window.FB&&window.FB.isAdmin) sub("members","members");
+  if(isAdminNow()) checkLegacy();
   if(S.myId&&S.canWrite){ try{ const ref=db.doc("team/"+S.myId), s=await ref.get(); const role=(window.FB&&TEAM_ROLES.includes(window.FB.role))?window.FB.role:""; if(!s.exists) await ref.set({name:S.meName,title:role,account:true,joinedAt:new Date().toISOString()}); else if(role&&!TEAM_ROLES.includes((s.data()||{}).title)) await ref.update({title:role});
     if(s.exists&&(s.data()||{}).removed) await ref.update({removed:false});
-    await ref.update({lastSeen:new Date().toISOString(),email:(window.FB&&window.FB.email)||null}); }catch(e){ if(e&&e.code==="invalid_argument"){ S.canWrite=false; render(); } } }
+    await ref.update({lastSeen:new Date().toISOString(),email:(window.FB&&window.FB.email)||null}); }catch(e){} }
 }
+
+// ---------- schools ----------
+const SP=c=>`schools/${S.schoolId}/${c}`;
+const schoolById=id=>S.schools.find(x=>x.id===id);
+const schoolName=id=>{ const x=schoolById(id); return x?(x.name||id):""; };
+const accessibleSchools=()=>S.schools.filter(x=>isAdminNow()||S.mySchools.has(x.id)).sort(byName);
+let schoolSubs=[], memberRun=0;
+async function checkMemberships(){
+  const db=S.db, me=S.myId; if(!db||!me){ S.schoolsChecked=true; soon(); return; }
+  const run=++memberRun, mine=new Set(), blocked=new Set();
+  await Promise.all(S.schools.map(async sc=>{
+    try{ const a=await db.doc(`schools/${sc.id}/staff/${me}`).get(); if(a.exists) mine.add(sc.id); }catch(e){}
+    try{ const b=await db.doc(`schools/${sc.id}/blocked/${me}`).get(); if(b.exists) blocked.add(sc.id); }catch(e){} }));
+  if(run!==memberRun) return;
+  S.mySchools=mine; S.blocked=blocked; S.schoolsChecked=true; pickSchool(); soon();
+}
+function closeSchool(){
+  schoolSubs.forEach(u=>{ try{ u(); }catch(e){} }); schoolSubs=[];
+  for(const k of Object.keys(watches)){ try{ watches[k](); }catch(e){} delete watches[k]; delete cache[k]; }
+  Object.assign(S,{people:[],meetings:[],messages:[],notes:[],progress:[],staff:[],schoolDoc:{},loadedKeys:new Set()});
+  for(const k of Object.keys(pendingRoll)) delete pendingRoll[k]; for(const k of Object.keys(pendingMsg)) delete pendingMsg[k];
+}
+function openSchool(sid){
+  if(S.schoolId===sid&&schoolSubs.length) return;
+  closeSchool(); S.schoolId=sid||null;
+  if(sid){ try{ localStorage.setItem("bm.school",sid); }catch(e){} }
+  if(!sid||!S.db){ soon(); return; }
+  const db=S.db;
+  const col=(c,key)=>schoolSubs.push(db.collection(`schools/${sid}/${c}`).onSnapshot(snap=>{ if(S.schoolId!==sid) return; S[key]=snap.docs.map(d=>({id:d.id,...d.data()})); S.loadedKeys.add(key); soon(); },
+    err=>{ if(S.schoolId!==sid) return; S.loadedKeys.add(key); if(err&&err.code==="invalid_argument") checkMemberships(); soon(); }));
+  col("people","people"); col("meetings","meetings"); col("messages","messages");
+  schoolSubs.push(db.collection(`schools/${sid}/staff`).onSnapshot(snap=>{ if(S.schoolId!==sid) return; S.staff=snap.docs.map(d=>d.id); S.loadedKeys.add("staff"); soon(); },()=>{ S.loadedKeys.add("staff"); soon(); }));
+  schoolSubs.push(db.doc(`schools/${sid}`).onSnapshot(x=>{ if(S.schoolId!==sid) return; S.schoolDoc=x.exists?x.data():{}; soon(); },()=>{}));
+}
+function pickSchool(){
+  const acc=accessibleSchools().map(x=>x.id);
+  if(S.schoolId&&acc.includes(S.schoolId)) return;
+  let saved=null; try{ saved=localStorage.getItem("bm.school"); }catch(e){}
+  const next=acc.includes(saved)?saved:(acc.find(id=>S.mySchools.has(id))||acc[0]||null);
+  if(next!==S.schoolId){ S.stack=[]; S.screen=S.screen==="schools"||S.screen==="me"?S.screen:"home"; openSchool(next); }
+}
+function switchSchool(sid){
+  S.menu=false; if(sid===S.schoolId){ render(); return; }
+  S.stack=[]; Object.assign(S,{screen:"home",personId:null,meetingId:null,msgId:null,memberId:null,homeQ:"",peopleQ:""});
+  openSchool(sid); render(); window.scrollTo(0,0); toast("Now viewing "+schoolName(sid));
+}
+async function setMySchools(want){
+  const add=[...want].filter(id=>!S.mySchools.has(id)), drop=[...S.mySchools].filter(id=>!want.has(id));
+  const ok=await write(async db=>{
+    for(const id of add) await db.doc(`schools/${id}/staff/${S.myId}`).set({uid:S.myId,joinedAt:new Date().toISOString()});
+    for(const id of drop) await db.doc(`schools/${id}/staff/${S.myId}`).delete();
+  });
+  if(ok){ S.mySchools=new Set(want); pickSchool(); soon(); }
+  return ok;
+}
+async function checkLegacy(){
+  try{ const snap=await S.db.collection("people").get(); S.legacyCount=snap.size; }catch(e){ S.legacyCount=0; }
+  soon();
+}
+const slugId=name=>{ let b=String(name||"school").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"school"; let id=b,i=2; while(schoolById(id)) id=b+"-"+(i++); return id; };
+async function inChunks(items,fn,size=20){ for(let i=0;i<items.length;i+=size) await Promise.all(items.slice(i,i+size).map(fn)); }
+async function migrateLegacy(name){
+  if(S.migrating) return;
+  const db=S.db, sid=slugId(name), colls=["people","notes","progress","meetings","messages"];
+  S.migrating={done:0,total:0,step:"Reading your data…"}; render();
+  const ok=await write(async()=>{
+    const legacy={}; let total=0;
+    for(const c of colls){ const snap=await db.collection(c).get(); legacy[c]=snap.docs.map(d=>({id:d.id,data:d.data()})); total+=legacy[c].length; }
+    let cfg={}; try{ const c=await db.doc("config/app").get(); cfg=c.exists?c.data():{}; }catch(e){}
+    S.migrating={done:0,total:total*2,step:`Copying into ${name}…`}; render();
+    await db.doc(`schools/${sid}`).set({name,createdAt:new Date().toISOString(),createdBy:S.myId||null,dupIgnore:cfg.dupIgnore||[],lastBackup:cfg.lastBackup||null,movedFromOldVersion:true});
+    const staff=S.team.filter(t=>!t.removed).map(t=>t.id); if(S.myId&&!staff.includes(S.myId)) staff.push(S.myId);
+    await inChunks(staff,uid=>db.doc(`schools/${sid}/staff/${uid}`).set({uid,joinedAt:new Date().toISOString(),movedFromOldVersion:true}));
+    for(const c of colls) await inChunks(legacy[c],async d=>{ await db.doc(`schools/${sid}/${c}/${d.id}`).set(d.data); S.migrating.done++; soon(); });
+    S.migrating.step="Tidying up the old copy…"; render();
+    for(const c of colls) await inChunks(legacy[c],async d=>{ await db.doc(`${c}/${d.id}`).delete(); S.migrating.done++; soon(); });
+  },`Moved everything into ${name}`);
+  S.migrating=null; S.legacyCount=ok?0:S.legacyCount;
+  if(ok){ S.mySchools.add(sid); try{ localStorage.setItem("bm.school",sid); }catch(e){} }
+  render();
+}
+async function createSchool(name){
+  name=String(name||"").trim(); if(!name){ toast("Give the school a name"); return false; }
+  const sid=slugId(name);
+  return write(db=>db.doc(`schools/${sid}`).set({name,createdAt:new Date().toISOString(),createdBy:S.myId||null,dupIgnore:[]}),`${name} created`);
+}
+async function removeFromSchool(sid,uid){
+  return write(async db=>{
+    await db.doc(`schools/${sid}/staff/${uid}`).delete();
+    await db.doc(`schools/${sid}/blocked/${uid}`).set({uid,at:new Date().toISOString(),by:S.myId||null});
+    const snap=await db.collection(`schools/${sid}/people`).where("contactIds","array-contains",uid).get();
+    await inChunks(snap.docs,async d=>{ const cur=(d.data().contactIds||[]).filter(x=>x!==uid); await db.doc(`schools/${sid}/people/${d.id}`).update({contactIds:cur,...stamp()}); });
+  },`${memberName(uid)} removed from ${schoolName(sid)}`);
+}
+const allowBack=(sid,uid)=>write(db=>db.doc(`schools/${sid}/blocked/${uid}`).delete(),`${memberName(uid)} can join ${schoolName(sid)} again`);
+const addToSchool=(sid,uid)=>write(async db=>{ await db.doc(`schools/${sid}/blocked/${uid}`).delete(); await db.doc(`schools/${sid}/staff/${uid}`).set({uid,joinedAt:new Date().toISOString(),addedBy:S.myId||null}); },`${memberName(uid)} added to ${schoolName(sid)}`);
+
 async function write(fn,ok){
   if(!S.db){ toast("Sign in to make changes"); return false; }
   try{ await fn(S.db); if(ok) toast(ok); return true; }
   catch(e){
-    if(e&&e.code==="invalid_argument"){ S.canWrite=false; render(); toast("That change wasn't allowed. Ask an admin to check your access."); }
+    if(e&&e.code==="invalid_argument") toast("That change wasn't allowed. Ask an admin to check your access.");
     else if(e&&e.code==="quota_exceeded") toast("The roster is full. Delete old records to add more.");
     else toast("That didn't save. Check your connection and try again.");
     return false;
   }
 }
+window.__lateWriteError=e=>toast(e&&e.code==="invalid_argument"?"A change wasn't allowed and was undone. Ask an admin to check your access.":"A change didn't reach the server. Check your connection; it will retry.");
 const stamp=()=>({updatedAt:new Date().toISOString(),updatedBy:S.myId||null});
 async function resolveIds(ids){
   if(!S.user) return; const want=[...new Set(ids.filter(Boolean))].filter(id=>!(id in S.profiles)); if(!want.length) return;
   want.forEach(id=>S.profiles[id]=""); const ps=await S.user.profiles(want); let any=false;
-  for(const id of want){ const n=ps[id]?.name||""; if(n){ S.profiles[id]=n; any=true; } } if(any) render();
+  for(const id of want){ const n=ps[id]?.name||""; if(n){ S.profiles[id]=n; any=true; } } if(any) soon();
 }
 const writeQ={};
 function queueWrite(key,fn){ writeQ[key]=(writeQ[key]||Promise.resolve()).then(fn); return writeQ[key]; }
 function setPresent(m,pid,on){
-  (pendingRoll[m.id]||(pendingRoll[m.id]={}))[pid]=on; render();
-  queueWrite("m:"+m.id,async()=>{ const ok=await write(db=>db.doc("meetings/"+m.id).update({att:{[pid]:on},...stamp()}));
-    if(pendingRoll[m.id]&&pendingRoll[m.id][pid]===on) delete pendingRoll[m.id][pid]; if(!ok) render(); });
+  (pendingRoll[m.id]||(pendingRoll[m.id]={}))[pid]=on; dirtyIdx(); render();
+  queueWrite("m:"+m.id,async()=>{ const ok=await write(db=>db.doc(SP("meetings")+"/"+m.id).update({att:{[pid]:on},...stamp()}));
+    if(pendingRoll[m.id]&&pendingRoll[m.id][pid]===on) delete pendingRoll[m.id][pid]; if(!ok){ dirtyIdx(); render(); } });
 }
 
 // ---------- on-demand loading ----------
@@ -418,63 +593,68 @@ function setPresent(m,pid,on){
 // person or teammate on screen. This keeps database reads low as the club grows.
 const watches={}, cache={};
 function rebuildLazy(){
-  const n=new Map(), g=new Map();
-  for(const [k,docs] of Object.entries(cache)){ const m=k.startsWith("notes|")?n:g; for(const d of docs) m.set(d.id,d); }
-  S.notes=[...n.values()]; S.progress=[...g.values()];
+  const n=new Map(), g=new Map(), staff=new Map(), blocked=new Map();
+  for(const [k,docs] of Object.entries(cache)){ const path=k.split("|")[0];
+    const m=path.endsWith("/notes")?n:path.endsWith("/progress")?g:path.endsWith("/staff")?staff:path.endsWith("/blocked")?blocked:null;
+    if(m) for(const d of docs) m.set(d.id,d); }
+  S.notes=[...n.values()]; S.progress=[...g.values()]; S.manage={staff:[...staff.values()],blocked:[...blocked.values()]};
 }
 function keysFor(){
-  if((S.screen==="person"||S.screen==="notes")&&S.personId) return ["notes|personId|"+S.personId,"progress|personId|"+S.personId];
-  if(S.screen==="member"&&S.memberId) return ["notes|by|"+S.memberId,"progress|by|"+S.memberId];
+  if(!S.schoolId&&S.screen!=="schools") return [];
+  if((S.screen==="person"||S.screen==="notes")&&S.personId) return [SP("notes")+"|personId|"+S.personId,SP("progress")+"|personId|"+S.personId];
+  if(S.screen==="member"&&S.memberId) return [SP("notes")+"|by|"+S.memberId,SP("progress")+"|by|"+S.memberId];
+  if(S.screen==="schools"&&S.manageId&&isAdminNow()) return [`schools/${S.manageId}/staff|`,`schools/${S.manageId}/blocked|`];
   return [];
 }
 function need(keys){
   if(!S.db) return;
   for(const k of Object.keys(watches)) if(!keys.includes(k)){ try{ watches[k](); }catch(e){} delete watches[k]; delete cache[k]; }
   for(const k of keys){ if(watches[k]) continue;
-    const [coll,field,val]=k.split("|");
-    watches[k]=S.db.collection(coll).where(field,"==",val).onSnapshot(snap=>{ cache[k]=snap.docs.map(d=>({id:d.id,...d.data()})); rebuildLazy(); render(); },()=>{ cache[k]=cache[k]||[]; render(); }); }
+    const [path,field,val]=k.split("|"), c=S.db.collection(path), q=field?c.where(field,"==",val):c;
+    watches[k]=q.onSnapshot(snap=>{ cache[k]=snap.docs.map(d=>({id:d.id,...d.data()})); rebuildLazy(); soon(); },()=>{ cache[k]=cache[k]||[]; rebuildLazy(); soon(); }); }
   rebuildLazy();
 }
 const loaded=()=>keysFor().every(k=>k in cache);
 
 // ---------- shell ----------
 const main=document.getElementById("main");
+let rq=0;
+function soon(){ dirtyIdx(); if(rq) return; rq=(window.requestAnimationFrame||setTimeout)(()=>{ rq=0; render(); }); }
 function render(){
-  const club=S.config.clubName||"Bṛhat Mṛdaṅga Database";
+  if(rq){ (window.cancelAnimationFrame||clearTimeout)(rq); rq=0; }
+  dirtyIdx();
+  const club=S.schoolId?schoolName(S.schoolId):"Bṛhat Mṛdaṅga Database";
   const bar=document.getElementById("bar");
   const nested=S.stack.length>0;
-  bar.replaceChildren(...[
+  patch(bar,[
     nested?h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back}),"Back"):null,
-    h("button",{class:"title",onclick:()=>goTab("home"),title:"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",null,club)),
-    bell(), profileMenu()].filter(Boolean));
+    schoolSwitcher(club,nested),
+    bell(), profileMenu()]);
   const tb=document.getElementById("tabbar");
   if(tb){ const cur=TAB_OF[S.screen]||"home", nb=S.ready?S.people.filter(p=>stats(p).followUp).length:0;
-    tb.replaceChildren(h("div",{class:"in"},[["home","Home","tHome"],["people","People","tPeople"],["meetings","Meetings","tCal"],["messages","Messages","tMsg"],["more","More","tMore"]].map(([k,l,ic])=>
-      h("button",{onclick:()=>goTab(k),"aria-current":cur===k?"page":null},h("span",{html:ICON[ic]}),l,k==="people"&&nb?h("span",{class:"dot","aria-label":`${nb} to reach out to`},nb>99?"99+":String(nb)):null)))); }
+    patch(tb,[h("div",{class:"in"},[["home","Home","tHome"],["people","People","tPeople"],["meetings","Meetings","tCal"],["messages","Messages","tMsg"],["more","More","tMore"]].map(([k,l,ic])=>
+      h("button",{onclick:()=>goTab(k),"aria-current":cur===k?"page":null},h("span",{html:ICON[ic]}),l,k==="people"&&nb?h("span",{class:"dot","aria-label":`${nb} to reach out to`},nb>99?"99+":String(nb)):null)))]); }
   const wide=["insights","people","meetings"].includes(S.screen);
   main.classList.toggle("wide",wide); document.getElementById("barWrap").classList.toggle("wide",wide);
 
-  const keep={}; S.dirty.forEach(id=>{ const el=document.getElementById(id); if(el) keep[id]=el.value; });
-  const a=document.activeElement, aid=a&&a.id; let sel=null; try{ sel=a&&a.selectionStart; }catch(e){}
   const top=[];
   if(!navigator.onLine) top.push(h("div",{class:"banner"},"You're offline. Check-ins and notes are saved on this device and will sync when you're back online."));
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
   need(keysFor());
-  const fn={more:vMore,home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
+  const fn={schools:vSchools,more:vMore,home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
   const copyBox=S.copyText?h("div",{class:"overlay",role:"dialog","aria-modal":"true"},h("div",{class:"box stack modal"},
     h("h2",null,"Copy these numbers"),h("p",{style:"margin:0"},"Select all and copy, then paste into a group text."),
     h("textarea",{readonly:true,style:"min-height:120px",onfocus:e=>e.target.select()},S.copyText),
     h("button",{class:"btn primary",onclick:()=>{S.copyText=null; render();}},"Done"))):null;
-  main.replaceChildren(...[...top, fn(), copyBox, rolePrompt()].filter(Boolean));
-  for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
-  if(aid){ const el=document.getElementById(aid); if(el){ el.focus({preventScroll:true}); try{ if(sel!=null) el.setSelectionRange(sel,sel); }catch(e){} } }
+  const gate=schoolGate();
+  patch(main,[...top, gate||fn(), copyBox, setupPrompt()]);
   resolveIds([...S.team.map(t=>t.id),...S.notes.map(x=>x.by),...S.progress.map(x=>x.by),...S.people.flatMap(p=>[p.createdBy,p.updatedBy]),...S.meetings.flatMap(m=>[m.by,m.updatedBy,m.talkBy])]);
 }
 const sec=(key,title,summary,body)=>h("details",{class:"sec","data-key":key,open:S.open.has(key)||null},h("summary",null,h("b",null,title),h("span",{class:"sum"},summary||"")),h("div",{class:"in"},body));
 
-window.addEventListener("online",()=>render());
-window.addEventListener("offline",()=>render());
+window.addEventListener("online",()=>soon());
+window.addEventListener("offline",()=>soon());
 
 // ---------- Home ----------
 function attentionRows(){
@@ -512,7 +692,7 @@ function vHome(){
   const newWeek=S.people.filter(p=>!p.importedAt&&p.createdAt&&new Date(p.createdAt)>=weekAgo).length;
   const d=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   return h("div",null,
-    h("div",{class:"greet"},h("h1",null, first?`Hare Kṛṣṇa, ${first}`:"Hare Kṛṣṇa"),h("span",{class:"date"},`${d} · ${!S.ready?"loading…":plural(S.people.length,"person","people")+" on the roster"}`)),
+    h("div",{class:"greet"},h("h1",null, first?`Hare Kṛṣṇa, ${first}`:"Hare Kṛṣṇa"),h("span",{class:"date"},`${d} · ${!S.ready?"loading…":plural(S.people.length,"person","people")+" at "+schoolName(S.schoolId)}`)),
     h("div",{style:"position:relative"},
       h("input",{id:"home_q",class:"big",type:"search",autocomplete:"off",placeholder:"Find someone by name or phone","aria-label":"Find someone",value:S.homeQ,
         oninput:e=>{S.homeQ=e.target.value; render();},
@@ -558,24 +738,105 @@ function myPeopleBox(){
       :h("p",{class:"muted",style:"margin:0"},"No one assigned to you yet. Tap “+ Add” to pick people from the roster."),
     mine.length>5?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>nav("people",{filter:"mine"})},`See all ${mine.length} →`):null);
 }
-function rolePrompt(){
+function schoolSwitcher(label,nested){
+  const acc=accessibleSchools(), canSwitch=S.schoolsChecked&&S.schools.length>0;
+  return h("div",{class:"menu-wrap title-wrap"+(nested?" nested":"")},
+    h("button",{class:"title","aria-haspopup":canSwitch?"true":null,"aria-expanded":canSwitch?String(S.menu==="school"):null,"aria-label":canSwitch?`School: ${label}. Tap to switch school`:"Home",
+      onclick:e=>{ e.stopPropagation(); if(!canSwitch){ goTab("home"); return; } S.menu=S.menu==="school"?false:"school"; render(); }},
+      h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",{class:"tt"},h("span",{class:"tn"},label),canSwitch?h("span",{class:"ts"},acc.length>1?"Switch school ▾":"School ▾"):null)),
+    S.menu==="school"?h("div",{class:"menu left",role:"menu"},
+      h("div",{class:"who"},h("div",{style:"font-weight:700"},"Schools"),h("div",{class:"muted small"},isAdminNow()?"As an admin you can open every school.":"Schools you work with.")),
+      acc.map(x=>h("button",{role:"menuitemradio","aria-checked":String(x.id===S.schoolId),onclick:()=>switchSchool(x.id)},h("span",{class:"rowflex"},h("span",null,x.name||x.id),x.id===S.schoolId?h("span",{class:"pill"},"Viewing"):null))),
+      h("button",{role:"menuitem",class:"sep",onclick:()=>nav("schools")},isAdminNow()?"Manage schools":"Join or leave a school")):null);
+}
+function schoolGate(){
+  if(!S.db||S.offline) return null;
+  if(!S.schoolsChecked||!S.loadedGlobal.has("schools")) return h("div",{class:"empty"},h("b",null,"Loading…"),"Getting your schools.");
+  if(!S.schools.length) return isAdminNow()?vSetup():h("div",{class:"empty"},h("b",null,"Your schools aren't set up yet"),"An admin is setting things up. Check back in a few minutes.");
+  if(S.screen==="schools"||S.screen==="me") return null;
+  if(!S.schoolId){
+    const blockedAll=S.schools.every(x=>S.blocked.has(x.id));
+    return h("div",{class:"empty"},h("b",null,blockedAll?"You've been removed from every school":"Choose your school to get started"),blockedAll?"Ask an admin to add you back to a school.":"Pick the school or schools you work with in the window that's open.");
+  }
+  return null;
+}
+function vSetup(){
+  const n=S.legacyCount, busy=S.migrating;
+  const f=h("form",{class:"card",onsubmit:async e=>{ e.preventDefault(); const name=document.getElementById("setup_name").value.trim(); if(!name){ toast("Give the school a name"); return; }
+      if(n) await migrateLegacy(name); else { if(await createSchool(name)) S.dirty.delete("setup_name"); } }},
+    h("h2",null,n?"Move your existing data into a school":"Create your first school"),
+    h("p",{class:"muted",style:"margin:0"},n?`Everything you've recorded so far (${plural(n,"person","people")}, plus their notes, meetings and message logs) will go into this school. Everyone already on the team is added to it, so nobody loses access.`:"Each school gets its own students, meetings, message logs and team."),
+    h("label",{class:"f"},"School name",h("input",{id:"setup_name",class:"big",value:n?"UC Berkeley":"",placeholder:"e.g. UC Berkeley",autocomplete:"off",disabled:busy||null})),
+    busy?h("div",{class:"stack",style:"gap:6px"},h("b",null,busy.step),busy.total?h("div",{class:"progress"},h("i",{style:`width:${Math.round(100*busy.done/busy.total)}%`})):null,h("span",{class:"muted small"},"Keep this page open until it finishes."))
+      :h("button",{class:"btn primary block",type:"submit"},n?"Create school and move my data":"Create school"));
+  return h("div",{class:"stack",style:"gap:16px"},
+    h("span",null,h("h1",null,"Set up schools"),h("span",{class:"muted small"},"The database can now track your club at several schools")),
+    S.legacyCount==null?h("p",{class:"muted"},"Checking your existing data…"):f);
+}
+function setupPrompt(){
   const t=S.team.find(x=>x.id===S.myId);
-  if(!t||TEAM_ROLES.includes(t.title)||!S.canWrite) return null;
-  const pick=S.promptRole||(window.FB&&TEAM_ROLES.includes(window.FB.role)?window.FB.role:"Speaker");
+  if(!t||!S.canWrite||!S.schoolsChecked||!S.schools.length) return null;
+  const needRole=!TEAM_ROLES.includes(t.title), needSchool=S.mySchools.size===0;
+  if(!needRole&&!needSchool) return null;
+  const pick=S.promptRole||(TEAM_ROLES.includes(t.title)?t.title:(window.FB&&TEAM_ROLES.includes(window.FB.role)?window.FB.role:"Speaker"));
+  if(!S.promptSchools) S.promptSchools=new Set(S.schools.length===1&&!S.blocked.has(S.schools[0].id)?[S.schools[0].id]:[]);
+  const open=S.schools.filter(x=>!S.blocked.has(x.id)).sort(byName), shut=S.schools.filter(x=>S.blocked.has(x.id));
   const f=h("form",{class:"box stack modal",onsubmit:async e=>{
     e.preventDefault(); const name=document.getElementById("rp_name").value.trim();
     if(!name){ toast("Add your name"); return; }
-    if(await write(db=>db.doc("team/"+S.myId).update({name,title:pick}),"Profile saved")){ S.promptRole=null; S.dirty.delete("rp_name"); render(); }
+    if(!S.promptSchools.size){ toast("Choose at least one school"); return; }
+    const ok=await write(db=>db.doc("team/"+S.myId).update({name,title:pick}));
+    if(ok&&await setMySchools(new Set([...S.mySchools,...S.promptSchools]))){ toast("Profile saved"); S.promptRole=null; S.promptSchools=null; S.dirty.delete("rp_name"); render(); }
   }},
     h("h2",{id:"rp_t"},"Set up your profile"),
-    h("p",{style:"margin:0"},"Before you start, tell the team who you are and what you do. If you give talks or look after students, choose Speaker."),
+    h("p",{style:"margin:0"},"Tell the team who you are, what you do, and which school you work with."),
     h("label",{class:"f"},"Your name",h("input",{id:"rp_name",class:"big",value:t.name||S.meName||"",required:true,autocomplete:"off"})),
     h("p",{style:"margin:4px 0 0;font-weight:700"},"What do you do on the team?"),
-    TEAM_ROLES.map(r=>h("button",{type:"button",class:"opt","aria-pressed":String(pick===r),onclick:()=>{S.promptRole=r; render();}},h("span",null,r),h("span",{class:"ck","aria-hidden":"true"},pick===r?"✓":""))),
-    h("button",{class:"btn primary block",type:"submit"},`Save and continue`));
+    h("div",{class:"seg"},TEAM_ROLES.map(r=>h("button",{type:"button",class:"opt sm","aria-pressed":String(pick===r),onclick:()=>{S.promptRole=r; render();}},h("span",null,r),h("span",{class:"ck","aria-hidden":"true"},pick===r?"✓":"")))),
+    h("p",{style:"margin:4px 0 0;font-weight:700"},"Which school do you work with? ",h("span",{class:"muted small",style:"font-weight:400"},"choose one or more")),
+    open.length?h("div",{class:"checks"},open.map(x=>h("label",{class:"chk"},h("input",{type:"checkbox",checked:S.promptSchools.has(x.id)||null,onchange:e=>{ e.target.checked?S.promptSchools.add(x.id):S.promptSchools.delete(x.id); render(); }}),h("span",null,x.name||x.id)))):null,
+    shut.length?h("p",{class:"muted small",style:"margin:0"},`Removed by an admin: ${shut.map(x=>x.name||x.id).join(", ")}. Ask an admin if this is a mistake.`):null,
+    open.length?h("button",{class:"btn primary block",type:"submit"},"Save and continue"):h("p",{style:"margin:0;font-weight:700"},"Ask an admin to add you back to a school."));
   return h("div",{class:"overlay",role:"dialog","aria-modal":"true","aria-labelledby":"rp_t"},f);
 }
-
+function vSchools(){
+  const admin=isAdminNow();
+  const mine=S.schools.filter(x=>S.mySchools.has(x.id)).sort(byName), other=S.schools.filter(x=>!S.mySchools.has(x.id)).sort(byName);
+  const row=(x,right,sub)=>h("div",{class:"res",style:"cursor:default"},h("span",{class:"grow"},h("span",{class:"name",style:"display:block"},x.name||x.id),sub?h("span",{class:"meta"},sub):null),right);
+  const cf=admin?h("form",{class:"row",onsubmit:async e=>{ e.preventDefault(); const el=document.getElementById("new_school"); if(await createSchool(el.value)){ el.value=""; S.dirty.delete("new_school"); } }},
+    h("input",{id:"new_school",class:"grow",style:"flex:1 1 200px",placeholder:"e.g. UC Davis",autocomplete:"off","aria-label":"New school name"}),h("button",{class:"btn primary",type:"submit"},"Create school")):null;
+  const man=admin&&S.manageId?schoolById(S.manageId):null;
+  return h("div",{class:"stack",style:"gap:18px"},
+    h("span",null,h("h1",null,admin?"Schools":"Your schools"),h("span",{class:"muted small"},admin?"Create schools, and choose who works at each one":"Join or leave the schools you work with")),
+    h("div",{class:"stack",style:"gap:8px"},h("h2",{class:"h2s"},"Schools you work with"),
+      mine.length?h("div",{class:"list"},mine.map(x=>row(x,h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},
+        x.id===S.schoolId?h("span",{class:"pill"},"Viewing"):h("button",{class:"btn small",onclick:()=>switchSchool(x.id)},"Open"),
+        mine.length>1?(S.confirm==="leave:"+x.id?h("button",{class:"btn small danger",onclick:async()=>{ const w=new Set(S.mySchools); w.delete(x.id); if(await setMySchools(w)){ S.confirm=null; toast(`You left ${x.name}`); } }},"Leave"):h("button",{class:"link small",onclick:()=>{S.confirm="leave:"+x.id; render();}},"Leave")):null))))
+        :h("p",{class:"muted",style:"margin:0"},"You haven't joined a school yet.")),
+    other.length?h("div",{class:"stack",style:"gap:8px"},h("h2",{class:"h2s"},admin?"Other schools":"Join another school"),
+      h("div",{class:"list"},other.map(x=>row(x,S.blocked.has(x.id)?h("span",{class:"meta"},"Removed by an admin"):h("button",{class:"btn small",onclick:async()=>{ if(await setMySchools(new Set([...S.mySchools,x.id]))) toast(`You joined ${x.name}`); }},"Join"),admin&&x.id===S.schoolId?"Viewing as admin":null)))):null,
+    admin?h("div",{class:"card"},h("div",{class:"card-h"},h("span",null,h("h2",null,"Manage a school"),h("span",{class:"muted small"},"Rename it, see who works there, remove or add people"))),
+      h("div",{class:"chips"},S.schools.slice().sort(byName).map(x=>h("button",{class:"chip","aria-pressed":String(S.manageId===x.id),onclick:()=>{ S.manageId=S.manageId===x.id?null:x.id; S.confirm=null; render(); }},x.name||x.id))),
+      man?manageSchool(man):h("p",{class:"muted small",style:"margin:0"},"Pick a school above."),
+      h("div",{class:"stack",style:"gap:6px;border-top:1px solid var(--line);padding-top:12px"},h("b",null,"Create a school"),cf)):null);
+}
+function manageSchool(x){
+  const ready=loaded(), staffIds=S.manage.staff.map(d=>d.id), blockedIds=S.manage.blocked.map(d=>d.id);
+  const others=S.team.filter(t=>!t.removed&&!staffIds.includes(t.id)).sort((a,b)=>memberName(a.id).localeCompare(memberName(b.id)));
+  const rf=h("form",{class:"row",onsubmit:async e=>{ e.preventDefault(); const v=document.getElementById("rename_school").value.trim(); if(!v) return; if(await write(db=>db.doc(`schools/${x.id}`).update({name:v}),"Renamed")) S.dirty.delete("rename_school"); }},
+    h("input",{id:"rename_school",class:"grow",style:"flex:1 1 200px",value:x.name||"","aria-label":"School name",autocomplete:"off"}),h("button",{class:"btn",type:"submit"},"Rename"));
+  return h("div",{class:"stack",style:"gap:12px"},rf,
+    !ready?h("p",{class:"muted"},"Loading…"):[
+      h("b",null,`Team at ${x.name} · ${staffIds.length}`),
+      staffIds.length?h("div",{class:"list"},staffIds.map(uid=>h("div",{class:"res",style:"cursor:default"},h("span",{class:"grow"},h("span",{class:"name",style:"display:block"},memberName(uid)+(uid===S.myId?" (you)":"")),h("span",{class:"meta"},(S.team.find(t=>t.id===uid)||{}).title||"No role yet")),
+        S.confirm==="rms:"+uid?h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},h("button",{class:"btn small danger",onclick:async()=>{ if(await removeFromSchool(x.id,uid)){ S.confirm=null; if(uid===S.myId){ S.mySchools.delete(x.id); pickSchool(); } } }},"Remove"),h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Keep"))
+          :h("button",{class:"link small",onclick:()=>{S.confirm="rms:"+uid; render();}},"Remove")))):h("p",{class:"muted",style:"margin:0"},"No one works here yet."),
+      h("p",{class:"muted small",style:"margin:0"},"Removing someone takes them off this school's contact lists and stops them rejoining it on their own. Their notes and logs stay."),
+      blockedIds.length?[h("b",null,"Removed"),h("div",{class:"list"},blockedIds.map(uid=>h("div",{class:"res",style:"cursor:default"},h("span",{class:"name"},memberName(uid)),h("button",{class:"btn small",onclick:()=>allowBack(x.id,uid)},"Allow back"))))]:null,
+      others.length?h("form",{class:"row",onsubmit:async e=>{ e.preventDefault(); const uid=document.getElementById("add_staff").value; if(uid) await addToSchool(x.id,uid); }},
+        h("select",{id:"add_staff",class:"grow",style:"flex:1 1 200px","aria-label":"Add a team member to this school"},h("option",{value:""},"Add a team member to this school…"),others.map(t=>h("option",{value:t.id},memberName(t.id)))),
+        h("button",{class:"btn",type:"submit"},"Add")):null]);
+}
 function profileMenu(){
   if(!S.myId) return null;
   const t=S.team.find(x=>x.id===S.myId), name=memberName(S.myId), role=t&&TEAM_ROLES.includes(t.title)?t.title:null;
@@ -593,11 +854,13 @@ function vMe(){
   const t=S.team.find(x=>x.id===S.myId);
   if(!t) return h("div",{class:"empty"},h("b",null,S.ready?"Your profile isn't set up yet":"Loading…"),"Reload the page in a moment.");
   if(S.meRole===undefined) S.meRole=TEAM_ROLES.includes(t.title)?t.title:"";
+  if(!S.meSchools) S.meSchools=new Set(S.mySchools);
   const f=h("form",{class:"stack",style:"gap:18px",onsubmit:async e=>{
     e.preventDefault(); const name=document.getElementById("me_name2").value.trim();
     if(!name){ toast("Add your name"); return; }
     if(!S.meRole){ toast("Choose what you do on the team"); return; }
-    if(await write(db=>db.doc("team/"+S.myId).update({name,title:S.meRole}),"Profile saved")){ clearDirty(f); S.meRole=undefined; back(); }
+    if(!S.meSchools.size){ toast("Keep at least one school"); return; }
+    if(await write(db=>db.doc("team/"+S.myId).update({name,title:S.meRole}))&&await setMySchools(new Set(S.meSchools))){ toast("Profile saved"); clearDirty(f); S.meRole=undefined; S.meSchools=null; back(); }
   }},
     h("h1",null,"Your profile"),
     h("label",{class:"f"},"Your name",h("input",{id:"me_name2",class:"big",value:t.name||S.meName||"",required:true,autocomplete:"off"})),
@@ -605,6 +868,10 @@ function vMe(){
       h("p",{style:"margin:0;font-weight:700"},"What do you do on the team?"),
       TEAM_ROLES.map(r=>h("button",{type:"button",class:"opt","aria-pressed":String(S.meRole===r),onclick:()=>{S.meRole=r; render();}},
         h("span",null,r),h("span",{class:"ck","aria-hidden":"true"},S.meRole===r?"✓":"")))),
+    h("div",{class:"stack",style:"gap:10px"},h("p",{style:"margin:0;font-weight:700"},"Schools you work with"),
+      h("div",{class:"checks"},S.schools.slice().sort(byName).map(x=>h("label",{class:"chk",style:S.blocked.has(x.id)?"opacity:.55":null},
+        h("input",{type:"checkbox",disabled:S.blocked.has(x.id)||null,checked:S.meSchools.has(x.id)||null,onchange:e=>{ e.target.checked?S.meSchools.add(x.id):S.meSchools.delete(x.id); }}),
+        h("span",null,x.name||x.id),S.blocked.has(x.id)?h("span",{class:"muted small"},"removed by an admin"):null)))),
     h("button",{class:"btn primary block",type:"submit"},"Save"));
   return f;
 }
@@ -616,7 +883,7 @@ function teamOptions(selected){
 }
 function vAdd(){ return personForm(null); }
 function personForm(p){
-  const v=p||{role:"Student",contactIds:S.myId?[S.myId]:[]};
+  const v=p||{role:"Student",contactIds:S.myId&&S.staff.includes(S.myId)?[S.myId]:[]};
   const showMore = !!p || S.addMore;
   const key=p?p.id:"new"; if(S.fc===undefined||S.fcFor!==key){ S.fc=contactsOf(v).slice(); S.fcFor=key; }
   const form=h("form",{class:"stack",onsubmit:async e=>{
@@ -625,11 +892,11 @@ function personForm(p){
     if(!data.name||(!p&&!data.phone)){ toast(p?"Add a name":"Name and phone number are needed"); return; }
     if(!p){ const k=phoneKey(data.phone), ex=k&&S.people.find(x=>phoneKey(x.phone)===k);
       if(ex&&S.dupOK!==ex.id){ S.dupWarn={id:ex.id}; render(); document.getElementById("dupWarn")?.scrollIntoView({block:"center"}); return; } }
-    if(p){ if(await write(db=>db.doc("people/"+p.id).update(data),"Saved")){ clearDirty(form); S.editing=false; S.fc=undefined; render(); } }
+    if(p){ if(await write(db=>db.doc(SP("people")+"/"+p.id).update(data),"Saved")){ clearDirty(form); S.editing=false; S.fc=undefined; render(); } }
     else{
       const note=g("notes"); let ref;
-      const ok=await write(async db=>{ ref=await db.collection("people").add({...data,createdAt:new Date().toISOString(),createdBy:S.myId||null});
-        const at=new Date().toISOString(); for(const line of note.split("\n").map(x=>x.replace(/^[-•*]\s*/,"").trim()).filter(Boolean)) await db.collection("notes").add({personId:ref.id,text:line,by:S.myId||null,createdAt:at}); },`${data.name} added`);
+      const ok=await write(async db=>{ ref=await db.collection(SP("people")).add({...data,createdAt:new Date().toISOString(),createdBy:S.myId||null});
+        const at=new Date().toISOString(); for(const line of note.split("\n").map(x=>x.replace(/^[-•*]\s*/,"").trim()).filter(Boolean)) await db.collection(SP("notes")).add({personId:ref.id,text:line,by:S.myId||null,createdAt:at}); },`${data.name} added`);
       if(ok){ clearDirty(form); S.fc=undefined; S.screen="person"; S.personId=ref.id; render(); window.scrollTo(0,0); }
     }
   }},
@@ -647,7 +914,7 @@ function personForm(p){
           h("span",null,memberName(t.id)+(t.id===S.myId?" (you)":"")),t.title?h("span",{class:"muted small"},t.title):null)):h("p",{class:"muted small",style:"margin:0"},"No team members yet.")),
       p?null:h("label",{class:"f"},h("span",null,"Notes ",h("small",null,`optional · one point per line · signed as ${memberName(S.myId)}`)),h("textarea",{id:"f_notes",placeholder:"How you met\nWhat they're interested in"}))
     ] : h("div",{class:"box",style:"padding:14px 16px"},
-        h("p",{class:"small",style:"margin:0"},`Role: Student · Looked after by: ${S.myId?memberName(S.myId)+" (you)":"no one yet"}`),
+        h("p",{class:"small",style:"margin:0"},`Role: Student · Looked after by: ${S.myId&&S.staff.includes(S.myId)?memberName(S.myId)+" (you)":"no one yet"}`),
         h("button",{type:"button",class:"link",onclick:()=>{S.addMore=true; render(); setTimeout(()=>document.getElementById("f_email")?.focus(),0);}},"Add email, birthday, schedule, notes, or change role and who looks after them")),
     (!p&&S.dupWarn&&personById(S.dupWarn.id))?(()=>{ const ex=personById(S.dupWarn.id); return h("div",{class:"confirm",id:"dupWarn",style:"background:var(--marigold-soft)"},
       h("span",null,h("b",null,ex.name)," is already on the roster with ",h("b",null,ex.phone||"this number"),". Adding again would create a duplicate."),
@@ -681,7 +948,7 @@ function vPerson(){
     e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
     const entry={personId:p.id,kind:"reading",date:g("rd_date")||today(),book:g("rd_book"),pages:g("rd_pages")===""?null:Number(g("rd_pages")),note:g("rd_note"),by:S.myId||null,createdAt:new Date().toISOString()};
     if(!entry.book){ toast("Add the book they're reading"); return; }
-    if(await write(db=>db.collection("progress").add(entry),"Reading logged")){ ["rd_pages","rd_note"].forEach(id=>document.getElementById(id).value=""); clearDirty(rf); }
+    if(await write(db=>db.collection(SP("progress")).add(entry),"Reading logged")){ ["rd_pages","rd_note"].forEach(id=>document.getElementById(id).value=""); clearDirty(rf); }
   }},
     h("div",{class:"row"},
       h("label",{class:"f",style:"flex:2 1 200px"},"Book",h("input",{id:"rd_book",list:"bookList",value:reading[0]?reading[0].book:"",placeholder:"e.g. Bhagavad-gītā As It Is",autocomplete:"off"})),
@@ -695,14 +962,14 @@ function vPerson(){
   const cf=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
     e.preventDefault(); const v=document.getElementById("ch_rounds").value.trim(); if(v===""){ toast("Enter rounds a day"); return; }
     const rounds=Number(v);
-    if(await write(db=>db.collection("progress").add({personId:p.id,kind:"chanting",date:today(),rounds,change:cur&&cur.rounds===rounds?"same":"changed",by:S.myId||null,createdAt:new Date().toISOString()}),"Chanting updated")) clearDirty(cf);
+    if(await write(db=>db.collection(SP("progress")).add({personId:p.id,kind:"chanting",date:today(),rounds,change:cur&&cur.rounds===rounds?"same":"changed",by:S.myId||null,createdAt:new Date().toISOString()}),"Chanting updated")) clearDirty(cf);
   }},
     h("div",{class:"row",style:"align-items:flex-end"},
       h("label",{class:"f",style:"flex:1 1 140px"},cur?"New number of rounds a day":"Rounds a day",h("input",{id:"ch_rounds",type:"number",min:"0",inputmode:"numeric",value:cur?String(cur.rounds):""})),
       h("button",{class:"btn",type:"submit"},cur?"Save change":"Save")),
-    cur?h("button",{type:"button",class:"btn primary",style:"align-self:flex-start",onclick:()=>write(db=>db.collection("progress").add({personId:p.id,kind:"chanting",date:today(),rounds:cur.rounds,change:"same",by:S.myId||null,createdAt:new Date().toISOString()}),"Confirmed")},`Still chanting ${cur.rounds} rounds`):null);
+    cur?h("button",{type:"button",class:"btn primary",style:"align-self:flex-start",onclick:()=>write(db=>db.collection(SP("progress")).add({personId:p.id,kind:"chanting",date:today(),rounds:cur.rounds,change:"same",by:S.myId||null,createdAt:new Date().toISOString()}),"Confirmed")},`Still chanting ${cur.rounds} rounds`):null);
 
-  const del=(x,label)=>S.canWrite?h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>write(db=>db.doc("progress/"+x.id).delete(),label)},"Remove"):null;
+  const del=(x,label)=>S.canWrite?h("button",{class:"link small",style:"color:var(--muted)",onclick:()=>write(db=>db.doc(SP("progress")+"/"+x.id).delete(),label)},"Remove"):null;
 
   return h("div",{class:"stack"},
     h("div",null, h("h1",null,p.name),
@@ -710,9 +977,11 @@ function vPerson(){
       h("p",{class:"lead"}, contactsOf(p).length?["Looked after by ",h("b",{style:"color:var(--ink)"},contactNames(p))]:"No one assigned yet"),
       S.myId&&S.canWrite?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":"+ I'll look after them too"):null),
     h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
-      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:"user-select:all"},fmtPhone(p.phone)),callLinks(p)):null), dd("Email",p.email?h("span",{style:"user-select:all"},p.email):null),
-      dd("Birthday",p.birthday?`${fmtShort(p.birthday)}${bd?(bd.days===0?" · today!":` · in ${plural(bd.days,"day")}`):""}`:null),
-      dd("Class schedule",p.schedule?h("span",{style:"white-space:pre-wrap;font-weight:400"},p.schedule):null)),
+      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:"user-select:all"},fmtPhone(p.phone)),callLinks(p)):null),
+      p.email?dd("Email",h("span",{style:"user-select:all"},p.email)):null,
+      p.birthday?dd("Birthday",`${fmtShort(p.birthday)}${bd?(bd.days===0?" · today!":` · in ${plural(bd.days,"day")}`):""}`):null,
+      p.schedule?dd("Class schedule",h("span",{style:"white-space:pre-wrap;font-weight:400"},p.schedule)):null,
+      (!p.email||!p.birthday||!p.schedule)&&S.canWrite?h("div",{class:"add"},h("button",{class:"link small",onclick:()=>{S.editing=true; S.fc=undefined; S.dirty.clear(); render(); window.scrollTo(0,0);}},"+ Add "+[!p.email?"email":null,!p.birthday?"birthday":null,!p.schedule?"class schedule":null].filter(Boolean).join(", "))):null),
       S.canWrite?h("button",{class:"btn small",style:"margin-top:14px",onclick:()=>{S.editing=true; S.fc=undefined; S.dirty.clear(); render(); window.scrollTo(0,0);}},"Edit details"):null),
     h("div",{class:"box stack",style:"gap:10px"},
       h("div",{class:"row",style:"justify-content:space-between"},h("span",null,h("h2",{style:"font-size:1.1rem"},`Team notes · ${notes.length}`),h("span",{class:"muted small"},"Anyone on the team can add a point")),
@@ -738,8 +1007,8 @@ function vPerson(){
     h("p",{class:"muted small",style:"margin:4px 0 0"},p.importedAt?`Signed up ${p.createdAt?fmtShort(p.createdAt):"(no date)"} · imported ${fmtShort(p.importedAt)} by ${memberName(p.createdBy)}`:`Added by ${memberName(p.createdBy)}${p.createdAt?" on "+fmtShort(p.createdAt):""}`,p.updatedBy&&p.updatedAt&&p.updatedAt!==p.createdAt?` · last edited by ${memberName(p.updatedBy)}`:""),
     S.canWrite?(S.confirm==="del"?h("div",{class:"confirm"},h("span",null,`Delete ${p.name}, their notes, reading and chanting records? This can't be undone.`),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{
-        const ok=await write(async db=>{ for(const n of S.notes.filter(x=>x.personId===p.id)) await db.doc("notes/"+n.id).delete();
-          for(const x of S.progress.filter(x=>x.personId===p.id)) await db.doc("progress/"+x.id).delete(); await db.doc("people/"+p.id).delete(); },`${p.name} removed`);
+        const ok=await write(async db=>{ for(const n of S.notes.filter(x=>x.personId===p.id)) await db.doc(SP("notes")+"/"+n.id).delete();
+          for(const x of S.progress.filter(x=>x.personId===p.id)) await db.doc(SP("progress")+"/"+x.id).delete(); await db.doc(SP("people")+"/"+p.id).delete(); },`${p.name} removed`);
         if(ok) back(); }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
       :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="del"; render();}},"Remove from roster")):null);
 }
@@ -754,7 +1023,7 @@ function vNotes(){
     e.preventDefault(); const t=document.getElementById("noteText");
     const lines=t.value.split("\n").map(x=>x.replace(/^[-•*]\s*/,"").trim()).filter(Boolean); if(!lines.length) return;
     const at=new Date().toISOString();
-    if(await write(async db=>{ for(const line of lines) await db.collection("notes").add({personId:p.id,text:line,by:S.myId||null,createdAt:at}); }, lines.length>1?`${lines.length} points added`:"Point added")){ t.value=""; S.dirty.delete("noteText"); }
+    if(await write(async db=>{ for(const line of lines) await db.collection(SP("notes")).add({personId:p.id,text:line,by:S.myId||null,createdAt:at}); }, lines.length>1?`${lines.length} points added`:"Point added")){ t.value=""; S.dirty.delete("noteText"); }
   }},
     h("label",{class:"f",for:"noteText"},"Add points ",h("small",null,`one per line · signed as ${memberName(S.myId)}`)),
     h("textarea",{id:"noteText",placeholder:"Asked about the Sunday feast\nStruggling with exams this week",onkeydown:e=>{ if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){ e.preventDefault(); e.target.form.requestSubmit(); } }}),
@@ -766,7 +1035,7 @@ function vNotes(){
       h("h2",{style:"font-size:1rem;color:var(--muted)"},g.d==="—"?"Undated":parse(g.d).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})),
       h("ul",{class:"bullets"},g.items.map(n=>h("li",null,h("span",null,n.text),
         h("span",{class:"by"},`${memberName(n.by)} · ${n.createdAt?new Date(n.createdAt).toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}):""}`,
-          S.canWrite&&(n.by===S.myId||!n.by||isAdminNow())?h("button",{class:"link small",style:"color:var(--muted);padding:0 0 0 10px",onclick:()=>write(db=>db.doc("notes/"+n.id).delete(),"Point removed")},"Remove"):null))))))
+          S.canWrite&&(n.by===S.myId||!n.by||isAdminNow())?h("button",{class:"link small",style:"color:var(--muted);padding:0 0 0 10px",onclick:()=>write(db=>db.doc(SP("notes")+"/"+n.id).delete(),"Point removed")},"Remove"):null))))))
       :h("div",{class:"empty"},h("b",null,"No notes yet"),"Add the first points above."));
 }
 
@@ -780,7 +1049,7 @@ function vMeeting(){
   if(!m){
     const f=h("form",{class:"stack",onsubmit:async e=>{
       e.preventDefault(); const date=document.getElementById("m_date").value||today(), title=document.getElementById("m_title").value.trim()||"Club meeting";
-      let ref; if(await write(async db=>{ ref=await db.collection("meetings").add({date,title,present:[],att:{},prasadam:[],pr:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Meeting started")){ clearDirty(f); S.meetingId=ref.id; render(); setTimeout(()=>document.getElementById("att_q")?.focus(),0); }
+      let ref; if(await write(async db=>{ ref=await db.collection(SP("meetings")).add({date,title,present:[],att:{},prasadam:[],pr:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Meeting started")){ clearDirty(f); S.meetingId=ref.id; render(); setTimeout(()=>document.getElementById("att_q")?.focus(),0); }
     }},
       h("div",null,h("h1",null,"Start a club meeting"),h("p",{class:"lead"},"Then check people in as they arrive.")),
       h("label",{class:"f"},h("span",null,"What's the meeting? ",h("small",null,"optional")),h("input",{id:"m_title",class:"big",placeholder:"e.g. Wednesday Gita class",autocomplete:"off"})),
@@ -802,7 +1071,7 @@ function vMeeting(){
 
   const talk=h("form",{class:"stack",onsubmit:async e=>{
     e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
-    if(await write(db=>db.doc("meetings/"+m.id).update({speaker:g("m_speaker"),topic:g("m_topic"),notes:g("m_notes"),talkBy:S.myId||null,talkAt:new Date().toISOString(),...stamp()}),"Saved")) clearDirty(talk);
+    if(await write(db=>db.doc(SP("meetings")+"/"+m.id).update({speaker:g("m_speaker"),topic:g("m_topic"),notes:g("m_notes"),talkBy:S.myId||null,talkAt:new Date().toISOString(),...stamp()}),"Saved")) clearDirty(talk);
   }},
     h("label",{class:"f"},"Speaker",h("input",{id:"m_speaker",list:"speakerList",value:m.speaker||"",placeholder:"Who gave the talk",autocomplete:"off",disabled:!S.canWrite||null})),
     h("datalist",{id:"speakerList"},speakers.map(n=>h("option",{value:n}))),
@@ -815,7 +1084,7 @@ function vMeeting(){
     e.preventDefault(); const dish=document.getElementById("pr_dish").value.trim(), cook=document.getElementById("pr_cook").value.trim();
     if(!dish){ toast("Add what was made"); return; }
     const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-    if(await write(db=>db.doc("meetings/"+m.id).update({pr:{[key]:{dish,cook,by:S.myId||null,at:new Date().toISOString()}},...stamp()}),"Prasadam added")){ document.getElementById("pr_dish").value=""; document.getElementById("pr_cook").value=""; clearDirty(prf); }
+    if(await write(db=>db.doc(SP("meetings")+"/"+m.id).update({pr:{[key]:{dish,cook,by:S.myId||null,at:new Date().toISOString()}},...stamp()}),"Prasadam added")){ document.getElementById("pr_dish").value=""; document.getElementById("pr_cook").value=""; clearDirty(prf); }
   }},
     h("div",{class:"row"},
       h("label",{class:"f",style:"flex:2 1 200px"},"What was made",h("input",{id:"pr_dish",placeholder:"e.g. Khichdi",autocomplete:"off"})),
@@ -827,16 +1096,17 @@ function vMeeting(){
     S.editMeeting===m.id&&S.canWrite?(()=>{ const f=h("form",{class:"card",style:"border:2px solid var(--blue)",onsubmit:async e=>{
         e.preventDefault(); const title=document.getElementById("em_title").value.trim()||"Club meeting", date=document.getElementById("em_date").value;
         if(!date){ toast("Pick a date"); return; }
-        if(await write(db=>db.doc("meetings/"+m.id).update({title,date,...stamp()}),"Meeting updated")){ S.editMeeting=null; clearDirty(f); render(); } }},
+        if(await write(db=>db.doc(SP("meetings")+"/"+m.id).update({title,date,...stamp()}),"Meeting updated")){ S.editMeeting=null; clearDirty(f); render(); } }},
         h("h2",{style:"font-size:1.1rem"},"Edit meeting"),
         h("label",{class:"f"},"Name of the meeting",h("input",{id:"em_title",class:"big",value:m.title||"",placeholder:"e.g. Wednesday Gita class",autocomplete:"off"})),
         h("label",{class:"f"},"Date",h("input",{id:"em_date",type:"date",value:m.date||today()})),
         h("p",{class:"muted small",style:"margin:0"},"Check-ins, the talk, notes and prasadam stay with this meeting."),
         h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"Save"),h("button",{class:"btn",type:"button",onclick:()=>{ S.editMeeting=null; S.dirty.delete("em_title"); S.dirty.delete("em_date"); render(); }},"Cancel")));
       return f; })()
-    :h("div",null,h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("h1",null,m.title||"Club meeting"),
-        S.canWrite?h("button",{class:"btn small",onclick:()=>{ S.editMeeting=m.id; render(); setTimeout(()=>document.getElementById("em_title")?.focus(),0); }},"Edit name or date"):null),
-      h("p",{class:"lead"},`${fmt(m.date)} · started by ${memberName(m.by)} · `,h("button",{class:"link",style:"padding:0",onclick:()=>nav("meetings")},"switch meeting"))),
+    :h("div",null,h("h1",null,m.title||"Club meeting"),
+      h("p",{class:"lead"},`${fmt(m.date)} · started by ${memberName(m.by)}`),
+      h("div",{class:"actions"},S.canWrite?h("button",{class:"btn small",onclick:()=>{ S.editMeeting=m.id; render(); setTimeout(()=>document.getElementById("em_title")?.focus(),0); }},"Edit name or date"):null,
+        h("button",{class:"btn small",onclick:()=>nav("meetings")},"Switch meeting"))),
     h("div",{class:"box stack",style:"gap:10px"},
       h("label",{class:"f",for:"att_q",style:"font-size:1.1rem"},"Check someone in"),
       S.canWrite?h("input",{id:"att_q",class:"big",type:"search",autocomplete:"off",placeholder:"Start typing their name",value:S.attQ,
@@ -862,21 +1132,21 @@ function vMeeting(){
     sec("prasadam","Prasadam", pr.length?pr.map(x=>x.dish).join(", "):"What was made, who cooked",[
       pr.length?h("div",{class:"list"},pr.map((x,i)=>h("div",{class:"res",style:"cursor:default"},
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},x.dish),h("span",{class:"meta"},`${x.cook?"Cooked by "+x.cook:"Cook not noted"} · logged by ${memberName(x.by)}`)),
-        S.canWrite?h("button",{class:"x","aria-label":`Remove ${x.dish}`,onclick:()=>write(db=>db.doc("meetings/"+m.id).update(x.key?{pr:{[x.key]:null},...stamp()}:{prasadam:(m.prasadam||[]).filter((_,j)=>j!==x.legacyIdx),...stamp()}),"Removed")},"×"):null))):null,
+        S.canWrite?h("button",{class:"x","aria-label":`Remove ${x.dish}`,onclick:()=>write(db=>db.doc(SP("meetings")+"/"+m.id).update(x.key?{pr:{[x.key]:null},...stamp()}:{prasadam:(m.prasadam||[]).filter((_,j)=>j!==x.legacyIdx),...stamp()}),"Removed")},"×"):null))):null,
       S.canWrite?prf:null]),
     S.canWrite?(S.confirm==="mdel"?h("div",{class:"confirm"},h("span",null,"Delete this meeting, its attendance, notes and prasadam?"),
-      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc("meetings/"+m.id).delete(),"Meeting deleted")){ S.meetingId=null; back(); } }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
+      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc(SP("meetings")+"/"+m.id).delete(),"Meeting deleted")){ S.meetingId=null; back(); } }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
       :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="mdel"; render();}},"Delete this meeting")):null);
 }
 function quickAdd(m){
   const f=h("form",{class:"stack",style:"gap:12px;background:var(--blue-soft);padding:16px;border-radius:12px",onsubmit:async e=>{
     e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
-    const data={name:g("np_name"),phone:g("np_phone"),email:"",schedule:"",birthday:"",role:g("np_role"),contactIds:S.myId?[S.myId]:[],createdAt:new Date().toISOString(),createdBy:S.myId||null,...stamp()};
+    const data={name:g("np_name"),phone:g("np_phone"),email:"",schedule:"",birthday:"",role:g("np_role"),contactIds:S.myId&&S.staff.includes(S.myId)?[S.myId]:[],createdAt:new Date().toISOString(),createdBy:S.myId||null,...stamp()};
     if(!data.name){ toast("Add a name"); return; }
     const k=phoneKey(data.phone), nm=data.name.trim().toLowerCase();
     const ex=k?S.people.find(x=>phoneKey(x.phone)===k):S.people.find(x=>(x.name||"").trim().toLowerCase()===nm);
     if(ex&&S.dupOK!==ex.id){ S.dupWarn={id:ex.id,byPhone:!!k}; render(); return; }
-    let ref; if(await write(async db=>{ ref=await db.collection("people").add(data); },`${data.name} added and checked in`)){
+    let ref; if(await write(async db=>{ ref=await db.collection(SP("people")).add(data); },`${data.name} added and checked in`)){
       clearDirty(f); S.quickAdd=null; S.attQ=""; S.dirty.delete("att_q"); setPresent(m,ref.id,true); }
   }},
     h("b",null,"New to the club"),
@@ -924,22 +1194,23 @@ function vPeople(){
   else if(S.filter!=="all") rows=rows.filter(r=>r.role===S.filter);
   rows.sort((a,b)=>a.name.localeCompare(b.name));
   const nFollow=S.people.filter(p=>stats(p).followUp).length, nMine=S.people.filter(p=>contactsOf(p).includes(S.myId)).length, nUn=S.people.filter(needsContact).length;
-  const chip=(v,l,c)=>h("button",{class:"chip","aria-pressed":String(S.filter===v),onclick:()=>{S.filter=v; render();}},l,c!=null?h("span",{class:"c"},String(c)):null);
+  const chip=(v,l,c)=>h("button",{class:"chip","aria-pressed":String(S.filter===v),onclick:()=>{S.filter=v; S.showAllPeople=false; render();}},l,c!=null?h("span",{class:"c"},String(c)):null);
   return h("div",{class:"stack"},
     h("div",{class:"row",style:"justify-content:space-between"},h("span",null,h("h1",null,"People"),h("span",{class:"muted small"},"Everyone on the roster and team. Tap a person for their profile")),S.canWrite?h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"+ Add a person"):null),
-    h("input",{id:"pq",type:"search",placeholder:"Search name, phone, contact",value:S.peopleQ,"aria-label":"Search people",oninput:e=>{S.peopleQ=e.target.value; render();}}),
+    h("input",{id:"pq",type:"search",placeholder:"Search name, phone, contact",value:S.peopleQ,"aria-label":"Search people",oninput:e=>{S.peopleQ=e.target.value; S.showAllPeople=false; render();}}),
     h("div",{class:"chips",role:"group","aria-label":"Show"},
       chip("all","Everyone"),chip("mine","Mine",nMine),chip("follow","Potential bloopers",nFollow),chip("unassigned","No contact",nUn),...ROLES.map(r=>chip(r,r+"s"))),
     ({mine:"People you're the contact for",follow:"People to reach out to, based on meeting check-ins and message replies",unassigned:"Came or replied, but no one is their contact yet. Open someone and tap “I'll look after them”"}[S.filter])?h("p",{class:"muted small",style:"margin:0"},{mine:"People you're the contact for",follow:"People to reach out to, based on meeting check-ins and message replies",unassigned:"Came or replied, but no one is their contact yet. Open someone and tap “I'll look after them”"}[S.filter]):null,
-    S.filter==="follow"?vBloopers(rows):[h("p",{class:"muted small",style:"margin:0"},plural(rows.length,"person","people")),
-    rows.length?h("div",{class:"list"},rows.map(r=>r.kind==="p"
+    S.filter==="follow"?vBloopers(rows):[h("p",{class:"muted small",style:"margin:0"},rows.length>25&&!S.showAllPeople?`Showing 25 of ${rows.length}${q?"":" · search to find anyone"}`:plural(rows.length,"person","people")),
+    rows.length?h("div",{class:"list"},(S.showAllPeople?rows:rows.slice(0,25)).map(r=>r.kind==="p"
       ? h("button",{class:"res",onclick:()=>nav("person",{personId:r.p.id})},
           h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.p.name),h("span",{class:"meta"},[r.role,contactsOf(r.p).length?"with "+contactNames(r.p):null].filter(Boolean).join(" · "))),
           r.s.followUp?blooperPill(r.s):h("span",{class:"meta"},r.s.last?"came "+fmtShort(r.s.last):r.s.lastReply?"replied "+fmtShort(r.s.lastReply):"new"))
       : h("div",{class:"res",style:"cursor:default"},
           h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.name+(r.t.id===S.myId?" (you)":"")),h("span",{class:"meta"},`${r.role} · team member · looks after ${plural(S.people.filter(p=>contactsOf(p).includes(r.t.id)).length,"person","people")}`)),
           h("span",{class:"pill"},"Team"))))
-      :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search or filter.":"Add the first person from the home screen.")]);
+      :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search or filter.":"Add the first person from the home screen."),
+    rows.length>25&&!S.showAllPeople?h("button",{class:"btn block",onclick:()=>{S.showAllPeople=true; render();}},`Show all ${rows.length}`):null]);
 }
 
 // ---------- Messages ----------
@@ -963,7 +1234,6 @@ function exportAllWeeks(){
       return [p.name,p.role||"Student",p.phone,...marks,n,ms.length,ms.length?Math.round(100*n/ms.length):""]; }));
   saveCsv(`messages-all-weeks-${today()}.csv`,rows);
 }
-const pendingMsg={}, pendingSent={};
 const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 function personalize(text,p){
   const nm=String(p.name||"").startsWith("Unknown")?"":String(p.name||"").trim().split(/\s+/)[0];
@@ -975,7 +1245,7 @@ const sentOf=m=>({...(m.sent||{}),...(pendingSent[m.id]||{})});
 function markSent(m,p,body,via){
   try{ navigator.clipboard&&navigator.clipboard.writeText(body).catch(()=>{}); }catch(e){}
   (pendingSent[m.id]||(pendingSent[m.id]={}))[p.id]={at:new Date().toISOString(),by:S.myId||null,via};
-  queueWrite("w:"+m.id,async()=>{ await write(db=>db.doc("messages/"+m.id).update({sent:{[p.id]:{at:new Date().toISOString(),by:S.myId||null,via}},...stamp()})); });
+  queueWrite("w:"+m.id,async()=>{ await write(db=>db.doc(SP("messages")+"/"+m.id).update({sent:{[p.id]:{at:new Date().toISOString(),by:S.myId||null,via}},...stamp()})); });
   setTimeout(render,300);
 }
 function textButtons(m,p,primary){
@@ -985,11 +1255,10 @@ function textButtons(m,p,primary){
     h("a",{class:"btn small"+(primary?" primary":""),href:sms,onclick:()=>markSent(m,p,body,"sms"),"aria-label":`Text ${p.name}`},"Text"),
     h("a",{class:"btn small",href:wa,target:"_blank",rel:"noopener",onclick:()=>markSent(m,p,body,"whatsapp"),"aria-label":`WhatsApp ${p.name}`},"WhatsApp"));
 }
-const respondedOf=m=>applyMap(m.responded,{...(m.replies||{}),...(pendingMsg[m.id]||{})});
 function setResponded(m,pid,on){
-  (pendingMsg[m.id]||(pendingMsg[m.id]={}))[pid]=on; render();
-  queueWrite("w:"+m.id,async()=>{ const ok=await write(db=>db.doc("messages/"+m.id).update({replies:{[pid]:on},...stamp()}));
-    if(pendingMsg[m.id]&&pendingMsg[m.id][pid]===on) delete pendingMsg[m.id][pid]; if(!ok) render(); });
+  (pendingMsg[m.id]||(pendingMsg[m.id]={}))[pid]=on; dirtyIdx(); render();
+  queueWrite("w:"+m.id,async()=>{ const ok=await write(db=>db.doc(SP("messages")+"/"+m.id).update({replies:{[pid]:on},...stamp()}));
+    if(pendingMsg[m.id]&&pendingMsg[m.id][pid]===on) delete pendingMsg[m.id][pid]; if(!ok){ dirtyIdx(); render(); } });
 }
 function vMessages(){
   const ms=S.messages.slice().sort((a,b)=>(a.date+(a.createdAt||""))<(b.date+(b.createdAt||""))?1:-1);
@@ -997,7 +1266,7 @@ function vMessages(){
   const f=h("form",{class:"box stack",style:"gap:10px",onsubmit:async e=>{
     e.preventDefault(); const title=document.getElementById("msg_title").value.trim(), date=document.getElementById("msg_date").value||today(), text=document.getElementById("msg_text").value.trim();
     if(!title){ toast("Give this week's message a name"); return; }
-    let ref; if(await write(async db=>{ ref=await db.collection("messages").add({title,date,text,responded:[],replies:{},sent:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Week created")){ clearDirty(f); nav("message",{msgId:ref.id,msgQ:"",msgFilter:"todo",editMsg:false}); }
+    let ref; if(await write(async db=>{ ref=await db.collection(SP("messages")).add({title,date,text,responded:[],replies:{},sent:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Week created")){ clearDirty(f); nav("message",{msgId:ref.id,msgQ:"",msgFilter:"todo",editMsg:false}); }
   }},
     h("h2",{style:"font-size:1.1rem"},"Start a new week"),
     h("label",{class:"f"},"Name",h("input",{id:"msg_title",class:"big",placeholder:"e.g. Week of Oct 27: Sunday feast invite",autocomplete:"off"})),
@@ -1020,7 +1289,7 @@ function vMessage(){
   if(!m) return h("div",{class:"empty"},h("b",null,S.ready?"This week was deleted":"Loading…"));
   const resp=new Set(respondedOf(m)), sent=sentOf(m);
   const others=S.messages.filter(x=>x.id!==m.id);
-  const hist=id=>others.filter(x=>respondedOf(x).includes(id)).length;
+  const I=idx(), hist=id=>(I.rep.get(id)||[]).length-(resp.has(id)?1:0);
   const q=S.msgQ.trim().toLowerCase();
   let list=S.people.map(p=>({p,n:hist(p.id),r:resp.has(p.id),t:sent[p.id]}));
   if(q) list=list.filter(x=>matches(x.p,q));
@@ -1034,34 +1303,36 @@ function vMessage(){
   const next=m.text&&S.canWrite?list.find(x=>!x.t&&!x.r&&ten(x.p.phone))||all.filter(x=>!x.t&&!x.r&&ten(x.p.phone)).sort((a,b)=>hist(b.p.id)-hist(a.p.id)||byName(a.p,b.p))[0]:null;
   const chip=(v,l,c)=>h("button",{class:"chip","aria-pressed":String(f===v),onclick:()=>{S.msgFilter=v; render();}},l,c!=null?h("span",{class:"c"},String(c)):null);
   const msgForm=h("form",{class:"stack",style:"gap:8px",onsubmit:async e=>{ e.preventDefault(); const text=document.getElementById("msg_edit").value.trim();
-    if(await write(db=>db.doc("messages/"+m.id).update({text,...stamp()}),"Message saved")){ S.editMsg=false; S.dirty.delete("msg_edit"); render(); } }},
+    if(await write(db=>db.doc(SP("messages")+"/"+m.id).update({text,...stamp()}),"Message saved")){ S.editMsg=false; S.dirty.delete("msg_edit"); render(); } }},
     h("textarea",{id:"msg_edit","aria-label":"Message text",placeholder:"Hare Kṛṣṇa {name}! …"},m.text||""),
     h("p",{class:"muted small",style:"margin:0"},"{name} becomes each person's first name."),
     h("div",{class:"row"},h("button",{class:"btn primary small",type:"submit"},"Save message"),m.text?h("button",{class:"btn small",type:"button",onclick:()=>{S.editMsg=false; render();}},"Cancel"):null));
   return h("div",{class:"stack",style:"gap:16px"},
-    h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("div",null,h("h1",null,m.title),
-      h("p",{class:"lead"},`${fmt(m.date)} · `,h("b",{style:"color:var(--ink)"},`${nSent} texted · ${count} replied`),` of ${S.people.length}`)),
-      h("button",{class:"btn small",onclick:()=>exportWeek(m)},"Export (CSV)")),
+    h("div",null,h("h1",null,m.title),
+      h("p",{class:"lead"},`${fmt(m.date)} · `,h("b",{style:"color:var(--ink)"},`${nSent} texted · ${count} replied`),` of ${S.people.length}`),
+      h("div",{class:"actions"},h("button",{class:"btn small",onclick:()=>exportWeek(m)},"Export this week (CSV)"))),
     h("div",{class:"card"},
       h("div",{class:"card-h"},h("h2",null,"The message"),m.text&&!S.editMsg&&S.canWrite?h("button",{class:"link small",onclick:()=>{S.editMsg=true; render();}},"Edit"):null),
       (S.editMsg||!m.text)&&S.canWrite?msgForm:h("p",{class:"msgtext"},m.text||"No message written."),
-      m.text&&!S.editMsg?h("p",{class:"muted small",style:"margin:0"},"Tap Text or WhatsApp next to someone: the message opens with their name filled in, ready to send. It's also copied, in case your phone doesn't fill it in."):null),
+      m.text&&!S.editMsg?h("p",{class:"muted small",style:"margin:0"},"Tap Text or WhatsApp next to someone. Their name is filled in; just press Send."):null),
     next?h("div",{class:"card nextup"},
-      h("div",{class:"card-h"},h("span",null,h("span",{class:"muted small",style:"display:block"},`Next up · ${nTodo} left to text`),h("b",{style:"font-size:1.15rem"},next.p.name)),textButtons(m,next.p,true)),
-      h("p",{class:"msgtext",style:"font-size:.92rem"},personalize(m.text,next.p))):null,
+      h("span",null,h("span",{class:"muted small",style:"display:block"},`Next up · ${nTodo} left to text`),h("b",{style:"font-size:1.15rem"},next.p.name)),
+      h("p",{class:"msgtext",style:"font-size:.92rem"},personalize(m.text,next.p)),
+      textButtons(m,next.p,true)):null,
     h("input",{id:"msg_q",type:"search",placeholder:"Search by name or phone",value:S.msgQ,autocomplete:"off","aria-label":"Search",oninput:e=>{S.msgQ=e.target.value; render();}}),
     h("div",{class:"chips",role:"group","aria-label":"Show"},
       chip("all","Everyone",S.people.length),chip("todo","Not texted yet",nTodo),chip("waiting","Texted, no reply",all.filter(x=>x.t&&!x.r).length),chip("yes","Replied",count),chip("no","Didn't reply",S.people.length-count)),
     h("div",{class:"row",style:"justify-content:space-between"},h("p",{class:"muted small",style:"margin:0"},others.length?"People who replied most in earlier weeks come first. Tick the box when someone replies.":"Tick the box when someone replies."),
       copyBtn(list.map(x=>x.p))),
-    list.length?h("div",{class:"list"},list.map(x=>h("div",{class:"mrow"+(x.r?" on":"")},
+    list.length?h("div",{class:"list"},(S.showAllPeople||q?list:list.slice(0,40)).map(x=>h("div",{class:"mrow"+(x.r?" on":"")},
       h("label",null,h("input",{type:"checkbox",checked:x.r||null,disabled:!S.canWrite||null,"aria-label":`${x.p.name} replied`,onchange:e=>setResponded(m,x.p.id,e.target.checked)}),
         h("span",{style:"min-width:0;flex:1"},h("span",{class:"name",style:"display:block"},x.p.name),
           h("span",{class:"meta"},[x.r?"Replied":x.t?`Texted ${fmtWhen(x.t.at)}${x.t.by&&x.t.by!==S.myId?" by "+memberName(x.t.by):""}`:"Not texted",others.length?`replied ${x.n} of ${others.length} before`:null].filter(Boolean).join(" · ")))),
       m.text&&S.canWrite&&!x.r?textButtons(m,x.p,false):null)))
       :h("div",{class:"empty"},h("b",null,S.people.length?"No one here":"The roster is empty"),S.people.length?"Try another filter or search.":"Add people to the roster first."),
+    list.length>40&&!S.showAllPeople&&!q?h("button",{class:"btn block",onclick:()=>{S.showAllPeople=true; render();}},`Show all ${list.length}`):null,
     S.canWrite?(S.confirm==="msgdel"?h("div",{class:"confirm"},h("span",null,"Delete this week, its texted and replied marks?"),
-      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc("messages/"+m.id).delete(),"Week deleted")) back(); }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
+      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc(SP("messages")+"/"+m.id).delete(),"Week deleted")) back(); }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
       :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="msgdel"; render();}},"Delete this week")):null);
 }
 
@@ -1080,6 +1351,13 @@ function vMeetings(){
 
 // ---------- Insights ----------
 function vInsights(){
+  if(!S.insightsOn) return h("div",{class:"stack",style:"gap:18px"},
+    h("span",null,h("h1",null,"Insights"),h("span",{class:"muted small"},"Attendance, birthdays, cooks and a roster download")),
+    h("button",{class:"tile meet",style:"width:100%;min-height:190px;align-items:center;text-align:center;justify-content:center",onclick:()=>{ S.insightsOn=true; render(); }},
+      h("span",{html:ICON.tCal}),h("b",{style:"font-size:1.45rem"},"Generate insights"),
+      h("span",null,`Builds the charts and tables from the ${plural(S.people.length,"person","people")} and ${plural(S.meetings.length,"meeting")} already loaded. Takes a second.`),
+      h("span",{class:"go"},"Generate →")),
+    h("button",{class:"btn",style:"align-self:flex-start",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)"));
   const rows=S.people.map(p=>({p,s:stats(p)}));
   const ms=S.meetings.slice().sort((a,b)=>a.date<b.date?-1:1);
   const countOf=m=>presentOf(m).filter(id=>personById(id)).length;
@@ -1176,8 +1454,8 @@ async function runImport(rows){
     const person={name:r.name||`Unknown (${r.phone.replace(/[()]/g,"").replace(" ","-")})`,phone:r.phone,email:"",schedule:"",birthday:"",role:"Student",contactIds:t?[t.id]:[],contactId:"",
       createdAt:at,createdBy:S.myId||null,importedAt:new Date().toISOString(),signupBy:r.collector||"",...stamp()};
     const noteText=[r.date?`Signed up ${fmtShort(iso(r.date))}, ${r.date.getFullYear()} via sign-up sheet`:"Imported from sign-up sheet (no signup date)",r.collector?`collected by ${r.collector}`:null,!r.name?"name was missing on the sheet":null].filter(Boolean).join(" · ");
-    const done=await write(async db=>{ const ref=await db.collection("people").add(person);
-      await db.collection("notes").add({personId:ref.id,text:noteText,by:S.myId||null,createdAt:new Date().toISOString()}); });
+    const done=await write(async db=>{ const ref=await db.collection(SP("people")).add(person);
+      await db.collection(SP("notes")).add({personId:ref.id,text:noteText,by:S.myId||null,createdAt:new Date().toISOString()}); });
     if(!done) break; ok++; S.importing.done=ok; render();
   }
   S.importing=null; S.importText=""; S.dirty.delete("imp_text"); render();
@@ -1188,7 +1466,7 @@ function vImport(){
   const n=k=>rows.filter(r=>r.status===k).length;
   const label={new:"Will be added",exists:"Already on roster",repeat:"Repeated in sheet"};
   return h("div",{class:"stack",style:"gap:16px"},
-    h("div",null,h("h1",null,"Import from a sheet"),h("p",{class:"lead"},"Copy the rows from Google Sheets (including the date, name and phone columns) and paste them below. Nothing is saved until you press Add.")),
+    h("div",null,h("h1",null,"Import from a sheet"),h("p",{class:"lead"},`People are added to `,h("b",{style:"color:var(--ink)"},schoolName(S.schoolId)),`. Copy the rows from Google Sheets (including the date, name and phone columns) and paste them below. Nothing is saved until you press Add.`)),
     h("textarea",{id:"imp_text",style:"min-height:150px;font-family:ui-monospace,Menlo,monospace;font-size:.85rem",placeholder:"8/27/2026 18:54:15\t\tLarissa\t2099003559",value:S.importText,"aria-label":"Paste rows from your sheet",oninput:e=>{S.importText=e.target.value; render();}}),
     rows.length?h("div",{class:"stack",style:"gap:10px"},
       h("div",{class:"row"},h("span",{class:"pill"},`${n("new")} new`),n("exists")?h("span",{class:"pill gold"},`${n("exists")} already on roster`):null,n("repeat")?h("span",{class:"pill gold"},`${n("repeat")} repeated`):null,
@@ -1201,14 +1479,15 @@ function vImport(){
           h("td",null,r.collector?(t?`${r.collector} → contact`:r.collector):"—"),
           h("td",null,label[r.status]+(r.match?` (${r.match})`:""))); })))),
       S.importing?h("p",{style:"font-weight:700"},`Adding ${S.importing.done} of ${S.importing.total}…`)
-        :h("button",{class:"btn primary block",disabled:!n("new")||!S.canWrite||null,onclick:()=>runImport(rows)},n("new")?`Add ${plural(n("new"),"person","people")} to the roster`:"Nothing new to add"))
+        :h("button",{class:"btn primary block",disabled:!n("new")||!S.canWrite||null,onclick:()=>runImport(rows)},n("new")?`Add ${plural(n("new"),"person","people")} to ${schoolName(S.schoolId)}`:"Nothing new to add"))
     :S.importText.trim()?h("p",{class:"muted"},"No rows with a phone number found. Make sure you copied the phone column."):null);
 }
 
 // ---------- Duplicates ----------
 const normName=n=>String(n||"").toLowerCase().replace(/[^a-zÀ-ɏḀ-ỿ ]/g,"").replace(/\s+/g," ").trim();
 function findDupes(){
-  const ign=new Set(S.config.dupIgnore||[]), groups=[], byPhone=new Map(), byName=new Map();
+  const I=idx(); if(I.dupes) return I.dupes;
+  const ign=new Set((S.schoolDoc||{}).dupIgnore||[]), groups=[], byPhone=new Map(), byName=new Map();
   for(const p of S.people){
     const k=phoneKey(p.phone); if(k){ if(!byPhone.has(k)) byPhone.set(k,[]); byPhone.get(k).push(p); }
     const n=normName(p.name); if(n&&!n.startsWith("unknown")){ if(!byName.has(n)) byName.set(n,[]); byName.get(n).push(p); }
@@ -1218,21 +1497,21 @@ function findDupes(){
   for(const [n,arr] of byName) if(arr.length>1){
     if(arr.every(p=>inPhone.has(p.id))&&new Set(arr.map(p=>phoneKey(p.phone))).size===1) continue;
     const key="nm:"+arr.map(p=>p.id).sort().join(","); if(!ign.has(key)) groups.push({key,kind:"name",label:`Same name: ${arr[0].name}`,people:arr}); }
-  return groups;
+  I.dupes=groups; return groups;
 }
 async function mergeInto(keep,others){
   S.merging=keep.id; render();
   const ok=await write(async db=>{
     for(const o of others){
-      for(const c of ["notes","progress"]){ const snap=await db.collection(c).where("personId","==",o.id).get(); for(const d of snap.docs) await db.doc(c+"/"+d.id).update({personId:keep.id}); }
-      for(const m of S.meetings) if(presentOf(m).includes(o.id)) await db.doc("meetings/"+m.id).update({att:{[o.id]:false,[keep.id]:true}});
-      for(const w of S.messages) if(respondedOf(w).includes(o.id)) await db.doc("messages/"+w.id).update({replies:{[o.id]:false,[keep.id]:true}});
+      for(const c of ["notes","progress"]){ const snap=await db.collection(SP(c)).where("personId","==",o.id).get(); for(const d of snap.docs) await db.doc(SP(c)+"/"+d.id).update({personId:keep.id}); }
+      for(const m of S.meetings) if(presentOf(m).includes(o.id)) await db.doc(SP("meetings")+"/"+m.id).update({att:{[o.id]:false,[keep.id]:true}});
+      for(const w of S.messages) if(respondedOf(w).includes(o.id)) await db.doc(SP("messages")+"/"+w.id).update({replies:{[o.id]:false,[keep.id]:true}});
     }
     const fill={}; for(const f of ["phone","email","birthday","schedule"]) if(!keep[f]){ const src=others.find(o=>o[f]); if(src) fill[f]=src[f]; }
     const all=[keep,...others];
-    await db.doc("people/"+keep.id).update({...fill,contactIds:[...new Set(all.flatMap(contactsOf))],contactId:"",createdAt:all.map(x=>x.createdAt).filter(Boolean).sort()[0]||keep.createdAt||null,...stamp()});
-    await db.collection("notes").add({personId:keep.id,text:`Merged duplicate record${others.length>1?"s":""}: ${others.map(o=>[o.name,o.phone].filter(Boolean).join(" ")).join("; ")}`,by:S.myId||null,createdAt:new Date().toISOString()});
-    for(const o of others) await db.doc("people/"+o.id).delete();
+    await db.doc(SP("people")+"/"+keep.id).update({...fill,contactIds:[...new Set(all.flatMap(contactsOf))],contactId:"",createdAt:all.map(x=>x.createdAt).filter(Boolean).sort()[0]||keep.createdAt||null,...stamp()});
+    await db.collection(SP("notes")).add({personId:keep.id,text:`Merged duplicate record${others.length>1?"s":""}: ${others.map(o=>[o.name,o.phone].filter(Boolean).join(" ")).join("; ")}`,by:S.myId||null,createdAt:new Date().toISOString()});
+    for(const o of others) await db.doc(SP("people")+"/"+o.id).delete();
   },"Merged into one record");
   S.merging=null; S.confirm=null; render();
   return ok;
@@ -1249,7 +1528,7 @@ function vDupes(){
         admin&&S.canWrite?(S.confirm==="keep:"+g.key+":"+p.id
           ?h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},h("button",{class:"btn small primary",disabled:S.merging||null,onclick:()=>mergeInto(p,g.people.filter(x=>x.id!==p.id))},S.merging?"Merging…":"Confirm merge"),h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Cancel"))
           :h("button",{class:"btn small",onclick:()=>{S.confirm="keep:"+g.key+":"+p.id; render();}},"Keep this one")):null))),
-      admin&&S.canWrite?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>write(db=>db.doc("config/app").set({...S.config,dupIgnore:[...(S.config.dupIgnore||[]),g.key],...stamp()}),"Marked as different people")},"These are different people"):null))
+      admin&&S.canWrite?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>write(db=>db.doc(`schools/${S.schoolId}`).update({dupIgnore:[...((S.schoolDoc||{}).dupIgnore||[]),g.key]}),"Marked as different people")},"These are different people"):null))
     :h("div",{class:"empty"},h("b",null,"No duplicates found"),"Everyone on the roster has their own phone number and name."),
     !admin?h("p",{class:"muted small"},"Only admins can merge records."):null);
 }
@@ -1262,8 +1541,9 @@ function vMore(){
     h("span",null,h("h1",null,"More"),h("span",{class:"muted small"},"Reports, team, admin tools and backups")),
     h("div",{class:"alist"},
       item("Insights","Attendance trends, birthdays, cooks, roster export",()=>nav("insights")),
-      item("Our team and activity","Who looks after whom, recent activity",()=>nav("team")),
-      admin?item("Import from a sheet","Paste contacts from Google Sheets",()=>nav("import",{importText:""})):null,
+      item("Our team and activity",`Who works at ${schoolName(S.schoolId)}, who looks after whom`,()=>nav("team")),
+      item(admin?"Schools":"Your schools",admin?`${plural(S.schools.length,"school")} · create, rename, manage teams`:"Join or leave a school, switch between them",()=>nav("schools")),
+      admin?item("Import from a sheet",`Paste contacts into ${schoolName(S.schoolId)}`,()=>nav("import",{importText:""})):null,
       admin?item(dupes?plural(dupes,"possible duplicate"):"Check for duplicates","Merge people added twice",()=>nav("dupes"),dupes?"gold":""):null,
       item("Edit my profile","Your name and role on the team",()=>nav("me",{meRole:undefined}))),
     backupBox(),
@@ -1271,12 +1551,14 @@ function vMore(){
 }
 
 // ---------- Full backup ----------
-const BACKUP_COLLECTIONS=["people","notes","progress","meetings","messages","team","members","config"];
+const SCHOOL_COLLECTIONS=["people","notes","progress","meetings","messages","staff"];
 async function fetchEverything(){
-  const out={};
-  for(const c of BACKUP_COLLECTIONS){
-    try{ const snap=await S.db.collection(c).get(); out[c]=snap.docs.map(d=>({id:d.id,...d.data()})); }
-    catch(e){ out[c]=[]; }
+  const out={team:[],members:[],schools:[]}, db=S.db;
+  for(const c of ["team","members"]){ try{ const snap=await db.collection(c).get(); out[c]=snap.docs.map(d=>({id:d.id,...d.data()})); }catch(e){} }
+  for(const sc of accessibleSchools()){
+    const one={id:sc.id,name:sc.name||sc.id};
+    for(const c of SCHOOL_COLLECTIONS){ try{ const snap=await db.collection(`schools/${sc.id}/${c}`).get(); one[c]=snap.docs.map(d=>({id:d.id,...d.data()})); }catch(e){ one[c]=[]; } }
+    out.schools.push(one);
   }
   return out;
 }
@@ -1290,46 +1572,48 @@ async function backup(kind){
   S.backingUp=kind; render();
   try{
     const D=await fetchEverything(), stamp8=today();
-    const pname=id=>((D.people.find(p=>p.id===id)||{}).name)||"(removed)";
     const tname=id=>{ const t=D.team.find(x=>x.id===id); return (t&&t.name)||memberName(id); };
     if(kind==="json"){
-      const body=JSON.stringify({app:"Bṛhat Mṛdaṅga Database",exportedAt:new Date().toISOString(),exportedBy:tname(S.myId),collections:D},null,2);
+      const body=JSON.stringify({app:"Bṛhat Mṛdaṅga Database",version:2,exportedAt:new Date().toISOString(),exportedBy:tname(S.myId),team:D.team,members:D.members,schools:D.schools},null,2);
       await dl.save({filename:`brhat-mrdanga-full-backup-${stamp8}.json`,data:new Blob([body],{type:"application/json"})});
     } else {
       const X=await loadXLSX();
       const pres=m=>applyMap(m.present,m.att), repl=m=>applyMap(m.responded,m.replies);
-      const ms=D.meetings.slice().sort((a,b)=>a.date<b.date?-1:1), ws=D.messages.slice().sort((a,b)=>a.date<b.date?-1:1);
-      const contacts=p=>(Array.isArray(p.contactIds)?p.contactIds:(p.contactId?[p.contactId]:[])).map(tname).join(", ");
-      const sheets={
-        "People":D.people.slice().sort(byName).map(p=>({ID:p.id,Name:p.name,Role:p.role||"Student",Phone:p.phone||"",Email:p.email||"",Birthday:p.birthday||"","Class schedule":p.schedule||"","Looked after by":contacts(p),
-          "Meetings attended":ms.filter(m=>pres(m).includes(p.id)).length,"Added by":tname(p.createdBy),"Added on":(p.createdAt||"").slice(0,10)})),
-        "Notes":D.notes.slice().sort((a,b)=>(a.createdAt||"")<(b.createdAt||"")?-1:1).map(n=>({When:n.createdAt?new Date(n.createdAt).toLocaleString():"",Person:pname(n.personId),Note:n.text,"Added by":tname(n.by)})),
-        "Reading":D.progress.filter(x=>x.kind==="reading"||(!x.kind&&x.reading)).map(x=>({Date:x.date,Person:pname(x.personId),Book:x.book||x.reading||"",Pages:x.pages??"",Note:x.note||"","Logged by":tname(x.by)})),
-        "Chanting":D.progress.filter(x=>x.kind==="chanting"||(!x.kind&&x.chanting!=null)).map(x=>({Date:x.date,Person:pname(x.personId),"Rounds a day":x.rounds??x.chanting,"Logged by":tname(x.by)})),
-        "Meetings":ms.map(m=>({Date:m.date,Meeting:m.title||"Club meeting",Speaker:m.speaker||"",Topic:m.topic||"",Notes:m.notes||"",Came:pres(m).length,"Started by":tname(m.by)})),
-        "Attendance":ms.flatMap(m=>pres(m).map(id=>({Date:m.date,Meeting:m.title||"Club meeting",Person:pname(id)}))),
-        "Prasadam":ms.flatMap(m=>prasadamOf(m).map(x=>({Date:m.date,Meeting:m.title||"Club meeting",Prasadam:x.dish,"Cooked by":x.cook||"","Logged by":tname(x.by)}))),
-        "Message weeks":ws.map(w=>({Date:w.date,Name:w.title,Replied:repl(w).length,"Created by":tname(w.by)})),
-        "Message replies":D.people.slice().sort(byName).map(p=>{ const row={Name:p.name}; let n=0; ws.forEach(w=>{ const y=repl(w).includes(p.id); if(y) n++; row[`${w.date} ${w.title}`.slice(0,60)]=y?"Yes":"No"; }); row["Times replied"]=n; return row; }),
-        "Team":D.team.map(t=>({Name:t.name||"",Role:t.title||"",Email:t.email||"","Last signed in":(t.lastSeen||"").slice(0,10),Status:t.removed?"Removed":"Active"})),
-        "Access list":D.members.map(m=>({Email:m.id,Role:m.role||"",Admin:m.admin?"Yes":"No"}))
-      };
+      const sheets={"People":[],"Notes":[],"Reading":[],"Chanting":[],"Meetings":[],"Attendance":[],"Prasadam":[],"Message weeks":[],"Message replies":[]};
+      for(const sc of D.schools){
+        const School=sc.name, byId=new Map(sc.people.map(p=>[p.id,p])), pname=id=>(byId.get(id)||{}).name||"(removed)";
+        const ms=sc.meetings.slice().sort((a,b)=>a.date<b.date?-1:1), ws=sc.messages.slice().sort((a,b)=>a.date<b.date?-1:1);
+        const contacts=p=>(Array.isArray(p.contactIds)?p.contactIds:(p.contactId?[p.contactId]:[])).map(tname).join(", ");
+        sheets["People"].push(...sc.people.slice().sort(byName).map(p=>({School,ID:p.id,Name:p.name,Role:p.role||"Student",Phone:p.phone||"",Email:p.email||"",Birthday:p.birthday||"","Class schedule":p.schedule||"","Looked after by":contacts(p),
+          "Meetings attended":ms.filter(m=>pres(m).includes(p.id)).length,"Added by":tname(p.createdBy),"Added on":(p.createdAt||"").slice(0,10)})));
+        sheets["Notes"].push(...sc.notes.slice().sort((a,b)=>(a.createdAt||"")<(b.createdAt||"")?-1:1).map(n=>({School,When:n.createdAt?new Date(n.createdAt).toLocaleString():"",Person:pname(n.personId),Note:n.text,"Added by":tname(n.by)})));
+        sheets["Reading"].push(...sc.progress.filter(x=>x.kind==="reading"||(!x.kind&&x.reading)).map(x=>({School,Date:x.date,Person:pname(x.personId),Book:x.book||x.reading||"",Pages:x.pages??"",Note:x.note||"","Logged by":tname(x.by)})));
+        sheets["Chanting"].push(...sc.progress.filter(x=>x.kind==="chanting"||(!x.kind&&x.chanting!=null)).map(x=>({School,Date:x.date,Person:pname(x.personId),"Rounds a day":x.rounds??x.chanting,"Logged by":tname(x.by)})));
+        sheets["Meetings"].push(...ms.map(m=>({School,Date:m.date,Meeting:m.title||"Club meeting",Speaker:m.speaker||"",Topic:m.topic||"",Notes:m.notes||"",Came:pres(m).length,"Started by":tname(m.by)})));
+        sheets["Attendance"].push(...ms.flatMap(m=>pres(m).map(id=>({School,Date:m.date,Meeting:m.title||"Club meeting",Person:pname(id)}))));
+        sheets["Prasadam"].push(...ms.flatMap(m=>prasadamOf(m).map(x=>({School,Date:m.date,Meeting:m.title||"Club meeting",Prasadam:x.dish,"Cooked by":x.cook||"","Logged by":tname(x.by)}))));
+        sheets["Message weeks"].push(...ws.map(w=>({School,Date:w.date,Name:w.title,Replied:repl(w).length,"Created by":tname(w.by)})));
+        sheets["Message replies"].push(...sc.people.slice().sort(byName).map(p=>{ const row={School,Name:p.name}; let n=0; ws.forEach(w=>{ const y=repl(w).includes(p.id); if(y) n++; row[`${w.date} ${w.title}`.slice(0,60)]=y?"Yes":"No"; }); row["Times replied"]=n; return row; }));
+      }
+      sheets["Team"]=D.team.map(t=>({Name:t.name||"",Role:t.title||"",Email:t.email||"",Schools:D.schools.filter(sc=>(sc.staff||[]).some(x=>x.id===t.id)).map(sc=>sc.name).join(", "),"Last signed in":(t.lastSeen||"").slice(0,10),Status:t.removed?"Removed":"Active"}));
+      if(D.members.length) sheets["Access list"]=D.members.map(m=>({Email:m.id,Role:m.role||"",Admin:m.admin?"Yes":"No"}));
       const wb=X.utils.book_new();
       for(const [name,rows] of Object.entries(sheets)) X.utils.book_append_sheet(wb, rows.length?X.utils.json_to_sheet(rows):X.utils.aoa_to_sheet([["(nothing yet)"]]), name);
       const buf=X.write(wb,{bookType:"xlsx",type:"array"});
       await dl.save({filename:`brhat-mrdanga-full-backup-${stamp8}.xlsx`,data:new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})});
     }
-    await write(db=>db.doc("config/app").set({...S.config,lastBackup:{at:new Date().toISOString(),by:S.myId||null,kind}}),"Backup downloaded");
+    const lb={at:new Date().toISOString(),by:S.myId||null,kind};
+    await write(async db=>{ for(const sc of accessibleSchools()) await db.doc(`schools/${sc.id}`).update({lastBackup:lb}); },"Backup downloaded");
   }catch(e){ if(!(e&&(e.code==="declined"||e.code==="cancelled"))) toast("The backup didn't finish. Check your connection and try again."); }
   S.backingUp=null; render();
 }
-const backupDue=()=>{ const b=S.config.lastBackup; return !b||!b.at||(Date.now()-new Date(b.at))>30*86400000; };
+const backupDue=()=>{ if(!S.schoolId) return false; const b=(S.schoolDoc||{}).lastBackup; return !b||!b.at||(Date.now()-new Date(b.at))>30*86400000; };
 function backupBox(){
-  const b=S.config.lastBackup;
+  const b=(S.schoolDoc||{}).lastBackup, n=accessibleSchools().length;
   return h("div",{class:"box stack",style:"gap:10px;border:2px solid "+(backupDue()?"var(--marigold)":"var(--line)")},
     h("h2",{style:"font-size:1.1rem"},"Monthly backup"),
     h("p",{style:"margin:0"},b&&b.at?`Last backup ${ago(b.at)} by ${memberName(b.by)}.`:"No backup yet.",backupDue()?" A backup is due.":""),
-    h("p",{class:"muted small",style:"margin:0"},"Downloads every record: people, notes, reading and chanting logs, meetings, attendance, prasadam, message logs, team and the access list. Save the files somewhere safe, like a shared Google Drive folder."),
+    h("p",{class:"muted small",style:"margin:0"},`Downloads every record${n>1?` for all ${n} schools you can open`:""}: people, notes, reading and chanting logs, meetings, attendance, prasadam, message logs, team${isAdminNow()?" and the access list":""}. Save the files somewhere safe, like a shared Google Drive folder.`),
     h("div",{class:"row"},
       h("button",{class:"btn primary",disabled:S.backingUp||null,onclick:()=>backup("xlsx")},S.backingUp==="xlsx"?"Preparing…":"Download everything (Excel)"),
       h("button",{class:"btn",disabled:S.backingUp||null,onclick:()=>backup("json")},S.backingUp==="json"?"Preparing…":"Download everything (JSON)")),
@@ -1372,11 +1656,14 @@ function vMember(){
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block;font-weight:400"},x.text)),h("span",{class:"meta"},fmtWhen(x.at)))))
         :h("p",{class:"muted",style:"margin:0"},"Nothing logged yet."),
       act.length>3&&loaded()?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>{S.allAct=!S.allAct; render();}},S.allAct?"Show less":`Show more (${Math.min(act.length,20)})`):null),
+    isAdmin&&S.staff.includes(t.id)?(S.confirm==="rms:"+t.id?h("div",{class:"confirm"},h("span",null,`Remove ${name} from ${schoolName(S.schoolId)}? They come off this school's contact lists and can't rejoin it on their own. Their notes and logs stay.`),
+      h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await removeFromSchool(S.schoolId,t.id)){ S.confirm=null; if(t.id===S.myId){ S.mySchools.delete(S.schoolId); pickSchool(); } back(); } }},"Remove"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
+      :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="rms:"+t.id; render();}},`Remove from ${schoolName(S.schoolId)}`)):null,
     isAdmin&&t.id!==S.myId?(S.confirm==="rm:"+t.id?h("div",{class:"confirm"},
-      h("span",null,`Remove ${name} from the team? ${t.email?"Their sign-in access is removed too. ":""}Their past notes and logs stay.`),
+      h("span",null,`Remove ${name} from the whole database? ${t.email?"Their sign-in access is removed too. ":""}Their past notes and logs stay.`),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ const ok=await write(async db=>{ if(t.email) await db.doc("members/"+t.email).delete(); await db.doc("team/"+t.id).update({removed:true}); },"Removed from the team"); if(ok) back(); }},"Remove"),
         h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
-      :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="rm:"+t.id; render();}},"Remove from the team")):null);
+      :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="rm:"+t.id; render();}},"Remove from the whole database")):null);
 }
 function vTeam(){
   const team=activeTeam().sort((a,b)=>memberName(a.id).localeCompare(memberName(b.id)));
@@ -1389,20 +1676,15 @@ function vTeam(){
     h("label",{class:"f"},"Name",h("input",{id:"me_name",value:meDoc.name||S.meName||"",required:true})),
     h("label",{class:"f"},h("span",null,"Role on the team ",h("small",null,"optional")),h("input",{id:"me_title",value:meDoc.title||"",placeholder:"e.g. Club president, Brahmacari"})),
     h("button",{class:"btn primary",type:"submit",style:"align-self:flex-start"},"Save")):null;
-  let clubForm=null;
-  if(S.canWrite){ clubForm=h("form",{class:"box stack",onsubmit:async e=>{ e.preventDefault(); const v=document.getElementById("c_name").value.trim();
-    if(await write(db=>db.doc("config/app").set({...S.config,clubName:v,...stamp()}),"Saved")) clearDirty(clubForm); }},
-    h("label",{class:"f"},"Club name shown at the top",h("input",{id:"c_name",value:S.config.clubName||"",placeholder:"Bṛhat Mṛdaṅga Database"})),
-    h("button",{class:"btn",type:"submit",style:"align-self:flex-start"},"Save")); }
   return h("div",{class:"stack",style:"gap:22px"},
-    h("div",null,h("h1",null,"Our team and activity"),h("p",{class:"lead"},"Tap anyone to see who they look after and what they've been doing.")),
+    h("span",null,h("h1",null,"Our team and activity"),h("span",{class:"muted small"},`Who works at ${schoolName(S.schoolId)}. Tap anyone to see who they look after and what they've been doing`)),
     team.length?h("div",{class:"list"},team.map(t=>{ const c=S.people.filter(p=>contactsOf(p).includes(t.id)).length, last=lastActive(t);
       return h("button",{class:"res",onclick:()=>nav("member",{memberId:t.id})},
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},memberName(t.id)+(t.id===S.myId?" (you)":"")),
           h("span",{class:"meta"},[t.title||"No role yet",`looks after ${plural(c,"person","people")}`,last?"signed in "+ago(last):null].filter(Boolean).join(" · "))),
         h("span",{class:"meta",style:"color:var(--blue);font-weight:700"},"View →")); }))
-      :h("div",{class:"empty"},"No one has joined yet."),
-    S.myId?h("button",{class:"btn",style:"align-self:flex-start",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"):null, clubForm,
+      :h("div",{class:"empty"},`No one has joined ${schoolName(S.schoolId)} yet.`),
+    S.myId?h("button",{class:"btn",style:"align-self:flex-start",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"):null,
     accessBox(),
     h("div",{class:"box row",style:"justify-content:space-between"},
       h("span",{class:"muted small"},"Signed in as ",h("b",{style:"color:var(--ink)"},(window.FB&&window.FB.email)||"")),
@@ -1411,7 +1693,7 @@ function vTeam(){
 function accessBox(){
   const FB=window.FB||{};
   if(!FB.isAdmin) return h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Adding a teammate"),
-    h("p",{style:"margin:8px 0 0"},"Ask an admin to add the person's Google email under Our Team. Once added, they sign in with Google and appear on this page."));
+    h("p",{style:"margin:8px 0 0"},"Ask an admin to add the person's Google email. Once added, they sign in with Google, pick their school, and appear here."));
   const f=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
     e.preventDefault(); const em=document.getElementById("acc_email").value.trim().toLowerCase(), adm=document.getElementById("acc_admin").checked, role=document.getElementById("acc_role").value;
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){ toast("Enter a valid email address"); return; }
@@ -1423,7 +1705,7 @@ function accessBox(){
     h("button",{class:"btn primary",type:"submit",style:"align-self:flex-start"},"Give access"));
   const list=S.members.slice().sort((a,b)=>a.id.localeCompare(b.id));
   return h("div",{class:"box stack"},
-    h("div",null,h("h2",{style:"font-size:1.1rem"},"Who can sign in"),h("p",{class:"muted small",style:"margin:4px 0 0"},"Only these Google accounts can open the database. Add someone here, then send them the link.")),
+    h("div",null,h("h2",{style:"font-size:1.1rem"},"Who can sign in"),h("p",{class:"muted small",style:"margin:4px 0 0"},"Only these Google accounts can open the database. Add someone here, then send them the link. They choose their school when they first sign in.")),
     f,
     list.length?h("div",{class:"list"},list.map(m=>h("div",{class:"res",style:"cursor:default"},
       h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.id),h("span",{class:"meta"},[m.role||"No role yet",m.admin?"Admin":null].filter(Boolean).join(" · "))),
@@ -1437,6 +1719,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=11"></script>
+<script type="module" src="./app-firebase.js?v=13"></script>
 </body>
 </html>
