@@ -266,6 +266,17 @@ td.wrap{white-space:normal;min-width:160px}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
 .chart{width:100%;height:auto;display:block}
 .chart text{fill:var(--muted);font:12px var(--font)}
+.guestbar{background:#2b2118;color:#fff;font-size:.9rem}
+.guestbar .in{max-width:760px;margin:0 auto;padding:8px 16px;display:flex;align-items:center;gap:10px}
+.guestbar .t{flex:1;min-width:0;line-height:1.3}
+.guestbar .t b{display:block;letter-spacing:.02em}
+.guestbar .t span{opacity:.8;font-size:.82rem}
+.guestbar button{flex:none;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.55);background:transparent;color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.gtag{display:inline-block;background:#e9b44c;color:#2b2118;border-radius:6px;padding:1px 7px;margin-right:6px;font-size:.75rem;font-weight:800;letter-spacing:.06em;vertical-align:1px}
+body.guest #main,body.guest header{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.guest #main [style*="user-select"]{-webkit-user-select:none!important;user-select:none!important}
+body.guest input,body.guest textarea{-webkit-user-select:text;user-select:text}
+@media print{body.guest header,body.guest #main{display:none!important}body.guest::before{content:"Printing is turned off in guest view.";display:block;padding:40px;font:16px sans-serif}}
 .banner{padding:12px 16px;border-radius:12px;background:var(--marigold-soft);margin-bottom:18px}
 .me-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin-bottom:20px}
 .me-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:700}
@@ -297,7 +308,7 @@ td.wrap{white-space:normal;min-width:160px}
 </head>
 <body>
 <div class="wrap gate" id="gate"><div class="card" id="gateCard"><p class="muted">Loading…</p></div></div>
-<header hidden><div class="wrap" id="barWrap"><div class="bar" id="bar"></div></div><div class="band" id="band"></div><nav class="tabbar" id="tabbar" aria-label="Main"></nav></header>
+<header hidden><div class="guestbar" id="guestbar" hidden></div><div class="wrap" id="barWrap"><div class="bar" id="bar"></div></div><div class="band" id="band"></div><nav class="tabbar" id="tabbar" aria-label="Main"></nav></header>
 <main class="wrap" id="main" hidden></main>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -409,18 +420,41 @@ const personById=id=>idx().byId.get(id);
 const pendingRoll={}, pendingMsg={}, pendingSent={};
 const byName=(a,b)=>(a.name||"").localeCompare(b.name||"");
 const activeTeam=()=>S.team.filter(t=>!t.removed&&S.staff.includes(t.id));
-const isAdminNow=()=>!window.FB||!!window.FB.isAdmin;
+const realAdmin=()=>!window.FB||!!window.FB.isAdmin;
+// Guest view: an admin looks around as a regular team member would. Read-only, nothing can be copied or downloaded.
+const isAdminNow=()=>!S.guest&&realAdmin();
+const GUEST_NO="Guest view is read-only. Exit guest view to make changes.";
+const maskPhone=v=>{ const d=digitsOf(v); return d.length>=4?"(•••) •••-••"+d.slice(-2):"•••"; };
+const maskEmail=e=>{ const [u,dm]=String(e||"").split("@"); return (u?u[0]:"")+"•••"+(dm?"@"+dm:""); };
+const shownPhone=v=>S.guest?maskPhone(v):fmtPhone(v);
+function enterGuest(){
+  S.realCanWrite=S.canWrite; S.guest=true; S.canWrite=false;
+  Object.assign(S,{menu:false,newWeek:false,editMsg:false,editMeeting:null,assigning:false,copyText:null});
+  home(); toast("You're in guest view. Nothing can be changed or downloaded.");
+}
+function exitGuest(){ S.guest=false; S.canWrite=S.realCanWrite!==false; S.menu=false; home(); toast("Back to your normal view"); }
+function guardDb(db){
+  // Belt and braces: in guest view every save, update, delete or add is refused before it reaches the database.
+  const W=new Set(["set","update","delete","add"]);
+  const wrapO=o=>(!o||typeof o!=="object")?o:new Proxy(o,{get(t,k){ const v=t[k]; if(typeof v!=="function") return v;
+    if(W.has(k)) return (...a)=>S.guest?Promise.reject({code:"guest",message:GUEST_NO}):v.apply(t,a);
+    return (...a)=>{ const r=v.apply(t,a); return (r&&typeof r==="object"&&typeof r.then!=="function")?wrapO(r):r; }; }});
+  return wrapO(db);
+}
+for(const ev of ["copy","cut","contextmenu","dragstart"]) document.addEventListener(ev,e=>{ if(S.guest){ const t=e.target; if(ev==="contextmenu"||!(t&&/^(INPUT|TEXTAREA)$/.test(t.tagName))){ e.preventDefault(); } if(ev==="copy"||ev==="cut") e.preventDefault(); } },true);
+document.addEventListener("selectstart",e=>{ if(S.guest&&!(e.target&&e.target.closest&&e.target.closest("input,textarea"))) e.preventDefault(); },true);
 const ten=v=>{ const d=String(v||"").replace(/\D/g,""); return d.length>=10?d.slice(-10):""; };
-function callLinks(p){ const d=ten(p.phone); if(!d) return null;
+function callLinks(p){ const d=ten(p.phone); if(!d||S.guest) return null;
   return h("span",{class:"callrow"},h("a",{class:"btn small",href:"tel:+1"+d,"aria-label":`Call ${p.name}`},"Call"),h("a",{class:"btn small",href:"sms:+1"+d,"aria-label":`Text ${p.name}`},"Text")); }
 async function copyNumbers(people){
   const nums=[...new Set(people.map(p=>ten(p.phone)).filter(Boolean))].map(d=>`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`);
+  if(S.guest){ toast(GUEST_NO); return; }
   if(!nums.length){ toast("No phone numbers to copy"); return; }
   const text=nums.join(", ");
   try{ await navigator.clipboard.writeText(text); toast(`Copied ${plural(nums.length,"number")}`); }
   catch(e){ S.copyText=text; render(); }
 }
-const copyBtn=(people,label)=>people.some(p=>ten(p.phone))?h("button",{class:"btn small",onclick:()=>copyNumbers(people)},label||`Copy ${plural(people.filter(p=>ten(p.phone)).length,"number")}`):null;
+const copyBtn=(people,label)=>!S.guest&&people.some(p=>ten(p.phone))?h("button",{class:"btn small",onclick:()=>copyNumbers(people)},label||`Copy ${plural(people.filter(p=>ten(p.phone)).length,"number")}`):null;
 function prasadamOf(m){
   const legacy=(Array.isArray(m.prasadam)?m.prasadam:[]).map((x,i)=>({...x,legacyIdx:i}));
   const mapped=Object.entries(m.pr||{}).filter(([,v])=>v&&v.dish).map(([k,v])=>({...v,key:k}));
@@ -476,6 +510,7 @@ function nextBirthday(b){
 const todaysMeeting=()=>S.meetings.filter(m=>m.date===today()).sort((a,b)=>(a.createdAt||"")<(b.createdAt||"")?1:-1)[0]||null;
 const digitsOf=v=>String(v||"").replace(/\D/g,"");
 function matches(p,q,extra){ q=q.trim().toLowerCase(); if(!q) return true; const qd=digitsOf(q);
+  if(S.guest) return [p.name,extra||""].join(" ").toLowerCase().includes(q);
   return [p.name,p.phone,p.email,extra||""].join(" ").toLowerCase().includes(q)||(qd.length>=3&&digitsOf(p.phone).includes(qd)); }
 function searchPeople(q,exclude){ q=q.trim().toLowerCase(); if(!q) return [];
   return S.people.filter(p=>!(exclude&&exclude.has(p.id))&&matches(p,q))
@@ -484,7 +519,7 @@ function searchPeople(q,exclude){ q=q.trim().toLowerCase(); if(!q) return [];
 // ---------- data ----------
 async function init(){
   const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
-  S.db=db; S.user=user;
+  S.db=db?guardDb(db):db; S.user=user;
   if(user){ const me=await user.me(); S.myId=me.id; S.meName=me.name||""; S.avatar=me.avatarUrl; if((await user.can("data.write"))===false) S.canWrite=false; }
   if(!db){ S.offline=true; render(); return; }
   const sub=(path,key,after)=>db.collection(path).onSnapshot(snap=>{ S[key]=snap.docs.map(d=>({id:d.id,...d.data()})); S.loadedGlobal.add(key); if(after) after(); soon(); },
@@ -507,7 +542,7 @@ const savingTo=(verb="Saving to")=>S.schoolId?h("p",{class:"saving"},verb+" ",sc
 const SP=c=>`schools/${S.schoolId}/${c}`;
 const schoolById=id=>S.schools.find(x=>x.id===id);
 const schoolName=id=>{ const x=schoolById(id); return x?(x.name||id):""; };
-const accessibleSchools=()=>S.schools.filter(x=>isAdminNow()||S.mySchools.has(x.id)).sort(byName);
+const accessibleSchools=()=>S.schools.filter(x=>isAdminNow()||S.guest||S.mySchools.has(x.id)).sort(byName);
 let schoolSubs=[], memberRun=0;
 async function checkMemberships(){
   const db=S.db, me=S.myId; if(!db||!me){ S.schoolsChecked=true; soon(); return; }
@@ -621,11 +656,13 @@ const allowBack=(sid,uid)=>write(db=>db.doc(`schools/${sid}/blocked/${uid}`).del
 const addToSchool=(sid,uid)=>write(async db=>{ await db.doc(`schools/${sid}/blocked/${uid}`).delete(); await db.doc(`schools/${sid}/staff/${uid}`).set({uid,joinedAt:new Date().toISOString(),addedBy:S.myId||null}); },`${memberName(uid)} added to ${schoolName(sid)}`);
 
 async function write(fn,ok){
+  if(S.guest){ toast(GUEST_NO); return false; }
   if(!S.db){ toast("Sign in to make changes"); return false; }
   S.inflight=(S.inflight||0)+1;
   try{ await fn(S.db); if(ok) toast(ok); return true; }
   catch(e){
-    if(e&&e.code==="invalid_argument") toast("That change wasn't allowed. Ask an admin to check your access.");
+    if(e&&e.code==="guest") toast(GUEST_NO);
+    else if(e&&e.code==="invalid_argument") toast("That change wasn't allowed. Ask an admin to check your access.");
     else if(e&&e.code==="quota_exceeded") toast("The roster is full. Delete old records to add more.");
     else toast("That didn't save. Check your connection and try again.");
     return false;
@@ -690,6 +727,9 @@ function render(){
     nested?h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back})):null,
     h("div",{class:"title-wrap"},h("button",{class:"title",onclick:()=>goTab("home"),"aria-label":"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",{class:"apn"},"Bṛhat Mṛdaṅga"))),
     bell(), profileMenu()]);
+  document.body.classList.toggle("guest",!!S.guest);
+  const gb=document.getElementById("guestbar");
+  if(gb){ gb.hidden=!S.guest; patch(gb,S.guest?[h("div",{class:"in"},h("div",{class:"t"},h("b",null,h("span",{class:"gtag"},"GUEST"),"Viewing as a guest"),h("span",null,"Read-only · nothing can be copied or downloaded")),h("button",{onclick:exitGuest},"Exit"))]:[]); }
   const band=document.getElementById("band");
   if(band){ const show=!!S.schoolId; band.hidden=!show; band.classList.toggle("wide",["insights","people","meetings"].includes(S.screen));
     if(show){ document.documentElement.style.setProperty("--sc",schoolColor(S.schoolId)); patch(band,[schoolBand()]); } }
@@ -703,7 +743,7 @@ function render(){
   const top=[];
   if(!navigator.onLine) top.push(h("div",{class:"banner"},"You're offline. Check-ins and notes are saved on this device and will sync when you're back online."));
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
-  else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
+  else if(!S.canWrite&&!S.guest) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
   need(keysFor());
   const fn={schools:vSchools,more:vMore,home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
   const copyBox=S.copyText?h("div",{class:"overlay",role:"dialog","aria-modal":"true"},h("div",{class:"box stack modal"},
@@ -761,7 +801,7 @@ function vHome(){
         oninput:e=>{S.homeQ=e.target.value; render();},
         onkeydown:e=>{ if(e.key==="Enter"&&res[0]){ e.preventDefault(); nav("person",{personId:res[0].id}); } }}),
       S.homeQ.trim() ? h("div",{class:"results"},
-        res.map(p=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"meta"},p.phone||p.role||"Student"))),
+        res.map(p=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"meta"},(p.phone?shownPhone(p.phone):"")||p.role||"Student"))),
         !res.length?h("div",{class:"res",style:"cursor:default"},h("span",{class:"muted"},"No one by that name.")):null) : null),
     h("div",{class:"tiles",style:"margin-top:16px"},
       h("button",{class:"tile meet",onclick:()=>nav("meeting",{meetingId:tm?tm.id:null})},
@@ -797,21 +837,21 @@ function myPeopleBox(){
     shown.length?h("div",{class:"flat"},shown.map(({p,s})=>{ const d=ten(p.phone);
       return h("div",{class:"row1"},
         h("button",{class:"rowlink",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"meta",style:s.bucket?"color:var(--alert)":null},s.bucket?blooperText(s):engagedLine(s))),
-        d?h("a",{class:"tbtn",href:"sms:+1"+d,"aria-label":`Text ${p.name}`},"Text"):null); }))
+        d&&!S.guest?h("a",{class:"tbtn",href:"sms:+1"+d,"aria-label":`Text ${p.name}`},"Text"):null); }))
       :(here?h("p",{class:"muted",style:"margin:0"},"No one assigned to you yet. Tap “+ Add” to pick people from the roster."):null),
     mine.length>5?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>nav("people",{filter:"mine"})},`See all ${mine.length} →`):null);
 }
 function schoolBand(){
-  const acc=accessibleSchools(), canSwitch=S.schoolsChecked&&(acc.length>1||isAdminNow());
+  const acc=accessibleSchools(), canSwitch=S.schoolsChecked&&(acc.length>1||isAdminNow()||S.guest);
   const open=e=>{ e.stopPropagation(); S.menu=S.menu==="school"?false:"school"; render(); };
   return h("div",{class:"in menu-wrap"},
-    h("button",{class:"sw",onclick:canSwitch?open:()=>nav("schools"),"aria-label":`You're working in ${schoolName(S.schoolId)}${canSwitch?". Tap to switch school":""}`,"aria-haspopup":canSwitch?"true":null,"aria-expanded":canSwitch?String(S.menu==="school"):null},
+    h("button",{class:"sw",onclick:canSwitch?open:()=>{ if(!S.guest) nav("schools"); },"aria-label":`You're working in ${schoolName(S.schoolId)}${canSwitch?". Tap to switch school":""}`,"aria-haspopup":canSwitch?"true":null,"aria-expanded":canSwitch?String(S.menu==="school"):null},
       h("span",{class:"lbl"},"Working in"),h("span",{class:"nm"},schoolName(S.schoolId))),
     canSwitch?h("button",{class:"chg",onclick:open,"aria-hidden":"true",tabindex:"-1"},"Switch ▾"):null,
     S.menu==="school"?h("div",{class:"menu left",role:"menu"},
-      h("div",{class:"who"},h("div",{style:"font-weight:700"},"Switch school"),h("div",{class:"muted small"},isAdminNow()?"As an admin you can open every school.":"Schools you work with.")),
+      h("div",{class:"who"},h("div",{style:"font-weight:700"},"Switch school"),h("div",{class:"muted small"},isAdminNow()?"As an admin you can open every school.":S.guest?"Guest view: look around any school.":"Schools you work with.")),
       acc.map(x=>h("button",{role:"menuitemradio","aria-checked":String(x.id===S.schoolId),onclick:()=>switchSchool(x.id)},h("span",{class:"rowflex"},schoolTag(x.id),x.id===S.schoolId?h("span",{class:"pill"},"Here now"):null))),
-      h("button",{role:"menuitem",class:"sep",onclick:()=>nav("schools")},isAdminNow()?"Manage schools":"Join or leave a school")):null);
+      S.guest?null:h("button",{role:"menuitem",class:"sep",onclick:()=>nav("schools")},isAdminNow()?"Manage schools":"Join or leave a school")):null);
 }
 function schoolGate(){
   if(!S.db||S.offline) return null;
@@ -910,10 +950,11 @@ function profileMenu(){
     h("button",{class:"avbtn","aria-haspopup":"true","aria-expanded":String(S.menu==="me"),"aria-label":"Your profile and sign out",onclick:e=>{ e.stopPropagation(); S.menu=S.menu==='me'?false:'me'; render(); }},
       S.avatar?h("img",{src:S.avatar,alt:""}):h("span",{class:"ini"},initials(name)),h("span",{class:"nm"},name.split(" ")[0])),
     S.menu==="me"?h("div",{class:"menu",role:"menu"},
-      h("div",{class:"who"},h("div",{style:"font-weight:700"},name),h("div",{class:"row",style:"gap:6px;margin-top:4px"},h("span",{class:"pill"},role||"No role yet"),window.FB&&window.FB.isAdmin?h("span",{class:"pill gold"},"Admin"):null),
-        window.FB&&window.FB.email?h("div",{class:"muted small",style:"margin-top:4px;overflow-wrap:anywhere"},window.FB.email):null,
+      h("div",{class:"who"},h("div",{style:"font-weight:700"},name),h("div",{class:"row",style:"gap:6px;margin-top:4px"},h("span",{class:"pill"},role||"No role yet"),S.guest?h("span",{class:"pill gold"},"Guest view"):isAdminNow()?h("span",{class:"pill gold"},"Admin"):null),
+        window.FB&&window.FB.email&&!S.guest?h("div",{class:"muted small",style:"margin-top:4px;overflow-wrap:anywhere"},window.FB.email):null,
         S.mySchools.size?h("div",{class:"tchips"},[...S.mySchools].filter(schoolById).map(id=>schoolTag(id))):null),
-      h("button",{role:"menuitem",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"),
+      S.guest?h("button",{role:"menuitem",style:"font-weight:700",onclick:exitGuest},"Exit guest view"):h("button",{role:"menuitem",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"),
+      !S.guest&&realAdmin()?h("button",{role:"menuitem",onclick:enterGuest},h("span",{style:"display:block"},"View as a guest"),h("span",{class:"muted small",style:"display:block;font-weight:400"},"See the team member view, read-only")):null,
       h("button",{role:"menuitem",onclick:()=>nav("member",{memberId:S.myId})},"My activity"),
       h("button",{role:"menuitem",onclick:()=>{ S.menu=false; signOutNow(); }},"Sign out")):null);
 }
@@ -1045,15 +1086,15 @@ function vPerson(){
       h("p",{class:"lead"}, contactsOf(p).length?["Looked after by ",h("b",{style:"color:var(--ink)"},contactNames(p))]:"No one assigned yet"),
       S.myId&&S.canWrite&&(mine||S.staff.includes(S.myId))?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":"+ I'll look after them too"):null),
     h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
-      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:"user-select:all"},fmtPhone(p.phone)),callLinks(p)):null),
-      p.email?dd("Email",h("span",{style:"user-select:all"},p.email)):null,
+      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:S.guest?null:"user-select:all"},shownPhone(p.phone)),callLinks(p)):null),
+      p.email?dd("Email",S.guest?h("span",null,maskEmail(p.email)):h("span",{style:"user-select:all"},p.email)):null,
       p.birthday?dd("Birthday",`${fmtShort(p.birthday)}${bd?(bd.days===0?" · today!":` · in ${plural(bd.days,"day")}`):""}`):null,
       p.schedule?dd("Class schedule",h("span",{style:"white-space:pre-wrap;font-weight:400"},p.schedule)):null,
       (!p.email||!p.birthday||!p.schedule)&&S.canWrite?h("div",{class:"add"},h("button",{class:"link small",onclick:()=>{S.editing=true; S.fc=undefined; S.dirty.clear(); render(); window.scrollTo(0,0);}},"+ Add "+[!p.email?"email":null,!p.birthday?"birthday":null,!p.schedule?"class schedule":null].filter(Boolean).join(", "))):null),
       S.canWrite?h("button",{class:"btn small",style:"margin-top:14px",onclick:()=>{S.editing=true; S.fc=undefined; S.dirty.clear(); render(); window.scrollTo(0,0);}},"Edit details"):null),
     h("div",{class:"box stack",style:"gap:10px"},
       h("div",{class:"row",style:"justify-content:space-between"},h("span",null,h("h2",{style:"font-size:1.1rem"},`Team notes · ${notes.length}`),h("span",{class:"muted small"},"Anyone on the team can add a point")),
-        h("button",{class:"btn primary small",onclick:()=>nav("notes",{personId:p.id})},notes.length?"Open notes":"Add a note")),
+        h("button",{class:"btn primary small",onclick:()=>nav("notes",{personId:p.id})},notes.length?"Open notes":S.guest?"View notes":"Add a note")),
       !loaded()?h("p",{class:"muted",style:"margin:0"},"Loading notes…"):notes.length?h("ul",{class:"bullets"},notes.slice(0,3).map(n=>h("li",null,h("span",null,n.text),h("span",{class:"by"},`${memberName(n.by)} · ${fmtWhen(n.createdAt)}`))))
         :h("p",{class:"muted",style:"margin:0"},"No notes yet."),
       notes.length>3?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>nav("notes",{personId:p.id})},`See all ${notes.length} notes`):null),
@@ -1284,7 +1325,7 @@ function vPeople(){
 // ---------- Messages ----------
 const csvEsc=v=>{v=v==null?"":String(v); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;};
 async function saveCsv(filename,rows){
-  const dl=await claude.use("downloads"); if(!dl){ toast("Downloads aren't available in this view"); return; }
+  const dl=(S.guest?null:await claude.use("downloads")); if(!dl){ toast(S.guest?GUEST_NO:"Downloads aren't available in this view"); return; }
   try{ await dl.save({filename,data:rows.map(r=>r.map(csvEsc).join(",")).join("\n")}); }
   catch(e){ if(e&&e.code!=="declined"&&e.code!=="cancelled") toast("The export didn't go through"); }
 }
@@ -1307,10 +1348,11 @@ function personalize(text,p){
   const nm=String(p.name||"").startsWith("Unknown")?"":String(p.name||"").trim().split(/\s+/)[0];
   return String(text||"").replace(/\{\s*name\s*\}/gi,nm).replace(/ +([!,.?])/g,"$1").replace(/ {2,}/g," ").trim();
 }
-const smsHref=(p,body)=>{ const d=ten(p.phone); return d?`sms:+1${d}${body?(IS_IOS?"&":"?")+"body="+encodeURIComponent(body):""}`:null; };
-const waHref=(p,body)=>{ const d=ten(p.phone); return d?`https://wa.me/1${d}${body?"?text="+encodeURIComponent(body):""}`:null; };
+const smsHref=(p,body)=>{ const d=ten(p.phone); return d&&!S.guest?`sms:+1${d}${body?(IS_IOS?"&":"?")+"body="+encodeURIComponent(body):""}`:null; };
+const waHref=(p,body)=>{ const d=ten(p.phone); return d&&!S.guest?`https://wa.me/1${d}${body?"?text="+encodeURIComponent(body):""}`:null; };
 const sentOf=m=>({...(m.sent||{}),...(pendingSent[m.id]||{})});
 function markSent(m,p,body,via){
+  if(S.guest){ toast(GUEST_NO); return; }
   try{ navigator.clipboard&&navigator.clipboard.writeText(body).catch(()=>{}); }catch(e){}
   (pendingSent[m.id]||(pendingSent[m.id]={}))[p.id]={at:new Date().toISOString(),by:S.myId||null,via};
   const path=SP("messages")+"/"+m.id;
@@ -1354,7 +1396,7 @@ function vMessages(){
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.title),h("span",{class:"meta"},`Sent ${fmt(m.date)} · by ${memberName(m.by)}`)),
         h("span",{class:"pill"},`${n} of ${total} replied`)); }))
       :h("div",{class:"empty"},h("b",null,"No weeks yet"),"Tap “Start a new week” to create the first one."),
-    ms.length?h("button",{class:"link small",style:"align-self:flex-start",onclick:exportAllWeeks},"Export all weeks (CSV)"):null);
+    ms.length&&!S.guest?h("button",{class:"link small",style:"align-self:flex-start",onclick:exportAllWeeks},"Export all weeks (CSV)"):null);
 }
 function vMessage(){
   const m=S.messages.find(x=>x.id===S.msgId);
@@ -1401,7 +1443,7 @@ function vMessage(){
       m.text&&S.canWrite&&!x.r?textButtons(m,x.p,false):null)))
       :h("div",{class:"empty"},h("b",null,S.people.length?"No one here":"The roster is empty"),S.people.length?"Try another filter or search.":"Add people to the roster first."),
     list.length>40&&!S.showAllPeople&&!q?h("button",{class:"btn block",onclick:()=>{S.showAllPeople=true; render();}},`Show all ${list.length}`):null,
-    h("div",{class:"actions"},h("button",{class:"btn small",onclick:()=>exportWeek(m)},"Export this week (CSV)")),
+    S.guest?null:h("div",{class:"actions"},h("button",{class:"btn small",onclick:()=>exportWeek(m)},"Export this week (CSV)")),
     S.canWrite?(S.confirm==="msgdel"?h("div",{class:"confirm"},h("span",null,"Delete this week, its texted and replied marks?"),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc(SP("messages")+"/"+m.id).delete(),"Week deleted")) back(); }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
       :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="msgdel"; render();}},"Delete this week")):null);
@@ -1428,7 +1470,7 @@ function vInsights(){
       h("span",{html:ICON.tCal}),h("b",{style:"font-size:1.45rem"},"Generate insights"),
       h("span",null,`Builds the charts and tables from the ${plural(S.people.length,"person","people")} and ${plural(S.meetings.length,"meeting")} already loaded. Takes a second.`),
       h("span",{class:"go"},"Generate →")),
-    h("button",{class:"btn",style:"align-self:flex-start",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)"));
+    S.guest?null:h("button",{class:"btn",style:"align-self:flex-start",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)"));
   const rows=S.people.map(p=>({p,s:stats(p)}));
   const ms=S.meetings.slice().sort((a,b)=>a.date<b.date?-1:1);
   const countOf=m=>presentOf(m).filter(id=>personById(id)).length;
@@ -1443,7 +1485,7 @@ function vInsights(){
   const recent=ms.slice(-8).reverse();
   const card=(title,sub,items,empty)=>h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},title),sub?h("p",{class:"muted small",style:"margin:0"},sub):null,items.length?h("div",{class:"list"},items):h("p",{class:"muted",style:"margin:0"},empty));
   return h("div",{class:"stack",style:"gap:28px"},
-    h("div",{class:"row",style:"justify-content:space-between"},h("span",null,h("h1",null,"Insights"),h("span",{class:"muted small"},`For ${schoolName(S.schoolId)}: attendance, birthdays, cooks and a roster download`)),h("button",{class:"btn",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)")),
+    h("div",{class:"row",style:"justify-content:space-between"},h("span",null,h("h1",null,"Insights"),h("span",{class:"muted small"},`For ${schoolName(S.schoolId)}: attendance, birthdays, cooks and a roster download`)),S.guest?null:h("button",{class:"btn",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)")),
     h("div",{class:"stats"},stat(S.people.length,"on the roster"),stat(active30,"came in the last 30 days"),stat(avg4==null?"—":avg4,"average, last 4 meetings"),stat(newThisMonth,"new this month")),
     h("p",{class:"muted",style:"margin:-14px 0 0"},ROLES.map(r=>plural(S.people.filter(p=>(p.role||"Student")===r).length,r)).join(" · ")),
     h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Attendance by meeting"),ms.length?chart(ms.slice(-16),countOf):h("p",{class:"muted"},"Record meetings to see the trend.")),
@@ -1478,7 +1520,7 @@ function chart(ms,countOf){
   return h("div",{style:"overflow-x:auto;margin-top:12px"},s);
 }
 async function exportCsv(){
-  const dl=await claude.use("downloads"); if(!dl){ toast("Downloads aren't available in this view"); return; }
+  const dl=(S.guest?null:await claude.use("downloads")); if(!dl){ toast(S.guest?GUEST_NO:"Downloads aren't available in this view"); return; }
   const esc=v=>{v=v==null?"":String(v); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v;};
   const head=["Name","Role","Phone","Email","Birthday","Class schedule","Looked after by","Meetings attended","Attendance rate %","In a row","Last came","Added by"];
   const lines=[head.join(",")].concat(S.people.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).map(p=>{const s=stats(p);
@@ -1618,7 +1660,7 @@ function vMore(){
     h("div",{class:"alist"},
       item("Insights","Attendance trends, birthdays, cooks, roster export",()=>nav("insights")),
       item("Our team and activity",`Who works at ${schoolName(S.schoolId)}, who looks after whom`,()=>nav("team")),
-      item(admin?"Schools":"Your schools",admin?`${plural(S.schools.length,"school")} · create, rename, manage teams`:"Join or leave a school, switch between them",()=>nav("schools")),
+      S.guest?null:item(admin?"Schools":"Your schools",admin?`${plural(S.schools.length,"school")} · create, rename, manage teams`:"Join or leave a school, switch between them",()=>nav("schools")),
       admin?item("Import from a sheet",`Paste contacts into ${schoolName(S.schoolId)}`,()=>nav("import",{importText:""})):null,
       admin?item(dupes?plural(dupes,"possible duplicate"):"Check for duplicates","Merge people added twice",()=>nav("dupes"),dupes?"gold":""):null,
       admin&&S.people.some(p=>p._raw)?item(`Fix ${plural(S.people.filter(p=>p._raw).length,"name")} in lowercase or all-caps`,"e.g. “adia” becomes “Adia”. One tap",fixNames,"gold"):null),
@@ -1642,8 +1684,9 @@ function loadXLSX(){
   return new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; sc.onload=()=>res(window.XLSX); sc.onerror=()=>rej(new Error("load")); document.head.append(sc); });
 }
 async function backup(kind){
+  if(S.guest){ toast(GUEST_NO); return; }
   if(!S.db){ toast("Sign in to back up"); return; }
-  const dl=await claude.use("downloads"); if(!dl){ toast("Downloads aren't available in this view"); return; }
+  const dl=(S.guest?null:await claude.use("downloads")); if(!dl){ toast(S.guest?GUEST_NO:"Downloads aren't available in this view"); return; }
   S.backingUp=kind; render();
   try{
     const D=await fetchEverything(), stamp8=today();
@@ -1684,6 +1727,7 @@ async function backup(kind){
 }
 const backupDue=()=>{ if(!S.schoolId) return false; const b=(S.schoolDoc||{}).lastBackup; return !b||!b.at||(Date.now()-new Date(b.at))>30*86400000; };
 function backupBox(){
+  if(S.guest) return null;
   const b=(S.schoolDoc||{}).lastBackup, n=accessibleSchools().length;
   return h("div",{class:"box stack",style:"gap:10px;border:2px solid "+(backupDue()?"var(--marigold)":"var(--line)")},
     h("h2",{style:"font-size:1.1rem"},"Monthly backup"),
@@ -1715,7 +1759,7 @@ function vMember(){
   if(!t) return h("div",{class:"empty"},h("b",null,S.ready?"This team member isn't on the team":"Loading…"));
   const name=memberName(t.id), people=S.people.filter(p=>contactsOf(p).includes(t.id)).sort(byName), act=activityOf(t.id);
   const counts=[["notes added",S.notes.filter(n=>n.by===t.id).length],["people added",S.people.filter(p=>p.createdBy===t.id).length],["reading and chanting logs",S.progress.filter(x=>x.by===t.id).length],["meetings started",S.meetings.filter(m=>m.by===t.id).length]];
-  const isAdmin=window.FB&&window.FB.isAdmin;
+  const isAdmin=isAdminNow();
   return h("div",{class:"stack",style:"gap:18px"},
     h("div",null,h("h1",null,name+(t.id===S.myId?" (you)":"")),
       h("div",{class:"row",style:"margin-top:8px"},h("span",{class:"pill"},t.title||"No role yet"),...schoolsOf(t.id).map(x=>schoolTag(x.id))),
@@ -1760,7 +1804,7 @@ function vTeam(){
 }
 function accessBox(){
   const FB=window.FB||{};
-  if(!FB.isAdmin) return h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Adding a teammate"),
+  if(!isAdminNow()) return h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Adding a teammate"),
     h("p",{style:"margin:8px 0 0"},"Ask an admin to add the person's Google email. Once added, they sign in with Google, pick their school, and appear here."));
   const f=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
     e.preventDefault(); const em=document.getElementById("acc_email").value.trim().toLowerCase(), adm=document.getElementById("acc_admin").checked, role=document.getElementById("acc_role").value;
