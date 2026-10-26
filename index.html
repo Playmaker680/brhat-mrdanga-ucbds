@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d5a86">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bṛhat Mṛdaṅga">
 <title>Bṛhat Mṛdaṅga Database</title>
 <link rel="icon" href="logo.jpg">
-<link rel="apple-touch-icon" href="logo.jpg">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
@@ -85,6 +90,8 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline
 .btn.small{min-height:38px;padding:6px 12px;font-size:.9rem}
 .btn.danger{color:var(--alert);border-color:var(--alert)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+a.btn{text-decoration:none}
+.callrow{display:flex;gap:6px;flex-wrap:nowrap}
 .link{background:none;border:0;padding:6px 0;font:inherit;color:var(--blue);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .x{background:none;border:0;min-width:44px;min-height:44px;border-radius:10px;color:var(--muted);cursor:pointer;font:700 1.2rem var(--font)}
 .x:hover{background:var(--alert-soft);color:var(--alert)}
@@ -215,7 +222,7 @@ const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2400); }
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
-const SCREENS=["home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import"];
+const SCREENS=["home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes"];
 const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
 const initials=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 function signOutNow(){ if(window.FB&&window.FB.signOut) window.FB.signOut(); else toast("In this preview, sign out from your Claude account. On your live site this signs you out."); }
@@ -225,12 +232,12 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySele
 const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
   screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
   personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
-  homeQ:"", backingUp:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
+  homeQ:"", backingUp:null, merging:null, copyText:null, dupWarn:null, dupOK:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
   db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, ready:false, offline:false, profiles:{}, dirty:new Set() };
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
 const clearDirty=el=>{ if(el) el.querySelectorAll("[id]").forEach(x=>S.dirty.delete(x.id)); };
-function nav(screen, patch){ S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:""},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function nav(screen, patch){ S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function back(){ const p=S.stack.pop()||{screen:"home"}; Object.assign(S,p,{editing:false,confirm:null,quickAdd:null}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function home(){ S.stack=[]; Object.assign(S,{screen:"home",editing:false,confirm:null,quickAdd:null,homeQ:""}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 
@@ -244,6 +251,23 @@ const personById=id=>S.people.find(p=>p.id===id);
 const pendingRoll={};
 const byName=(a,b)=>(a.name||"").localeCompare(b.name||"");
 const activeTeam=()=>S.team.filter(t=>!t.removed);
+const isAdminNow=()=>!window.FB||!!window.FB.isAdmin;
+const ten=v=>{ const d=String(v||"").replace(/\D/g,""); return d.length>=10?d.slice(-10):""; };
+function callLinks(p){ const d=ten(p.phone); if(!d) return null;
+  return h("span",{class:"callrow"},h("a",{class:"btn small",href:"tel:+1"+d,"aria-label":`Call ${p.name}`},"Call"),h("a",{class:"btn small",href:"sms:+1"+d,"aria-label":`Text ${p.name}`},"Text")); }
+async function copyNumbers(people){
+  const nums=[...new Set(people.map(p=>ten(p.phone)).filter(Boolean))].map(d=>`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`);
+  if(!nums.length){ toast("No phone numbers to copy"); return; }
+  const text=nums.join(", ");
+  try{ await navigator.clipboard.writeText(text); toast(`Copied ${plural(nums.length,"number")}`); }
+  catch(e){ S.copyText=text; render(); }
+}
+const copyBtn=(people,label)=>people.some(p=>ten(p.phone))?h("button",{class:"btn small",onclick:()=>copyNumbers(people)},label||`Copy ${plural(people.filter(p=>ten(p.phone)).length,"number")}`):null;
+function prasadamOf(m){
+  const legacy=(Array.isArray(m.prasadam)?m.prasadam:[]).map((x,i)=>({...x,legacyIdx:i}));
+  const mapped=Object.entries(m.pr||{}).filter(([,v])=>v&&v.dish).map(([k,v])=>({...v,key:k}));
+  return legacy.concat(mapped).sort((a,b)=>(a.at||"")<(b.at||"")?-1:1);
+}
 const contactsOf=p=>Array.isArray(p.contactIds)?p.contactIds:(p.contactId?[p.contactId]:[]);
 const contactNames=p=>contactsOf(p).map(memberName).join(", ");
 async function setContact(p,uid,on){
@@ -357,16 +381,24 @@ function render(){
   const keep={}; S.dirty.forEach(id=>{ const el=document.getElementById(id); if(el) keep[id]=el.value; });
   const a=document.activeElement, aid=a&&a.id; let sel=null; try{ sel=a&&a.selectionStart; }catch(e){}
   const top=[];
+  if(!navigator.onLine) top.push(h("div",{class:"banner"},"You're offline. Check-ins and notes are saved on this device and will sync when you're back online."));
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
   need(keysFor());
-  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport}[S.screen]||vHome;
-  main.replaceChildren(...top, fn());
+  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
+  const copyBox=S.copyText?h("div",{class:"overlay",role:"dialog","aria-modal":"true"},h("div",{class:"box stack modal"},
+    h("h2",null,"Copy these numbers"),h("p",{style:"margin:0"},"Select all and copy, then paste into a group text."),
+    h("textarea",{readonly:true,style:"min-height:120px",onfocus:e=>e.target.select()},S.copyText),
+    h("button",{class:"btn primary",onclick:()=>{S.copyText=null; render();}},"Done"))):null;
+  main.replaceChildren(...top, fn(), copyBox);
   for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
   if(aid){ const el=document.getElementById(aid); if(el){ el.focus({preventScroll:true}); try{ if(sel!=null) el.setSelectionRange(sel,sel); }catch(e){} } }
   resolveIds([...S.team.map(t=>t.id),...S.notes.map(x=>x.by),...S.progress.map(x=>x.by),...S.people.flatMap(p=>[p.createdBy,p.updatedBy]),...S.meetings.flatMap(m=>[m.by,m.updatedBy,m.talkBy])]);
 }
 const sec=(key,title,summary,body)=>h("details",{class:"sec","data-key":key,open:S.open.has(key)||null},h("summary",null,h("b",null,title),h("span",{class:"sum"},summary||"")),h("div",{class:"in"},body));
+
+window.addEventListener("online",()=>render());
+window.addEventListener("offline",()=>render());
 
 // ---------- Home ----------
 function vHome(){
@@ -416,7 +448,7 @@ function myPeopleBox(){
   return h("div",{class:"box stack",style:"margin-top:22px;gap:12px;border:2px solid var(--line)"},
     h("div",{class:"row",style:"justify-content:space-between"},
       h("h2",{style:"font-size:1.15rem"},`People you look after · ${mine.length}`),
-      S.canWrite?h("button",{class:"btn small",onclick:()=>{S.assigning=!S.assigning; S.assignQ=""; render(); setTimeout(()=>document.getElementById("assign_q")?.focus(),0);}},S.assigning?"Done":"+ Add someone"):null),
+      h("span",{class:"row",style:"gap:6px"},mine.length?copyBtn(mine,"Copy numbers"):null,S.canWrite?h("button",{class:"btn small",onclick:()=>{S.assigning=!S.assigning; S.assignQ=""; render(); setTimeout(()=>document.getElementById("assign_q")?.focus(),0);}},S.assigning?"Done":"+ Add someone"):null)),
     S.assigning?h("div",null,
       h("input",{id:"assign_q",type:"search",autocomplete:"off",placeholder:"Search the roster by name",value:S.assignQ,"aria-label":"Search the roster to add someone you look after",oninput:e=>{S.assignQ=e.target.value; render();}}),
       S.assignQ.trim()?h("div",{class:"results"},cand.map(p=>h("button",{class:"res",onclick:async()=>{ if(await setContact(p,S.myId,true)){ S.assignQ=""; S.dirty.delete("assign_q"); render(); } }},
@@ -497,6 +529,8 @@ function personForm(p){
     e.preventDefault(); const g=id=>{ const el=document.getElementById("f_"+id); return el?el.value.trim():(v[id]||""); };
     const data={name:g("name"),phone:g("phone"),email:g("email"),schedule:g("schedule"),birthday:g("birthday"),role:g("role")||"Student",contactIds:S.fc.slice(),contactId:"",...stamp()};
     if(!data.name||(!p&&!data.phone)){ toast(p?"Add a name":"Name and phone number are needed"); return; }
+    if(!p){ const k=phoneKey(data.phone), ex=k&&S.people.find(x=>phoneKey(x.phone)===k);
+      if(ex&&S.dupOK!==ex.id){ S.dupWarn={id:ex.id}; render(); document.getElementById("dupWarn")?.scrollIntoView({block:"center"}); return; } }
     if(p){ if(await write(db=>db.doc("people/"+p.id).update(data),"Saved")){ clearDirty(form); S.editing=false; S.fc=undefined; render(); } }
     else{
       const note=g("notes"); let ref;
@@ -521,6 +555,10 @@ function personForm(p){
     ] : h("div",{class:"box",style:"padding:14px 16px"},
         h("p",{class:"small",style:"margin:0"},`Role: Student · Looked after by: ${S.myId?memberName(S.myId)+" (you)":"no one yet"}`),
         h("button",{type:"button",class:"link",onclick:()=>{S.addMore=true; render(); setTimeout(()=>document.getElementById("f_email")?.focus(),0);}},"Add email, birthday, schedule, notes, or change role and who looks after them")),
+    (!p&&S.dupWarn&&personById(S.dupWarn.id))?(()=>{ const ex=personById(S.dupWarn.id); return h("div",{class:"confirm",id:"dupWarn",style:"background:var(--marigold-soft)"},
+      h("span",null,h("b",null,ex.name)," is already on the roster with ",h("b",null,ex.phone||"this number"),". Adding again would create a duplicate."),
+      h("div",{class:"row"},h("button",{type:"button",class:"btn primary",onclick:()=>nav("person",{personId:ex.id})},"Open their profile"),
+        h("button",{type:"button",class:"btn",onclick:e=>{ S.dupOK=ex.id; S.dupWarn=null; e.target.closest("form").requestSubmit(); }},"Add anyway"))); })():null,
     h("div",{class:"row",style:"margin-top:6px"},
       h("button",{class:"btn primary block",type:"submit",disabled:!S.canWrite||!S.db||null},p?"Save changes":"Add to roster"),
       p?h("button",{class:"btn block",type:"button",onclick:()=>{S.editing=false; S.fc=undefined; S.dirty.clear(); render();}},"Cancel"):null));
@@ -578,7 +616,7 @@ function vPerson(){
       h("p",{class:"lead"}, contactsOf(p).length?["Looked after by ",h("b",{style:"color:var(--ink)"},contactNames(p))]:"No one assigned yet"),
       S.myId&&S.canWrite?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":"+ I'll look after them too"):null),
     h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
-      dd("Phone",p.phone?h("span",{style:"user-select:all"},p.phone):null), dd("Email",p.email?h("span",{style:"user-select:all"},p.email):null),
+      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:"user-select:all"},p.phone),callLinks(p)):null), dd("Email",p.email?h("span",{style:"user-select:all"},p.email):null),
       dd("Birthday",p.birthday?`${fmtShort(p.birthday)}${bd?(bd.days===0?" · today!":` · in ${plural(bd.days,"day")}`):""}`:null),
       dd("Class schedule",p.schedule?h("span",{style:"white-space:pre-wrap;font-weight:400"},p.schedule):null)),
       S.canWrite?h("button",{class:"btn small",style:"margin-top:14px",onclick:()=>{S.editing=true; S.fc=undefined; S.dirty.clear(); render(); window.scrollTo(0,0);}},"Edit details"):null),
@@ -603,7 +641,7 @@ function vPerson(){
       reading.length?h("div",{class:"tablewrap"},h("table",null,
         h("thead",null,h("tr",null,h("th",null,"When"),h("th",null,"Book"),h("th",{class:"num"},"Pages"),h("th",null,"Note"),h("th",null,"Logged by"),h("th",null,""))),
         h("tbody",null,reading.slice(0,20).map(x=>h("tr",null,h("td",null,fmtShort(x.date)),h("td",{class:"wrap"},x.book),h("td",{class:"num"},x.pages??"—"),h("td",{class:"wrap"},x.note||"—"),h("td",null,memberName(x.by)),h("td",null,del(x,"Removed"))))))):null]),
-    h("p",{class:"muted small",style:"margin:4px 0 0"},`Added by ${memberName(p.createdBy)}${p.createdAt?" on "+fmtShort(p.createdAt):""}`,p.updatedBy&&p.updatedAt&&p.updatedAt!==p.createdAt?` · last edited by ${memberName(p.updatedBy)}`:""),
+    h("p",{class:"muted small",style:"margin:4px 0 0"},p.importedAt?`Signed up ${p.createdAt?fmtShort(p.createdAt):"(no date)"} · imported ${fmtShort(p.importedAt)} by ${memberName(p.createdBy)}`:`Added by ${memberName(p.createdBy)}${p.createdAt?" on "+fmtShort(p.createdAt):""}`,p.updatedBy&&p.updatedAt&&p.updatedAt!==p.createdAt?` · last edited by ${memberName(p.updatedBy)}`:""),
     S.canWrite?(S.confirm==="del"?h("div",{class:"confirm"},h("span",null,`Delete ${p.name}, their notes, reading and chanting records? This can't be undone.`),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{
         const ok=await write(async db=>{ for(const n of S.notes.filter(x=>x.personId===p.id)) await db.doc("notes/"+n.id).delete();
@@ -634,7 +672,7 @@ function vNotes(){
       h("h2",{style:"font-size:1rem;color:var(--muted)"},g.d==="—"?"Undated":parse(g.d).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"})),
       h("ul",{class:"bullets"},g.items.map(n=>h("li",null,h("span",null,n.text),
         h("span",{class:"by"},`${memberName(n.by)} · ${n.createdAt?new Date(n.createdAt).toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"}):""}`,
-          S.canWrite&&(n.by===S.myId||!n.by)?h("button",{class:"link small",style:"color:var(--muted);padding:0 0 0 10px",onclick:()=>write(db=>db.doc("notes/"+n.id).delete(),"Point removed")},"Remove"):null))))))
+          S.canWrite&&(n.by===S.myId||!n.by||isAdminNow())?h("button",{class:"link small",style:"color:var(--muted);padding:0 0 0 10px",onclick:()=>write(db=>db.doc("notes/"+n.id).delete(),"Point removed")},"Remove"):null))))))
       :h("div",{class:"empty"},h("b",null,"No notes yet"),"Add the first points above."));
 }
 
@@ -648,7 +686,7 @@ function vMeeting(){
   if(!m){
     const f=h("form",{class:"stack",onsubmit:async e=>{
       e.preventDefault(); const date=document.getElementById("m_date").value||today(), title=document.getElementById("m_title").value.trim()||"Club meeting";
-      let ref; if(await write(async db=>{ ref=await db.collection("meetings").add({date,title,present:[],att:{},prasadam:[],createdAt:new Date().toISOString(),by:S.myId||null}); },"Meeting started")){ clearDirty(f); S.meetingId=ref.id; render(); setTimeout(()=>document.getElementById("att_q")?.focus(),0); }
+      let ref; if(await write(async db=>{ ref=await db.collection("meetings").add({date,title,present:[],att:{},prasadam:[],pr:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Meeting started")){ clearDirty(f); S.meetingId=ref.id; render(); setTimeout(()=>document.getElementById("att_q")?.focus(),0); }
     }},
       h("div",null,h("h1",null,"Start a club meeting"),h("p",{class:"lead"},"Then check people in as they arrive.")),
       h("label",{class:"f"},h("span",null,"What's the meeting? ",h("small",null,"optional")),h("input",{id:"m_title",class:"big",placeholder:"e.g. Wednesday Gita class",autocomplete:"off"})),
@@ -666,7 +704,7 @@ function vMeeting(){
   const peopleNames=S.people.map(p=>p.name).filter(Boolean);
   const speakers=[...new Set([...S.people.filter(p=>p.role==="Speaker").map(p=>p.name),...activeTeam().filter(t=>t.title==="Speaker").map(t=>memberName(t.id)),...teamNames,...peopleNames])];
   const cooks=[...new Set([...teamNames,...peopleNames])];
-  const pr=Array.isArray(m.prasadam)?m.prasadam:[];
+  const pr=prasadamOf(m);
 
   const talk=h("form",{class:"stack",onsubmit:async e=>{
     e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
@@ -682,7 +720,8 @@ function vMeeting(){
   const prf=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
     e.preventDefault(); const dish=document.getElementById("pr_dish").value.trim(), cook=document.getElementById("pr_cook").value.trim();
     if(!dish){ toast("Add what was made"); return; }
-    if(await write(db=>db.doc("meetings/"+m.id).update({prasadam:[...pr,{dish,cook,by:S.myId||null,at:new Date().toISOString()}],...stamp()}),"Prasadam added")){ document.getElementById("pr_dish").value=""; document.getElementById("pr_cook").value=""; clearDirty(prf); }
+    const key=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    if(await write(db=>db.doc("meetings/"+m.id).update({pr:{[key]:{dish,cook,by:S.myId||null,at:new Date().toISOString()}},...stamp()}),"Prasadam added")){ document.getElementById("pr_dish").value=""; document.getElementById("pr_cook").value=""; clearDirty(prf); }
   }},
     h("div",{class:"row"},
       h("label",{class:"f",style:"flex:2 1 200px"},"What was made",h("input",{id:"pr_dish",placeholder:"e.g. Khichdi",autocomplete:"off"})),
@@ -718,7 +757,7 @@ function vMeeting(){
     sec("prasadam","Prasadam", pr.length?pr.map(x=>x.dish).join(", "):"What was made, who cooked",[
       pr.length?h("div",{class:"list"},pr.map((x,i)=>h("div",{class:"res",style:"cursor:default"},
         h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},x.dish),h("span",{class:"meta"},`${x.cook?"Cooked by "+x.cook:"Cook not noted"} · logged by ${memberName(x.by)}`)),
-        S.canWrite?h("button",{class:"x","aria-label":`Remove ${x.dish}`,onclick:()=>write(db=>db.doc("meetings/"+m.id).update({prasadam:pr.filter((_,j)=>j!==i),...stamp()}),"Removed")},"×"):null))):null,
+        S.canWrite?h("button",{class:"x","aria-label":`Remove ${x.dish}`,onclick:()=>write(db=>db.doc("meetings/"+m.id).update(x.key?{pr:{[x.key]:null},...stamp()}:{prasadam:(m.prasadam||[]).filter((_,j)=>j!==x.legacyIdx),...stamp()}),"Removed")},"×"):null))):null,
       S.canWrite?prf:null]),
     S.canWrite?(S.confirm==="mdel"?h("div",{class:"confirm"},h("span",null,"Delete this meeting, its attendance, notes and prasadam?"),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc("meetings/"+m.id).delete(),"Meeting deleted")){ S.meetingId=null; back(); } }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
@@ -729,6 +768,9 @@ function quickAdd(m){
     e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
     const data={name:g("np_name"),phone:g("np_phone"),email:"",schedule:"",birthday:"",role:g("np_role"),contactIds:S.myId?[S.myId]:[],createdAt:new Date().toISOString(),createdBy:S.myId||null,...stamp()};
     if(!data.name){ toast("Add a name"); return; }
+    const k=phoneKey(data.phone), nm=data.name.trim().toLowerCase();
+    const ex=k?S.people.find(x=>phoneKey(x.phone)===k):S.people.find(x=>(x.name||"").trim().toLowerCase()===nm);
+    if(ex&&S.dupOK!==ex.id){ S.dupWarn={id:ex.id,byPhone:!!k}; render(); return; }
     let ref; if(await write(async db=>{ ref=await db.collection("people").add(data); },`${data.name} added and checked in`)){
       clearDirty(f); S.quickAdd=null; S.attQ=""; S.dirty.delete("att_q"); setPresent(m,ref.id,true); }
   }},
@@ -736,7 +778,11 @@ function quickAdd(m){
     h("label",{class:"f"},"Name",h("input",{id:"np_name",value:S.quickAdd.name,required:true,autocomplete:"off"})),
     h("label",{class:"f"},h("span",null,"Phone number ",h("small",null,"can add later")),h("input",{id:"np_phone",type:"tel",inputmode:"tel",autocomplete:"off"})),
     h("label",{class:"f"},"Role",h("select",{id:"np_role"},ROLES.map(r=>h("option",{value:r},r)))),
-    h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"Add and check in"),h("button",{class:"btn",type:"button",onclick:()=>{S.quickAdd=null; render();}},"Cancel")));
+    (S.dupWarn&&personById(S.dupWarn.id))?(()=>{ const ex=personById(S.dupWarn.id); return h("div",{class:"confirm",style:"background:var(--marigold-soft)"},
+      h("span",null,S.dupWarn.byPhone?[h("b",null,ex.name)," already has this phone number."]:["Someone named ",h("b",null,ex.name)," is already on the roster",ex.phone?` · ${ex.phone}`:"","."]),
+      h("div",{class:"row"},h("button",{type:"button",class:"btn primary",onclick:()=>{ S.dupWarn=null; S.quickAdd=null; S.attQ=""; S.dirty.delete("att_q"); setPresent(m,ex.id,true); toast(`${ex.name} checked in`); }},`Check in ${ex.name} instead`),
+        h("button",{type:"button",class:"btn",onclick:e=>{ S.dupOK=ex.id; S.dupWarn=null; e.target.closest("form").requestSubmit(); }},"It's someone new"))); })():null,
+    h("div",{class:"row"},h("button",{class:"btn primary",type:"submit"},"Add and check in"),h("button",{class:"btn",type:"button",onclick:()=>{S.quickAdd=null; S.dupWarn=null; render();}},"Cancel")));
   return f;
 }
 
@@ -750,17 +796,17 @@ function engagedLine(s){
 function vBloopers(rows){
   const never=rows.filter(r=>r.s.bucket==="never").sort((a,b)=>a.name.localeCompare(b.name));
   const quiet=rows.filter(r=>r.s.bucket==="quiet").sort((a,b)=>b.s.quietDays-a.s.quietDays);
-  const item=r=>h("button",{class:"res",onclick:()=>nav("person",{personId:r.p.id})},
-    h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.p.name),
+  const item=r=>h("div",{class:"res",style:"cursor:default;flex-wrap:wrap"},
+    h("button",{class:"rowlink",onclick:()=>nav("person",{personId:r.p.id})},h("span",{class:"name",style:"display:block"},r.p.name),
       h("span",{class:"meta"},[engagedLine(r.s),contactsOf(r.p).length?"with "+contactNames(r.p):"no one assigned"].join(" · "))),
-    blooperPill(r.s));
+    h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},blooperPill(r.s),callLinks(r.p)));
   return [
     h("div",{class:"stack",style:"gap:8px"},
-      h("h2",{style:"font-size:1.15rem"},`1. Never engaged · ${never.length}`),
+      h("div",{class:"row",style:"justify-content:space-between"},h("h2",{style:"font-size:1.15rem"},`1. Never engaged · ${never.length}`),copyBtn(never.map(r=>r.p))),
       h("p",{class:"muted small",style:"margin:0"},"Never replied to a message and never came to a meeting. People added in the last week aren't listed yet."),
       never.length?h("div",{class:"list"},never.map(item)):h("p",{class:"muted",style:"margin:0"},"No one here.")),
     h("div",{class:"stack",style:"gap:8px;margin-top:10px"},
-      h("h2",{style:"font-size:1.15rem"},`2. Engaged before, now quiet · ${quiet.length}`),
+      h("div",{class:"row",style:"justify-content:space-between"},h("h2",{style:"font-size:1.15rem"},`2. Engaged before, now quiet · ${quiet.length}`),copyBtn(quiet.map(r=>r.p))),
       h("p",{class:"muted small",style:"margin:0"},"Replied or came at least once, but nothing in the last 3 weeks. Longest quiet first."),
       quiet.length?h("div",{class:"list"},quiet.map(item)):h("p",{class:"muted",style:"margin:0"},"No one here."))
   ];
@@ -776,7 +822,7 @@ function vPeople(){
   else if(S.filter!=="all") rows=rows.filter(r=>r.role===S.filter);
   rows.sort((a,b)=>a.name.localeCompare(b.name));
   return h("div",{class:"stack"},
-    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,S.filter==="follow"?"Potential bloopers":"Everyone"),S.canWrite?h("div",{class:"row",style:"gap:8px"},window.FB&&window.FB.isAdmin||!window.FB?h("button",{class:"btn",onclick:()=>nav("import",{importText:""})},"Import from a sheet"):null,h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"Add a person")):null),
+    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,S.filter==="follow"?"Potential bloopers":"Everyone"),S.canWrite?h("div",{class:"row",style:"gap:8px"},(()=>{ const n=findDupes().length; return n?h("button",{class:"btn",style:"border-color:var(--marigold)",onclick:()=>nav("dupes")},`${plural(n,"possible duplicate")}`):h("button",{class:"btn",onclick:()=>nav("dupes")},"Check duplicates"); })(),window.FB&&window.FB.isAdmin||!window.FB?h("button",{class:"btn",onclick:()=>nav("import",{importText:""})},"Import from a sheet"):null,h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"Add a person")):null),
     S.filter==="follow"?h("p",{class:"lead",style:"margin:0"},"People to reach out to, based on meeting check-ins and message replies."):null,
     h("div",{class:"row"},
       h("input",{id:"pq",type:"search",class:"grow",style:"flex:2 1 220px",placeholder:"Search name, phone, contact",value:S.peopleQ,oninput:e=>{S.peopleQ=e.target.value; render();}}),
@@ -862,7 +908,8 @@ function vMessage(){
       h("input",{id:"msg_q",type:"search",class:"grow",style:"flex:2 1 220px",placeholder:"Search students by name",value:S.msgQ,autocomplete:"off",oninput:e=>{S.msgQ=e.target.value; render();}}),
       h("select",{id:"msg_f",style:"flex:1 1 160px;width:auto","aria-label":"Show",onchange:e=>{S.msgFilter=e.target.value; render();}},
         [["all","Everyone"],["yes","Replied"],["no","Didn't reply"]].map(([v,l])=>h("option",{value:v,selected:S.msgFilter===v?"selected":null},l)))),
-    h("p",{class:"muted small",style:"margin:0"},others.length?"People who replied most often in earlier weeks are listed first.":"Check off each person who replied."),
+    h("div",{class:"row",style:"justify-content:space-between"},h("p",{class:"muted small",style:"margin:0"},others.length?"People who replied most often in earlier weeks are listed first.":"Check off each person who replied."),
+      copyBtn(list.map(x=>x.p),S.msgFilter==="no"?`Copy numbers of the ${list.filter(x=>ten(x.p.phone)).length} who didn't reply`:undefined)),
     list.length?h("div",{class:"list"},list.map(x=>h("label",{class:"res check"+(x.r?" on":"")},
       h("input",{type:"checkbox",checked:x.r||null,disabled:!S.canWrite||null,onchange:e=>setResponded(m,x.p.id,e.target.checked)}),
       h("span",{style:"min-width:0;flex:1"},h("span",{class:"name",style:"display:block"},x.p.name),
@@ -896,7 +943,7 @@ function vInsights(){
   const active30=rows.filter(r=>r.s.last&&r.s.gap<=30).length;
   const follow=rows.filter(r=>r.s.followUp).sort((a,b)=>(a.s.bucket===b.s.bucket?0:a.s.bucket==="never"?-1:1)||((b.s.quietDays??0)-(a.s.quietDays??0)));
   const bdays=S.people.map(p=>({p,b:nextBirthday(p.birthday)})).filter(x=>x.b&&x.b.days<=30).sort((a,b)=>a.b.days-b.b.days);
-  const cooks={}; ms.forEach(m=>(m.prasadam||[]).forEach(x=>{ if(x.cook) cooks[x.cook]=(cooks[x.cook]||0)+1; }));
+  const cooks={}; ms.forEach(m=>prasadamOf(m).forEach(x=>{ if(x.cook) cooks[x.cook]=(cooks[x.cook]||0)+1; }));
   const cookList=Object.entries(cooks).sort((a,b)=>b[1]-a[1]).slice(0,8);
   const recent=ms.slice(-8).reverse();
   const card=(title,sub,items,empty)=>h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},title),sub?h("p",{class:"muted small",style:"margin:0"},sub):null,items.length?h("div",{class:"list"},items):h("p",{class:"muted",style:"margin:0"},empty));
@@ -914,7 +961,7 @@ function vInsights(){
       recent.length?h("div",{class:"tablewrap"},h("table",null,
         h("thead",null,h("tr",null,h("th",null,"Date"),h("th",null,"Meeting"),h("th",null,"Speaker"),h("th",null,"Topic"),h("th",{class:"num"},"Came"),h("th",null,"Prasadam"))),
         h("tbody",null,recent.map(m=>h("tr",null,h("td",null,fmtShort(m.date)),h("td",null,m.title||"Club meeting"),h("td",null,m.speaker||"—"),h("td",{class:"wrap"},m.topic||"—"),h("td",{class:"num"},countOf(m)),
-          h("td",{class:"wrap"},(m.prasadam||[]).map(x=>x.cook?`${x.dish} (${x.cook})`:x.dish).join(", ")||"—")))))):h("p",{class:"muted",style:"margin:0"},"No meetings yet.")),
+          h("td",{class:"wrap"},prasadamOf(m).map(x=>x.cook?`${x.dish} (${x.cook})`:x.dish).join(", ")||"—")))))):h("p",{class:"muted",style:"margin:0"},"No meetings yet.")),
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Everyone"),
       rows.length?h("div",{class:"tablewrap"},h("table",null,
         h("thead",null,h("tr",null,h("th",null,"Name"),h("th",null,"Role"),h("th",null,"Looked after by"),h("th",{class:"num"},"Meetings"),h("th",{class:"num"},"Rate"),h("th",{class:"num"},"In a row"),h("th",null,"Last came"))),
@@ -1013,6 +1060,55 @@ function vImport(){
     :S.importText.trim()?h("p",{class:"muted"},"No rows with a phone number found. Make sure you copied the phone column."):null);
 }
 
+// ---------- Duplicates ----------
+const normName=n=>String(n||"").toLowerCase().replace(/[^a-zÀ-ɏḀ-ỿ ]/g,"").replace(/\s+/g," ").trim();
+function findDupes(){
+  const ign=new Set(S.config.dupIgnore||[]), groups=[], byPhone=new Map(), byName=new Map();
+  for(const p of S.people){
+    const k=phoneKey(p.phone); if(k){ if(!byPhone.has(k)) byPhone.set(k,[]); byPhone.get(k).push(p); }
+    const n=normName(p.name); if(n&&!n.startsWith("unknown")){ if(!byName.has(n)) byName.set(n,[]); byName.get(n).push(p); }
+  }
+  const inPhone=new Set();
+  for(const [k,arr] of byPhone) if(arr.length>1){ arr.forEach(p=>inPhone.add(p.id)); const key="ph:"+k; if(!ign.has(key)) groups.push({key,kind:"phone",label:`Same phone number ${fmtPhone(k)}`,people:arr}); }
+  for(const [n,arr] of byName) if(arr.length>1){
+    if(arr.every(p=>inPhone.has(p.id))&&new Set(arr.map(p=>phoneKey(p.phone))).size===1) continue;
+    const key="nm:"+arr.map(p=>p.id).sort().join(","); if(!ign.has(key)) groups.push({key,kind:"name",label:`Same name: ${arr[0].name}`,people:arr}); }
+  return groups;
+}
+async function mergeInto(keep,others){
+  S.merging=keep.id; render();
+  const ok=await write(async db=>{
+    for(const o of others){
+      for(const c of ["notes","progress"]){ const snap=await db.collection(c).where("personId","==",o.id).get(); for(const d of snap.docs) await db.doc(c+"/"+d.id).update({personId:keep.id}); }
+      for(const m of S.meetings) if(presentOf(m).includes(o.id)) await db.doc("meetings/"+m.id).update({att:{[o.id]:false,[keep.id]:true}});
+      for(const w of S.messages) if(respondedOf(w).includes(o.id)) await db.doc("messages/"+w.id).update({replies:{[o.id]:false,[keep.id]:true}});
+    }
+    const fill={}; for(const f of ["phone","email","birthday","schedule"]) if(!keep[f]){ const src=others.find(o=>o[f]); if(src) fill[f]=src[f]; }
+    const all=[keep,...others];
+    await db.doc("people/"+keep.id).update({...fill,contactIds:[...new Set(all.flatMap(contactsOf))],contactId:"",createdAt:all.map(x=>x.createdAt).filter(Boolean).sort()[0]||keep.createdAt||null,...stamp()});
+    await db.collection("notes").add({personId:keep.id,text:`Merged duplicate record${others.length>1?"s":""}: ${others.map(o=>[o.name,o.phone].filter(Boolean).join(" ")).join("; ")}`,by:S.myId||null,createdAt:new Date().toISOString()});
+    for(const o of others) await db.doc("people/"+o.id).delete();
+  },"Merged into one record");
+  S.merging=null; S.confirm=null; render();
+  return ok;
+}
+function vDupes(){
+  const groups=findDupes(), admin=isAdminNow();
+  const info=p=>{ const s=stats(p); return [p.phone||"no phone",p.importedAt?"signed up "+(p.createdAt?fmtShort(p.createdAt):"?"):"added "+(p.createdAt?fmtShort(p.createdAt):"?"),plural(s.attended,"meeting"),plural(s.replies,"reply","replies"),contactsOf(p).length?"with "+contactNames(p):null].filter(Boolean).join(" · "); };
+  return h("div",{class:"stack",style:"gap:18px"},
+    h("div",null,h("h1",null,"Possible duplicates"),h("p",{class:"lead"},"People who share a phone number, or have the same name. Pick the record to keep and the others are merged into it: notes, reading and chanting logs, meeting check-ins, message replies and contacts all move over.")),
+    groups.length?groups.map(g=>h("div",{class:"box stack",style:"gap:10px;border:2px solid "+(g.kind==="phone"?"var(--marigold)":"var(--line)")},
+      h("div",{class:"row",style:"justify-content:space-between"},h("h2",{style:"font-size:1.05rem"},g.label),h("span",{class:g.kind==="phone"?"pill gold":"pill"},g.kind==="phone"?"Very likely the same person":"Maybe the same person")),
+      h("div",{class:"list"},g.people.map(p=>h("div",{class:"res",style:"cursor:default;flex-wrap:wrap"},
+        h("button",{class:"rowlink",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name",style:"display:block"},p.name),h("span",{class:"meta"},info(p))),
+        admin&&S.canWrite?(S.confirm==="keep:"+g.key+":"+p.id
+          ?h("span",{class:"row",style:"gap:6px;flex-wrap:nowrap"},h("button",{class:"btn small primary",disabled:S.merging||null,onclick:()=>mergeInto(p,g.people.filter(x=>x.id!==p.id))},S.merging?"Merging…":"Confirm merge"),h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Cancel"))
+          :h("button",{class:"btn small",onclick:()=>{S.confirm="keep:"+g.key+":"+p.id; render();}},"Keep this one")):null))),
+      admin&&S.canWrite?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>write(db=>db.doc("config/app").set({...S.config,dupIgnore:[...(S.config.dupIgnore||[]),g.key],...stamp()}),"Marked as different people")},"These are different people"):null))
+    :h("div",{class:"empty"},h("b",null,"No duplicates found"),"Everyone on the roster has their own phone number and name."),
+    !admin?h("p",{class:"muted small"},"Only admins can merge records."):null);
+}
+
 // ---------- Full backup ----------
 const BACKUP_COLLECTIONS=["people","notes","progress","meetings","messages","team","members","config"];
 async function fetchEverything(){
@@ -1051,7 +1147,7 @@ async function backup(kind){
         "Chanting":D.progress.filter(x=>x.kind==="chanting"||(!x.kind&&x.chanting!=null)).map(x=>({Date:x.date,Person:pname(x.personId),"Rounds a day":x.rounds??x.chanting,"Logged by":tname(x.by)})),
         "Meetings":ms.map(m=>({Date:m.date,Meeting:m.title||"Club meeting",Speaker:m.speaker||"",Topic:m.topic||"",Notes:m.notes||"",Came:pres(m).length,"Started by":tname(m.by)})),
         "Attendance":ms.flatMap(m=>pres(m).map(id=>({Date:m.date,Meeting:m.title||"Club meeting",Person:pname(id)}))),
-        "Prasadam":ms.flatMap(m=>(m.prasadam||[]).map(x=>({Date:m.date,Meeting:m.title||"Club meeting",Prasadam:x.dish,"Cooked by":x.cook||"","Logged by":tname(x.by)}))),
+        "Prasadam":ms.flatMap(m=>prasadamOf(m).map(x=>({Date:m.date,Meeting:m.title||"Club meeting",Prasadam:x.dish,"Cooked by":x.cook||"","Logged by":tname(x.by)}))),
         "Message weeks":ws.map(w=>({Date:w.date,Name:w.title,Replied:repl(w).length,"Created by":tname(w.by)})),
         "Message replies":D.people.slice().sort(byName).map(p=>{ const row={Name:p.name}; let n=0; ws.forEach(w=>{ const y=repl(w).includes(p.id); if(y) n++; row[`${w.date} ${w.title}`.slice(0,60)]=y?"Yes":"No"; }); row["Times replied"]=n; return row; }),
         "Team":D.team.map(t=>({Name:t.name||"",Role:t.title||"",Email:t.email||"","Last signed in":(t.lastSeen||"").slice(0,10),Status:t.removed?"Removed":"Active"})),
@@ -1084,12 +1180,12 @@ function ago(isoStr){ if(!isoStr) return ""; const d=Math.floor((Date.now()-new 
   return d<=0?"today":d===1?"yesterday":d<7?`${d} days ago`:d<60?`${Math.round(d/7)} weeks ago`:fmtShort(isoStr); }
 function activityOf(uid){
   const a=[], P=id=>(personById(id)||{}).name||"someone (removed)";
-  S.people.forEach(p=>{ if(p.createdBy===uid) a.push({at:p.createdAt,text:`Added ${p.name} to the roster`,pid:p.id}); });
+  S.people.forEach(p=>{ if(p.createdBy===uid) a.push({at:p.importedAt||p.createdAt,text:p.importedAt?`Imported ${p.name} from a sign-up sheet`:`Added ${p.name} to the roster`,pid:p.id}); });
   S.notes.forEach(n=>{ if(n.by===uid) a.push({at:n.createdAt,text:`Added a note on ${P(n.personId)}`,pid:n.personId}); });
   S.progress.forEach(x=>{ if(x.by===uid) a.push({at:x.createdAt||x.date,text:`${x.kind==="chanting"||(!x.kind&&x.chanting!=null)?"Updated chanting":"Logged reading"} for ${P(x.personId)}`,pid:x.personId}); });
   S.meetings.forEach(m=>{ if(m.by===uid) a.push({at:m.createdAt||m.date,text:`Started meeting “${m.title||"Club meeting"}”`,mid:m.id});
     if(m.talkBy===uid) a.push({at:m.talkAt,text:`Saved talk and notes for “${m.title||"Club meeting"}”`,mid:m.id});
-    (m.prasadam||[]).forEach(x=>{ if(x.by===uid) a.push({at:x.at,text:`Logged prasadam: ${x.dish}`,mid:m.id}); }); });
+    prasadamOf(m).forEach(x=>{ if(x.by===uid) a.push({at:x.at,text:`Logged prasadam: ${x.dish}`,mid:m.id}); }); });
   S.messages.forEach(m=>{ if(m.by===uid) a.push({at:m.createdAt||m.date,text:`Created message week “${m.title}”`,msg:m.id}); });
   return a.filter(x=>x.at).sort((x,y)=>x.at<y.at?1:-1);
 }
@@ -1179,6 +1275,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=7"></script>
+<script type="module" src="./app-firebase.js?v=8"></script>
 </body>
 </html>

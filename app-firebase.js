@@ -3,7 +3,7 @@
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const card = document.getElementById("gateCard");
 const CLUB = "Bṛhat Mṛdaṅga Database";
@@ -23,18 +23,49 @@ if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWit
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const fs = getFirestore(app);
+// Keep a copy of the data on the device so check-ins and notes still save with no signal.
+let fs;
+try { fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch (e) { fs = getFirestore(app); }
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
-function showSignIn(message){
+// WhatsApp, Instagram, Messenger etc. open links in their own mini-browser, where Google sign-in can't finish.
+const UA = navigator.userAgent || "";
+const IN_APP = /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|Snapchat|MicroMessenger|GSA\/|LinkedInApp|Twitter/i.test(UA)
+  || (/iPhone|iPad|iPod/.test(UA) && !/Safari\//.test(UA))
+  || /; wv\)/.test(UA);
+function showOpenInBrowser(note){
+  const ios = /iPhone|iPad|iPod/.test(UA);
+  gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1>
+    <p style="margin:0;font-weight:700">Open this page in ${ios ? "Safari" : "Chrome"} to sign in.</p>
+    <p class="muted" style="margin:0">${note || "You opened the link inside another app (like WhatsApp or Instagram), and Google sign-in doesn't work there."}</p>
+    <ol style="text-align:left;margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px">
+      <li>Tap <b>Copy link</b> below.</li>
+      <li>Open <b>${ios ? "Safari" : "Chrome"}</b>, paste it in the address bar, and go.</li>
+      <li>Tip: once signed in, use <b>Share → Add to Home Screen</b> so it opens like an app.</li>
+    </ol>
+    <button class="btn primary block" id="copyLink">Copy link</button>
+    <p id="linkTxt" style="margin:0;font-size:.85rem;word-break:break-all;user-select:all;color:var(--muted)">${location.href.split("#")[0].replace(/[<>"]/g,"")}</p>
+    <button class="btn block" id="tryAnyway">Try signing in here anyway</button>`);
+  document.getElementById("copyLink").onclick = async () => {
+    try { await navigator.clipboard.writeText(location.href.split("#")[0]); document.getElementById("copyLink").textContent = "Copied ✓"; }
+    catch (e) { const r = document.createRange(); r.selectNodeContents(document.getElementById("linkTxt")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  };
+  document.getElementById("tryAnyway").onclick = () => showSignIn("", true);
+}
+function showSignIn(message, forced){
+  if (IN_APP && !forced) { showOpenInBrowser(); return; }
   gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1>
     <p class="muted" style="margin:0">Hare Kṛṣṇa. Sign in with the Google account your team added.</p>
     ${message ? `<p style="margin:0;color:var(--alert)">${message}</p>` : ""}
     <button class="btn primary block gbtn" id="signIn"><span style="background:#fff;border-radius:50%;padding:3px;display:inline-flex">${GOOGLE}</span>Sign in with Google</button>`);
   document.getElementById("signIn").onclick = async () => {
     try { await signInWithPopup(auth, provider); }
-    catch (e) { if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") showSignIn("Sign-in didn't finish. Please try again."); }
+    catch (e) {
+      if (["auth/operation-not-supported-in-this-environment","auth/web-storage-unsupported","auth/popup-blocked","auth/internal-error"].includes(e.code)) showOpenInBrowser("Sign-in couldn't finish in this browser.");
+      else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") showSignIn("Sign-in didn't finish. Please try again.", true);
+    }
   };
 }
 
@@ -56,15 +87,17 @@ function flatten(obj, prefix = "", out = {}) {
 }
 const wrap = d => ({ id: d.id, exists: d.exists(), data: () => d.data() });
 const guard = p => p.catch(e => { throw mapErr(e); });
+// Offline, writes are saved on the device and sent later, so don't wait for the server.
+const guardW = p => navigator.onLine ? guard(p) : (p.catch(() => {}), Promise.resolve());
 
 function docRef(path){
   const d = doc(fs, path);
   return {
     id: d.id, path,
     get: () => guard(getDoc(d)).then(wrap),
-    set: data => guard(setDoc(d, data)),
-    update: data => guard(updateDoc(d, flatten(data))),
-    delete: () => guard(deleteDoc(d)),
+    set: data => guardW(setDoc(d, data)),
+    update: data => guardW(updateDoc(d, flatten(data))),
+    delete: () => guardW(deleteDoc(d)),
     onSnapshot: (next, err) => onSnapshot(d, s => next(wrap(s)), e => err && err(mapErr(e))),
     collection: sub => colRef(path + "/" + sub)
   };
@@ -82,7 +115,7 @@ function colRef(path){
     ...queryRef(c),
     where: (field, op, value) => queryRef(query(c, where(field, op, value))),
     doc: id => id ? docRef(path + "/" + id) : docRef(doc(c).path),
-    add: data => guard(addDoc(c, data)).then(r => docRef(r.path))
+    add: data => { const r = doc(c); return guardW(setDoc(r, data)).then(() => docRef(r.path)); }
   };
 }
 const db = { doc: docRef, collection: colRef };
@@ -111,7 +144,10 @@ onAuthStateChanged(auth, async u => {
   const email = (u.email || "").toLowerCase();
   let member;
   try { member = await getDoc(doc(fs, "members/" + email)); }
-  catch (e) { member = null; }
+  catch (e) {
+    if (!navigator.onLine) { gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1><p style="margin:0">You're offline. Connect to the internet once to finish signing in.</p><button class="btn block" onclick="location.reload()">Try again</button>`); return; }
+    member = null;
+  }
   if (!member || !member.exists()) {
     gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1><p style="margin:0">The account <b>${email.replace(/[<>&"]/g, "")}</b> isn't on the team list yet.</p>
       <p class="muted" style="margin:0">Ask an admin to add this Google email under Our Team, then sign in again.</p>
