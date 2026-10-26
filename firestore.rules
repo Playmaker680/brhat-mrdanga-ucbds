@@ -1,8 +1,14 @@
 rules_version = '2';
 
-// Bṛhat Mṛdaṅga Database: only Google accounts listed in /members can read or write anything.
-// Each member document's ID is the person's Google email in lowercase, e.g. members/radha@gmail.com
-// A member with { admin: true } can add and remove people from that list.
+// Bṛhat Mṛdaṅga Database, multi-school version.
+//
+// Who can do what:
+// - Only Google accounts on the access list (/members/<email>) can open anything.
+// - Each school's data lives under /schools/<schoolId>/... and can only be read or changed by
+//   people who work at that school (/schools/<schoolId>/staff/<uid>), or by admins.
+// - Team members add themselves to a school when they first sign in, unless an admin has
+//   removed them from it (/schools/<schoolId>/blocked/<uid>).
+// - Admins (members with admin: true) create schools, manage the access list, and can open every school.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -18,6 +24,15 @@ service cloud.firestore {
     function isAdmin() {
       return isMember() && get(/databases/$(database)/documents/members/$(myEmail())).data.admin == true;
     }
+    function worksAt(sid) {
+      return exists(/databases/$(database)/documents/schools/$(sid)/staff/$(request.auth.uid));
+    }
+    function inSchool(sid) {
+      return isAdmin() || (isMember() && worksAt(sid));
+    }
+    function blockedAt(sid) {
+      return exists(/databases/$(database)/documents/schools/$(sid)/blocked/$(request.auth.uid));
+    }
 
     // The access list. Anyone signed in may check their own entry; members see the list; only admins change it.
     match /members/{email} {
@@ -25,9 +40,47 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Everything else (people, meetings, notes, progress, team, config): members only.
+    // Team profiles (name, role). Everyone on the access list can see names; you edit your own.
+    match /team/{uid} {
+      allow read: if isMember();
+      allow create, update: if isMember() && (uid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /config/{doc} {
+      allow read: if isMember();
+      allow write: if isAdmin();
+    }
+
+    match /schools/{sid} {
+      // School names are visible to every member so they can pick their school.
+      allow read: if isMember();
+      allow create, delete: if isAdmin();
+      // Staff can update school settings (backup date, duplicate choices) but only admins rename.
+      allow update: if isAdmin() || (isMember() && worksAt(sid) && request.resource.data.name == resource.data.name);
+
+      match /staff/{uid} {
+        allow read: if inSchool(sid) || (isMember() && uid == request.auth.uid);
+        allow create: if isAdmin() || (isMember() && uid == request.auth.uid && !blockedAt(sid));
+        allow update: if isAdmin();
+        allow delete: if isAdmin() || (isMember() && uid == request.auth.uid);
+      }
+
+      match /blocked/{uid} {
+        allow read: if isAdmin() || (isMember() && uid == request.auth.uid);
+        allow write: if isAdmin();
+      }
+
+      // People, notes, reading/chanting logs, meetings and message weeks for this school.
+      match /{coll}/{docId} {
+        allow read, write: if coll != "staff" && coll != "blocked" && inSchool(sid);
+      }
+    }
+
+    // Data from before schools existed. Admins can read it and clear it once it has been moved
+    // into a school (the app does this in one step). Nobody else can see it.
     match /{coll}/{docId} {
-      allow read, write: if coll != "members" && isMember();
+      allow read, delete: if isAdmin() && coll in ["people", "notes", "progress", "meetings", "messages"];
     }
   }
 }
