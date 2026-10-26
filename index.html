@@ -57,7 +57,54 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var
 .back{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px 0 6px;border:0;border-radius:10px;background:var(--blue-soft);color:var(--blue);font:700 .95rem var(--font);cursor:pointer}
 .back svg{width:20px;height:20px}
 .avatar-sm{width:32px;height:32px;border-radius:50%}
-main{padding-block:24px 60px}
+main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding:4px max(6px,env(safe-area-inset-left,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px))}
+.tabbar .in{display:flex;width:100%;max-width:640px;justify-content:space-around}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;color:var(--muted);font:700 .74rem var(--font);padding:6px 0 4px;cursor:pointer;min-height:54px;border-radius:12px;position:relative}
+.tabbar button svg{width:25px;height:25px}
+.tabbar button[aria-current="page"]{color:var(--blue)}
+.tabbar button[aria-current="page"]::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--blue)}
+.tabbar .dot{position:absolute;top:6px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--alert);color:#fff;font-size:.68rem;display:grid;place-items:center}
+.menu-wrap{position:relative}
+.avbtn{display:flex;align-items:center;gap:8px;background:none;border:2px solid var(--line);border-radius:99px;padding:3px 10px 3px 3px;cursor:pointer;font:700 .9rem var(--font);color:var(--ink);min-height:44px}
+.avbtn img,.avbtn .ini{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:.8rem}
+.avbtn .nm{max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.avbtn .nm{display:none}.avbtn{padding:3px}}
+.menu{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:250px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 30px rgba(0,0,0,.18);padding:8px;display:flex;flex-direction:column}
+.menu .who{padding:8px 10px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.menu button{background:none;border:0;text-align:left;font:700 .98rem var(--font);color:var(--ink);padding:12px 10px;border-radius:10px;cursor:pointer;min-height:46px}
+.menu button:hover{background:var(--blue-soft)}
+.greet{display:flex;flex-direction:column;gap:2px;margin-bottom:16px}
+.greet .date{color:var(--muted);font-size:.95rem}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.card-h h2{font-size:1.1rem}
+.section{margin-top:18px}
+.alist{display:flex;flex-direction:column;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.arow{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 14px;background:var(--surface);border:0;border-bottom:1px solid var(--line);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
+.arow:last-child{border-bottom:0}
+.arow:hover{background:var(--blue-soft)}
+.arow .ic{width:10px;height:10px;border-radius:50%;flex:none;background:var(--blue)}
+.arow .ic.warn{background:var(--alert)} .arow .ic.gold{background:var(--marigold)}
+.arow .t{flex:1;min-width:0}
+.arow .n{font-weight:700;font-variant-numeric:tabular-nums}
+.arow::after{content:"";width:8px;height:8px;border-right:2.5px solid var(--muted);border-top:2.5px solid var(--muted);transform:rotate(45deg);flex:none}
+.snap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.snap div{background:var(--bg);border-radius:12px;padding:12px}
+.snap b{display:block;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.snap span{font-size:.82rem;color:var(--muted)}
+@media (max-width:420px){.snap{grid-template-columns:1fr 1fr}.snap div:last-child{grid-column:1/-1}}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:2px solid var(--line);background:var(--surface);border-radius:99px;padding:6px 14px;font:700 .9rem var(--font);color:var(--ink);cursor:pointer;min-height:42px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:var(--blue-ink)}
+.chip .c{font-weight:400;margin-left:4px;opacity:.8}
+.mrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface)}
+.mrow:last-child{border-bottom:0}
+.mrow.on{background:var(--blue-soft)}
+.mrow label{display:flex;align-items:center;gap:12px;flex:1;min-width:180px;cursor:pointer}
+.msgtext{white-space:pre-wrap;background:var(--bg);border-radius:12px;padding:12px 14px;margin:0}
+.nextup{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:4;border:2px solid var(--blue)}
 h1{font-size:1.75rem;line-height:1.2;margin:0;text-wrap:balance}
 h2{font-size:1.35rem;line-height:1.25;margin:0;text-wrap:balance}
 .lead{color:var(--muted);margin:6px 0 0}
@@ -184,7 +231,7 @@ td.wrap{white-space:normal;min-width:160px}
 </head>
 <body>
 <div class="wrap gate" id="gate"><div class="card" id="gateCard"><p class="muted">Loading…</p></div></div>
-<header hidden><div class="wrap" id="barWrap"><div class="bar" id="bar"></div></div></header>
+<header hidden><div class="wrap" id="barWrap"><div class="bar" id="bar"></div></div><nav class="tabbar" id="tabbar" aria-label="Main"></nav></header>
 <main class="wrap" id="main" hidden></main>
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -206,6 +253,11 @@ function h(tag, attrs, ...kids){
   return el;
 }
 const ICON = {
+  tHome:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
+  tPeople:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.6-.4 4.4 1 5 4"/></svg>',
+  tCal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8.5 14.5l2 2 4-4"/></svg>',
+  tMsg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>',
+  tMore:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
   meet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.4"/><path d="M3.5 19c.6-3 2.8-4.8 5.5-4.8s4.9 1.8 5.5 4.8"/><path d="M15 14.6c2.6-.4 4.8 1 5.5 4"/></svg>',
   add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 19.5c.7-3.3 3.3-5.2 6.5-5.2 1.3 0 2.5.3 3.5.9"/><path d="M18 13v7M14.5 16.5h7"/></svg>'
@@ -222,23 +274,28 @@ const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2400); }
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
-const SCREENS=["home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes"];
+const TAB_SCREENS=["home","people","meetings","messages","more"];
+const TAB_OF={home:"home",people:"people",person:"people",notes:"people",add:"people",meetings:"meetings",meeting:"meetings",messages:"messages",message:"messages",more:"more",insights:"more",team:"more",member:"more",me:"more",import:"more",dupes:"more"};
+const SCREENS=["more","home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes"];
 const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
 const initials=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
 function signOutNow(){ if(window.FB&&window.FB.signOut) window.FB.signOut(); else toast("In this preview, sign out from your Claude account. On your live site this signs you out."); }
 
 // ---------- state ----------
+document.addEventListener("click",e=>{ if(S.menu&&!e.target.closest(".menu-wrap")){ S.menu=false; render(); } });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.menu){ S.menu=false; render(); } });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&document.querySelector(".overlay")) e.preventDefault(); },true);
 const S={ members:[], messages:[], people:[], meetings:[], progress:[], notes:[], team:[], config:{},
   screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
   personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
-  homeQ:"", backingUp:null, merging:null, copyText:null, dupWarn:null, dupOK:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
+  homeQ:"", menu:false, editMsg:false, backingUp:null, merging:null, copyText:null, dupWarn:null, dupOK:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
   db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, ready:false, offline:false, profiles:{}, dirty:new Set() };
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
 const clearDirty=el=>{ if(el) el.querySelectorAll("[id]").forEach(x=>S.dirty.delete(x.id)); };
-function nav(screen, patch){ S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function nav(screen, patch){ S.menu=false; S.stack.push({screen:S.screen,personId:S.personId,meetingId:S.meetingId,memberId:S.memberId,msgId:S.msgId,filter:S.filter}); Object.assign(S,{screen,editing:false,confirm:null,quickAdd:null,attQ:"",dupWarn:null,dupOK:null},patch||{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function back(){ const p=S.stack.pop()||{screen:"home"}; Object.assign(S,p,{editing:false,confirm:null,quickAdd:null}); S.dirty.clear(); render(); window.scrollTo(0,0); }
+function goTab(t){ S.stack=[]; Object.assign(S,{screen:t,editing:false,confirm:null,quickAdd:null,menu:false,homeQ:"",peopleQ:"",assigning:false},t==="people"?{filter:"all"}:{}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 function home(){ S.stack=[]; Object.assign(S,{screen:"home",editing:false,confirm:null,quickAdd:null,homeQ:""}); S.dirty.clear(); render(); window.scrollTo(0,0); }
 
 // ---------- names & stats ----------
@@ -371,10 +428,16 @@ const loaded=()=>keysFor().every(k=>k in cache);
 const main=document.getElementById("main");
 function render(){
   const club=S.config.clubName||"Bṛhat Mṛdaṅga Database";
-  const bar=document.getElementById("bar"); bar.replaceChildren();
-  if(S.screen!=="home") bar.append(h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back}),"Back"));
-  bar.append(h("button",{class:"title",onclick:home,title:"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",null,club)));
-  if(S.avatar) bar.append(h("img",{class:"avatar-sm",src:S.avatar,alt:"Signed in as "+memberName(S.myId)}));
+  const bar=document.getElementById("bar");
+  const nested=S.stack.length>0;
+  bar.replaceChildren(...[
+    nested?h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back}),"Back"):null,
+    h("button",{class:"title",onclick:()=>goTab("home"),title:"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",null,club)),
+    profileMenu()].filter(Boolean));
+  const tb=document.getElementById("tabbar");
+  if(tb){ const cur=TAB_OF[S.screen]||"home", nb=S.ready?S.people.filter(p=>stats(p).followUp).length:0;
+    tb.replaceChildren(h("div",{class:"in"},[["home","Home","tHome"],["people","People","tPeople"],["meetings","Meetings","tCal"],["messages","Messages","tMsg"],["more","More","tMore"]].map(([k,l,ic])=>
+      h("button",{onclick:()=>goTab(k),"aria-current":cur===k?"page":null},h("span",{html:ICON[ic]}),l,k==="people"&&nb?h("span",{class:"dot","aria-label":`${nb} to reach out to`},nb>99?"99+":String(nb)):null)))); }
   const wide=["insights","people","meetings"].includes(S.screen);
   main.classList.toggle("wide",wide); document.getElementById("barWrap").classList.toggle("wide",wide);
 
@@ -385,12 +448,12 @@ function render(){
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
   need(keysFor());
-  const fn={home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
+  const fn={more:vMore,home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
   const copyBox=S.copyText?h("div",{class:"overlay",role:"dialog","aria-modal":"true"},h("div",{class:"box stack modal"},
     h("h2",null,"Copy these numbers"),h("p",{style:"margin:0"},"Select all and copy, then paste into a group text."),
     h("textarea",{readonly:true,style:"min-height:120px",onfocus:e=>e.target.select()},S.copyText),
     h("button",{class:"btn primary",onclick:()=>{S.copyText=null; render();}},"Done"))):null;
-  main.replaceChildren(...top, fn(), copyBox);
+  main.replaceChildren(...[...top, fn(), copyBox, rolePrompt()].filter(Boolean));
   for(const id in keep){ const el=document.getElementById(id); if(el&&el.value!==keep[id]) el.value=keep[id]; }
   if(aid){ const el=document.getElementById(aid); if(el){ el.focus({preventScroll:true}); try{ if(sel!=null) el.setSelectionRange(sel,sel); }catch(e){} } }
   resolveIds([...S.team.map(t=>t.id),...S.notes.map(x=>x.by),...S.progress.map(x=>x.by),...S.people.flatMap(p=>[p.createdBy,p.updatedBy]),...S.meetings.flatMap(m=>[m.by,m.updatedBy,m.talkBy])]);
@@ -405,64 +468,73 @@ function vHome(){
   const tm=todaysMeeting();
   const myT=S.team.find(t=>t.id===S.myId); const first=((myT&&myT.name)||S.meName||"").split(" ")[0];
   const res=searchPeople(S.homeQ);
-  const follow=S.people.filter(p=>stats(p).followUp).length;
-  const bdays=S.people.filter(p=>{const b=nextBirthday(p.birthday); return b&&b.days<=14;}).length;
+  const all=S.people.map(p=>({p,s:stats(p)}));
+  const never=all.filter(x=>x.s.bucket==="never").length, quiet=all.filter(x=>x.s.bucket==="quiet").length;
+  const unassigned=S.people.filter(p=>!contactsOf(p).length).length;
+  const bdays=S.people.filter(p=>{const b=nextBirthday(p.birthday); return b&&b.days<=7;});
+  const dupes=isAdminNow()?findDupes().length:0;
+  const rows=[
+    never?["warn",`${plural(never,"person","people")} never engaged`,"Never replied or came",()=>nav("people",{filter:"follow"})]:null,
+    quiet?["warn",`${plural(quiet,"person","people")} gone quiet`,"Nothing in 3+ weeks",()=>nav("people",{filter:"follow"})]:null,
+    unassigned?["",`${plural(unassigned,"person","people")} with no one looking after them`,"Claim someone",()=>nav("people",{filter:"unassigned"})]:null,
+    bdays.length?["gold",bdays.length===1?`${bdays[0].name}'s birthday is coming up`:`${bdays.length} birthdays this week`,"Next 7 days",()=>bdays.length===1?nav("person",{personId:bdays[0].id}):nav("insights")]:null,
+    dupes?["gold",plural(dupes,"possible duplicate"),"Review and merge",()=>nav("dupes")]:null,
+    S.ready&&backupDue()?["gold","Monthly backup is due","Takes one tap",()=>nav("more")]:null].filter(Boolean);
+  const lastM=S.meetings.slice().sort((a,b)=>a.date<b.date?1:-1)[0];
+  const lastW=S.messages.slice().sort((a,b)=>(a.date+(a.createdAt||""))<(b.date+(b.createdAt||""))?1:-1)[0];
+  const weekAgo=Date.now()-7*86400000;
+  const newWeek=S.people.filter(p=>!p.importedAt&&p.createdAt&&new Date(p.createdAt)>=weekAgo).length;
+  const d=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
   return h("div",null,
-    meBar(), rolePrompt(),
-    h("h1",null, first?`Hare Kṛṣṇa, ${first}`:"Hare Kṛṣṇa"),
-    h("p",{class:"lead"}, !S.ready?"Loading the roster…":`${plural(S.people.length,"person","people")} on the roster`),
-    h("div",{class:"tiles"},
-      h("button",{class:"tile meet",onclick:()=>nav("meeting",{meetingId:tm?tm.id:null})},
-        h("span",{html:ICON.meet}), h("b",null,"Log a Club Meeting"),
-        h("span",null, tm?`Today · ${plural(presentOf(tm).filter(id=>personById(id)).length,"person","people")} checked in. Tap to continue.`:"Start today's meeting and check people in."),
-        h("span",{class:"go"},tm?"Continue →":"Start →")),
-      h("button",{class:"tile add",onclick:()=>nav("add",{addMore:false,fc:undefined})},
-        h("span",{html:ICON.add}), h("b",null,"Add a person"), h("span",null,"Just a name and phone number. Everything else is optional."),
-        h("span",{class:"go"},"Add →"))),
-    myPeopleBox(),
-    h("div",{style:"margin-top:26px"},
-      h("label",{class:"f",for:"home_q"},"Find someone"),
-      h("input",{id:"home_q",class:"big",type:"search",autocomplete:"off",placeholder:"Type a name or phone number",value:S.homeQ,style:"margin-top:6px",
+    h("div",{class:"greet"},h("h1",null, first?`Hare Kṛṣṇa, ${first}`:"Hare Kṛṣṇa"),h("span",{class:"date"},`${d} · ${!S.ready?"loading…":plural(S.people.length,"person","people")+" on the roster"}`)),
+    h("div",{style:"position:relative"},
+      h("input",{id:"home_q",class:"big",type:"search",autocomplete:"off",placeholder:"Find someone by name or phone","aria-label":"Find someone",value:S.homeQ,
         oninput:e=>{S.homeQ=e.target.value; render();},
         onkeydown:e=>{ if(e.key==="Enter"&&res[0]){ e.preventDefault(); nav("person",{personId:res[0].id}); } }}),
       S.homeQ.trim() ? h("div",{class:"results"},
-        res.map(p=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"meta"},p.role||"Student"))),
+        res.map(p=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"meta"},p.phone||p.role||"Student"))),
         !res.length?h("div",{class:"res",style:"cursor:default"},h("span",{class:"muted"},"No one by that name.")):null) : null),
-    (follow||bdays) ? h("div",{class:"shortcuts"},
-      follow?h("button",{class:"pill warn",onclick:()=>nav("people",{filter:"follow"})},`${plural(follow,"potential blooper")} to call`):null,
-      bdays?h("button",{class:"pill gold",onclick:()=>nav("insights")},`${plural(bdays,"birthday")} in the next 2 weeks`):null,
-      S.ready&&backupDue()?h("button",{class:"pill gold",onclick:()=>nav("insights")},"Monthly backup due"):null) : (S.ready&&backupDue()?h("div",{class:"shortcuts"},h("button",{class:"pill gold",onclick:()=>nav("insights")},"Monthly backup due")):null),
-    h("h2",{style:"margin-top:34px;font-size:1.05rem;color:var(--muted)"},"More"),
-    h("div",{class:"more"},
-      h("button",{onclick:()=>nav("people",{filter:"all"})},h("b",null,"View Everyone"),h("span",null,"Roster and team, all roles")),
-      h("button",{onclick:()=>nav("messages")},h("b",null,"View Message Logs"),h("span",null,"Who replied each week")),
-      h("button",{onclick:()=>nav("meetings")},h("b",null,"View Past Meeting Logs"),h("span",null,plural(S.meetings.length,"meeting")+" recorded")),
-      h("button",{onclick:()=>nav("people",{filter:"follow"})},h("b",null,"View Potential Bloopers"),h("span",null,"Not seen in 3+ weeks")),
-      h("button",{onclick:()=>nav("insights")},h("b",null,"View Insights"),h("span",null,"Attendance, follow-ups, export")),
-      h("button",{onclick:()=>nav("team")},h("b",null,"View Our Team and Activity"),h("span",null,"Who looks after whom, recent activity"))));
+    h("div",{class:"tiles",style:"margin-top:16px"},
+      h("button",{class:"tile meet",onclick:()=>nav("meeting",{meetingId:tm?tm.id:null})},
+        h("span",{html:ICON.meet}), h("b",null,"Log a Club Meeting"),
+        h("span",null, tm?`Today · ${plural(presentOf(tm).filter(id=>personById(id)).length,"person","people")} checked in`:"Start today's meeting and check people in."),
+        h("span",{class:"go"},tm?"Continue →":"Start →")),
+      h("button",{class:"tile add",onclick:()=>nav("add",{addMore:false,fc:undefined})},
+        h("span",{html:ICON.add}), h("b",null,"Add a person"), h("span",null,"Just a name and phone number."),
+        h("span",{class:"go"},"Add →"))),
+    h("div",{class:"section card"},
+      h("div",{class:"card-h"},h("h2",null,"Needs attention")),
+      rows.length?h("div",{class:"alist"},rows.map(([tone,title,sub,go])=>h("button",{class:"arow",onclick:go},h("span",{class:"ic "+tone}),h("span",{class:"t"},h("span",{class:"n",style:"display:block"},title),h("span",{class:"muted small"},sub)))))
+        :h("p",{class:"muted",style:"margin:0"},S.ready?"All caught up. Hare Kṛṣṇa!":"Loading…")),
+    myPeopleBox(),
+    h("div",{class:"section card"},
+      h("div",{class:"card-h"},h("h2",null,"This week"),h("button",{class:"link small",onclick:()=>nav("insights")},"Insights →")),
+      h("div",{class:"snap"},
+        h("div",null,h("b",null,lastM?presentOf(lastM).filter(id=>personById(id)).length:"—"),h("span",null,lastM?`came to ${lastM.title||"the last meeting"} (${fmtShort(lastM.date)})`:"no meetings yet")),
+        h("div",null,h("b",null,lastW?`${respondedOf(lastW).filter(id=>personById(id)).length}/${S.people.length}`:"—"),h("span",null,lastW?`replied to “${lastW.title}”`:"no message weeks yet")),
+        h("div",null,h("b",null,newWeek),h("span",null,"new people added this week")))));
 }
 function myPeopleBox(){
   if(!S.myId) return null;
-  const mine=S.people.filter(p=>contactsOf(p).includes(S.myId)).sort(byName);
-  const cand=S.assignQ.trim()?searchPeople(S.assignQ,new Set(mine.map(p=>p.id))):[];
-  return h("div",{class:"box stack",style:"margin-top:22px;gap:12px;border:2px solid var(--line)"},
-    h("div",{class:"row",style:"justify-content:space-between"},
-      h("h2",{style:"font-size:1.15rem"},`People you look after · ${mine.length}`),
-      h("span",{class:"row",style:"gap:6px"},mine.length?copyBtn(mine,"Copy numbers"):null,S.canWrite?h("button",{class:"btn small",onclick:()=>{S.assigning=!S.assigning; S.assignQ=""; render(); setTimeout(()=>document.getElementById("assign_q")?.focus(),0);}},S.assigning?"Done":"+ Add someone"):null)),
+  const mine=S.people.filter(p=>contactsOf(p).includes(S.myId)).map(p=>({p,s:stats(p)}))
+    .sort((a,b)=>(!!b.s.bucket-!!a.s.bucket)||byName(a.p,b.p));
+  const cand=S.assignQ.trim()?searchPeople(S.assignQ,new Set(mine.map(x=>x.p.id))):[];
+  const shown=mine.slice(0,5);
+  return h("div",{class:"section card"},
+    h("div",{class:"card-h"},h("h2",null,`Your people · ${mine.length}`),
+      h("span",{class:"row",style:"gap:6px"},S.canWrite?h("button",{class:"btn small",onclick:()=>{S.assigning=!S.assigning; S.assignQ=""; render(); setTimeout(()=>document.getElementById("assign_q")?.focus(),0);}},S.assigning?"Done":"+ Add"):null,
+        mine.length?h("button",{class:"btn small",onclick:()=>nav("people",{filter:"mine"})},"See all"):null)),
     S.assigning?h("div",null,
-      h("input",{id:"assign_q",type:"search",autocomplete:"off",placeholder:"Search the roster by name",value:S.assignQ,"aria-label":"Search the roster to add someone you look after",oninput:e=>{S.assignQ=e.target.value; render();}}),
+      h("input",{id:"assign_q",type:"search",autocomplete:"off",placeholder:"Search the roster to add someone",value:S.assignQ,"aria-label":"Search the roster to add someone you look after",oninput:e=>{S.assignQ=e.target.value; render();}}),
       S.assignQ.trim()?h("div",{class:"results"},cand.map(p=>h("button",{class:"res",onclick:async()=>{ if(await setContact(p,S.myId,true)){ S.assignQ=""; S.dirty.delete("assign_q"); render(); } }},
         h("span",{class:"name"},p.name),h("span",{class:"meta",style:"color:var(--blue);font-weight:700"},"+ Add to my list"))),
         !cand.length?h("div",{class:"res",style:"cursor:default"},h("span",{class:"muted"},"No match, or they're already on your list.")):null):null):null,
-    mine.length?h("div",{class:"list"},mine.map(p=>{ const s=stats(p);
-      return h("div",{class:"res",style:"cursor:default;gap:8px"},
-        h("button",{class:"rowlink",onclick:()=>nav("person",{personId:p.id})},
-          h("span",{class:"name",style:"display:block"},p.name),
-          h("span",{class:"meta"},[p.role||"Student", s.last?"came "+fmtShort(s.last):"not at a meeting yet", contactsOf(p).length>1?"also "+contactsOf(p).filter(x=>x!==S.myId).map(memberName).join(", "):null].filter(Boolean).join(" · "))),
-        h("div",{class:"row",style:"gap:6px;flex-wrap:nowrap"},
-          s.followUp?h("span",{class:"pill warn"},s.bucket==="never"?"never engaged":"quiet"):null,
-          S.canWrite?h("button",{class:"btn small",onclick:()=>nav("person",{personId:p.id,editing:true,fc:undefined})},"Edit"):null)); }))
-      :h("p",{class:"muted",style:"margin:0"},"No one assigned to you yet. Tap “+ Add someone” to pick from the roster."));
+    shown.length?h("div",{class:"list"},shown.map(({p,s})=>h("div",{class:"res",style:"cursor:default;gap:8px"},
+      h("button",{class:"rowlink",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name",style:"display:block"},p.name),
+        h("span",{class:"meta"},s.bucket?blooperText(s):engagedLine(s))),
+      callLinks(p))))
+      :h("p",{class:"muted",style:"margin:0"},"No one assigned to you yet. Tap “+ Add” to pick people from the roster."),
+    mine.length>5?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>nav("people",{filter:"mine"})},`See all ${mine.length} →`):null);
 }
 function rolePrompt(){
   const t=S.team.find(x=>x.id===S.myId);
@@ -482,18 +554,18 @@ function rolePrompt(){
   return h("div",{class:"overlay",role:"dialog","aria-modal":"true","aria-labelledby":"rp_t"},f);
 }
 
-function meBar(){
+function profileMenu(){
   if(!S.myId) return null;
   const t=S.team.find(x=>x.id===S.myId), name=memberName(S.myId), role=t&&TEAM_ROLES.includes(t.title)?t.title:null;
-  const edit=()=>nav("me",{meRole:undefined});
-  return h("div",{class:"box me-bar"},
-    h("div",{class:"row grow",style:"flex-wrap:nowrap;min-width:200px"},
-      S.avatar?h("img",{class:"me-av",src:S.avatar,alt:""}):h("span",{class:"me-av"},initials(name)),
-      h("div",{style:"min-width:0"},h("div",{style:"font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"},name),
-        role?h("span",{class:"pill"},role):h("button",{class:"link small",style:"padding:0",onclick:edit},"Choose your role"))),
-    h("div",{class:"row",style:"gap:8px"},
-      h("button",{class:"btn small",onclick:edit},"Edit my profile"),
-      h("button",{class:"btn small",onclick:signOutNow},"Sign out")));
+  return h("div",{class:"menu-wrap"},
+    h("button",{class:"avbtn","aria-haspopup":"true","aria-expanded":String(!!S.menu),"aria-label":"Your profile and sign out",onclick:e=>{ e.stopPropagation(); S.menu=!S.menu; render(); }},
+      S.avatar?h("img",{src:S.avatar,alt:""}):h("span",{class:"ini"},initials(name)),h("span",{class:"nm"},name.split(" ")[0])),
+    S.menu?h("div",{class:"menu",role:"menu"},
+      h("div",{class:"who"},h("div",{style:"font-weight:700"},name),h("div",{class:"row",style:"gap:6px;margin-top:4px"},h("span",{class:"pill"},role||"No role yet"),window.FB&&window.FB.isAdmin?h("span",{class:"pill gold"},"Admin"):null),
+        window.FB&&window.FB.email?h("div",{class:"muted small",style:"margin-top:4px;overflow-wrap:anywhere"},window.FB.email):null),
+      h("button",{role:"menuitem",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"),
+      h("button",{role:"menuitem",onclick:()=>nav("member",{memberId:S.myId})},"My activity"),
+      h("button",{role:"menuitem",onclick:()=>{ S.menu=false; signOutNow(); }},"Sign out")):null);
 }
 function vMe(){
   const t=S.team.find(x=>x.id===S.myId);
@@ -616,7 +688,7 @@ function vPerson(){
       h("p",{class:"lead"}, contactsOf(p).length?["Looked after by ",h("b",{style:"color:var(--ink)"},contactNames(p))]:"No one assigned yet"),
       S.myId&&S.canWrite?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":"+ I'll look after them too"):null),
     h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
-      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:"user-select:all"},p.phone),callLinks(p)):null), dd("Email",p.email?h("span",{style:"user-select:all"},p.email):null),
+      dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:"user-select:all"},fmtPhone(p.phone)),callLinks(p)):null), dd("Email",p.email?h("span",{style:"user-select:all"},p.email):null),
       dd("Birthday",p.birthday?`${fmtShort(p.birthday)}${bd?(bd.days===0?" · today!":` · in ${plural(bd.days,"day")}`):""}`:null),
       dd("Class schedule",p.schedule?h("span",{style:"white-space:pre-wrap;font-weight:400"},p.schedule):null)),
       S.canWrite?h("button",{class:"btn small",style:"margin-top:14px",onclick:()=>{S.editing=true; S.fc=undefined; S.dirty.clear(); render(); window.scrollTo(0,0);}},"Edit details"):null),
@@ -815,19 +887,21 @@ function vPeople(){
   const q=S.peopleQ.trim().toLowerCase();
   let rows=S.people.map(p=>({kind:"p",p,s:stats(p),name:p.name||"",role:p.role||"Student"}));
   const teamRows=activeTeam().map(t=>({kind:"t",t,name:memberName(t.id),role:t.title||"Team"}));
-  if(!["follow","mine"].includes(S.filter)) rows=rows.concat(teamRows);
+  if(!["follow","mine","unassigned"].includes(S.filter)) rows=rows.concat(teamRows);
   if(q) rows=rows.filter(r=>r.kind==="p"?matches(r.p,q,contactNames(r.p)):[r.name,r.role].join(" ").toLowerCase().includes(q));
   if(S.filter==="follow") rows=rows.filter(r=>r.s.followUp);
   else if(S.filter==="mine") rows=rows.filter(r=>contactsOf(r.p).includes(S.myId));
+  else if(S.filter==="unassigned") rows=rows.filter(r=>r.kind==="p"&&!contactsOf(r.p).length);
   else if(S.filter!=="all") rows=rows.filter(r=>r.role===S.filter);
   rows.sort((a,b)=>a.name.localeCompare(b.name));
+  const nFollow=S.people.filter(p=>stats(p).followUp).length, nMine=S.people.filter(p=>contactsOf(p).includes(S.myId)).length, nUn=S.people.filter(p=>!contactsOf(p).length).length;
+  const chip=(v,l,c)=>h("button",{class:"chip","aria-pressed":String(S.filter===v),onclick:()=>{S.filter=v; render();}},l,c!=null?h("span",{class:"c"},String(c)):null);
   return h("div",{class:"stack"},
-    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,S.filter==="follow"?"Potential bloopers":"Everyone"),S.canWrite?h("div",{class:"row",style:"gap:8px"},(()=>{ const n=findDupes().length; return n?h("button",{class:"btn",style:"border-color:var(--marigold)",onclick:()=>nav("dupes")},`${plural(n,"possible duplicate")}`):h("button",{class:"btn",onclick:()=>nav("dupes")},"Check duplicates"); })(),window.FB&&window.FB.isAdmin||!window.FB?h("button",{class:"btn",onclick:()=>nav("import",{importText:""})},"Import from a sheet"):null,h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"Add a person")):null),
-    S.filter==="follow"?h("p",{class:"lead",style:"margin:0"},"People to reach out to, based on meeting check-ins and message replies."):null,
-    h("div",{class:"row"},
-      h("input",{id:"pq",type:"search",class:"grow",style:"flex:2 1 220px",placeholder:"Search name, phone, contact",value:S.peopleQ,oninput:e=>{S.peopleQ=e.target.value; render();}}),
-      h("select",{id:"pf",style:"flex:1 1 180px;width:auto","aria-label":"Show",onchange:e=>{S.filter=e.target.value; render();}},
-        [["all","Everyone (all roles)"],["mine","People I look after"],["follow","Potential bloopers"],...ROLES.map(r=>[r,r+"s"])].map(([v,l])=>h("option",{value:v,selected:S.filter===v?"selected":null},l)))),
+    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"People"),S.canWrite?h("button",{class:"btn primary",onclick:()=>nav("add",{addMore:false,fc:undefined})},"+ Add a person"):null),
+    h("input",{id:"pq",type:"search",placeholder:"Search name, phone, contact",value:S.peopleQ,"aria-label":"Search people",oninput:e=>{S.peopleQ=e.target.value; render();}}),
+    h("div",{class:"chips",role:"group","aria-label":"Show"},
+      chip("all","Everyone"),chip("mine","Mine",nMine),chip("follow","Potential bloopers",nFollow),chip("unassigned","No contact",nUn),...ROLES.map(r=>chip(r,r+"s"))),
+    S.filter==="follow"?h("p",{class:"muted",style:"margin:0"},"People to reach out to, based on meeting check-ins and message replies."):null,
     S.filter==="follow"?vBloopers(rows):[h("p",{class:"muted small",style:"margin:0"},plural(rows.length,"person","people")),
     rows.length?h("div",{class:"list"},rows.map(r=>r.kind==="p"
       ? h("button",{class:"res",onclick:()=>nav("person",{personId:r.p.id})},
@@ -849,7 +923,7 @@ async function saveCsv(filename,rows){
 const msgsSorted=()=>S.messages.slice().sort((a,b)=>(a.date+(a.createdAt||""))<(b.date+(b.createdAt||""))?-1:1);
 function exportWeek(m){
   const resp=new Set(respondedOf(m));
-  const rows=[["Name","Role","Phone","Replied"]].concat(S.people.slice().sort(byName).map(p=>[p.name,p.role||"Student",p.phone,resp.has(p.id)?"Yes":"No"]));
+  const sent=sentOf(m); const rows=[["Name","Role","Phone","Texted","Replied"]].concat(S.people.slice().sort(byName).map(p=>[p.name,p.role||"Student",p.phone,sent[p.id]?"Yes":"No",resp.has(p.id)?"Yes":"No"]));
   const slug=(m.title||"week").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
   saveCsv(`messages-${m.date}-${slug}.csv`,rows);
 }
@@ -860,7 +934,28 @@ function exportAllWeeks(){
       return [p.name,p.role||"Student",p.phone,...marks,n,ms.length,ms.length?Math.round(100*n/ms.length):""]; }));
   saveCsv(`messages-all-weeks-${today()}.csv`,rows);
 }
-const pendingMsg={};
+const pendingMsg={}, pendingSent={};
+const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+function personalize(text,p){
+  const nm=String(p.name||"").startsWith("Unknown")?"":String(p.name||"").trim().split(/\s+/)[0];
+  return String(text||"").replace(/\{\s*name\s*\}/gi,nm).replace(/ +([!,.?])/g,"$1").replace(/ {2,}/g," ").trim();
+}
+const smsHref=(p,body)=>{ const d=ten(p.phone); return d?`sms:+1${d}${body?(IS_IOS?"&":"?")+"body="+encodeURIComponent(body):""}`:null; };
+const waHref=(p,body)=>{ const d=ten(p.phone); return d?`https://wa.me/1${d}${body?"?text="+encodeURIComponent(body):""}`:null; };
+const sentOf=m=>({...(m.sent||{}),...(pendingSent[m.id]||{})});
+function markSent(m,p,body,via){
+  try{ navigator.clipboard&&navigator.clipboard.writeText(body).catch(()=>{}); }catch(e){}
+  (pendingSent[m.id]||(pendingSent[m.id]={}))[p.id]={at:new Date().toISOString(),by:S.myId||null,via};
+  queueWrite("w:"+m.id,async()=>{ await write(db=>db.doc("messages/"+m.id).update({sent:{[p.id]:{at:new Date().toISOString(),by:S.myId||null,via}},...stamp()})); });
+  setTimeout(render,300);
+}
+function textButtons(m,p,primary){
+  const body=personalize(m.text,p), sms=smsHref(p,body), wa=waHref(p,body);
+  if(!sms) return h("span",{class:"muted small"},"no phone");
+  return h("span",{class:"callrow"},
+    h("a",{class:"btn small"+(primary?" primary":""),href:sms,onclick:()=>markSent(m,p,body,"sms"),"aria-label":`Text ${p.name}`},"Text"),
+    h("a",{class:"btn small",href:wa,target:"_blank",rel:"noopener",onclick:()=>markSent(m,p,body,"whatsapp"),"aria-label":`WhatsApp ${p.name}`},"WhatsApp"));
+}
 const respondedOf=m=>applyMap(m.responded,{...(m.replies||{}),...(pendingMsg[m.id]||{})});
 function setResponded(m,pid,on){
   (pendingMsg[m.id]||(pendingMsg[m.id]={}))[pid]=on; render();
@@ -871,16 +966,18 @@ function vMessages(){
   const ms=S.messages.slice().sort((a,b)=>(a.date+(a.createdAt||""))<(b.date+(b.createdAt||""))?1:-1);
   const total=S.people.length;
   const f=h("form",{class:"box stack",style:"gap:10px",onsubmit:async e=>{
-    e.preventDefault(); const title=document.getElementById("msg_title").value.trim(), date=document.getElementById("msg_date").value||today();
+    e.preventDefault(); const title=document.getElementById("msg_title").value.trim(), date=document.getElementById("msg_date").value||today(), text=document.getElementById("msg_text").value.trim();
     if(!title){ toast("Give this week's message a name"); return; }
-    let ref; if(await write(async db=>{ ref=await db.collection("messages").add({title,date,responded:[],replies:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Week created")){ clearDirty(f); nav("message",{msgId:ref.id,msgQ:"",msgFilter:"all"}); }
+    let ref; if(await write(async db=>{ ref=await db.collection("messages").add({title,date,text,responded:[],replies:{},sent:{},createdAt:new Date().toISOString(),by:S.myId||null}); },"Week created")){ clearDirty(f); nav("message",{msgId:ref.id,msgQ:"",msgFilter:"todo",editMsg:false}); }
   }},
     h("h2",{style:"font-size:1.1rem"},"Start a new week"),
     h("label",{class:"f"},"Name",h("input",{id:"msg_title",class:"big",placeholder:"e.g. Week of Oct 27: Sunday feast invite",autocomplete:"off"})),
-    h("label",{class:"f"},"Date sent",h("input",{id:"msg_date",type:"date",value:today()})),
+    h("label",{class:"f"},"Date",h("input",{id:"msg_date",type:"date",value:today()})),
+    h("label",{class:"f"},h("span",null,"The message ",h("small",null,"optional · {name} becomes each person's first name")),
+      h("textarea",{id:"msg_text",placeholder:"Hare Kṛṣṇa {name}! Join us Wednesday at 7pm for kirtan and a free dinner 🙏"})),
     h("button",{class:"btn primary",type:"submit",style:"align-self:flex-start"},"Create week"));
   return h("div",{class:"stack",style:"gap:20px"},
-    h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("div",null,h("h1",null,"Message logs"),h("p",{class:"lead"},"Create a column for each week's message, then check off who replied.")),
+    h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("div",null,h("h1",null,"Messages"),h("p",{class:"lead"},"Write the week's message once, text everyone from here, then tick who replied.")),
       ms.length?h("button",{class:"btn",onclick:exportAllWeeks},"Export all weeks (CSV)"):null),
     S.canWrite?f:null,
     ms.length?h("div",{class:"list"},ms.map(m=>{ const n=respondedOf(m).filter(id=>personById(id)).length;
@@ -892,31 +989,49 @@ function vMessages(){
 function vMessage(){
   const m=S.messages.find(x=>x.id===S.msgId);
   if(!m) return h("div",{class:"empty"},h("b",null,S.ready?"This week was deleted":"Loading…"));
-  const resp=new Set(respondedOf(m));
+  const resp=new Set(respondedOf(m)), sent=sentOf(m);
   const others=S.messages.filter(x=>x.id!==m.id);
   const hist=id=>others.filter(x=>respondedOf(x).includes(id)).length;
   const q=S.msgQ.trim().toLowerCase();
-  let list=S.people.map(p=>({p,n:hist(p.id),r:resp.has(p.id)}));
+  let list=S.people.map(p=>({p,n:hist(p.id),r:resp.has(p.id),t:sent[p.id]}));
   if(q) list=list.filter(x=>matches(x.p,q));
-  if(S.msgFilter==="yes") list=list.filter(x=>x.r); else if(S.msgFilter==="no") list=list.filter(x=>!x.r);
+  const f=S.msgFilter;
+  if(f==="todo") list=list.filter(x=>!x.t&&!x.r); else if(f==="waiting") list=list.filter(x=>x.t&&!x.r);
+  else if(f==="yes") list=list.filter(x=>x.r); else if(f==="no") list=list.filter(x=>!x.r);
   list.sort((a,b)=>b.n-a.n||byName(a.p,b.p));
-  const count=[...resp].filter(id=>personById(id)).length;
+  const count=[...resp].filter(id=>personById(id)).length, nSent=Object.keys(sent).filter(id=>personById(id)).length;
+  const all=S.people.map(p=>({p,t:sent[p.id],r:resp.has(p.id)}));
+  const nTodo=all.filter(x=>!x.t&&!x.r).length;
+  const next=m.text&&S.canWrite?list.find(x=>!x.t&&!x.r&&ten(x.p.phone))||all.filter(x=>!x.t&&!x.r&&ten(x.p.phone)).sort((a,b)=>hist(b.p.id)-hist(a.p.id)||byName(a.p,b.p))[0]:null;
+  const chip=(v,l,c)=>h("button",{class:"chip","aria-pressed":String(f===v),onclick:()=>{S.msgFilter=v; render();}},l,c!=null?h("span",{class:"c"},String(c)):null);
+  const msgForm=h("form",{class:"stack",style:"gap:8px",onsubmit:async e=>{ e.preventDefault(); const text=document.getElementById("msg_edit").value.trim();
+    if(await write(db=>db.doc("messages/"+m.id).update({text,...stamp()}),"Message saved")){ S.editMsg=false; S.dirty.delete("msg_edit"); render(); } }},
+    h("textarea",{id:"msg_edit","aria-label":"Message text",placeholder:"Hare Kṛṣṇa {name}! …"},m.text||""),
+    h("p",{class:"muted small",style:"margin:0"},"{name} becomes each person's first name."),
+    h("div",{class:"row"},h("button",{class:"btn primary small",type:"submit"},"Save message"),m.text?h("button",{class:"btn small",type:"button",onclick:()=>{S.editMsg=false; render();}},"Cancel"):null));
   return h("div",{class:"stack",style:"gap:16px"},
-    h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("div",null,h("h1",null,m.title),h("p",{class:"lead"},`Sent ${fmt(m.date)} · `,h("b",{style:"color:var(--ink)"},`${count} of ${S.people.length} replied`))),
-      h("button",{class:"btn",onclick:()=>exportWeek(m)},"Export this week (CSV)")),
-    h("div",{class:"row"},
-      h("input",{id:"msg_q",type:"search",class:"grow",style:"flex:2 1 220px",placeholder:"Search students by name",value:S.msgQ,autocomplete:"off",oninput:e=>{S.msgQ=e.target.value; render();}}),
-      h("select",{id:"msg_f",style:"flex:1 1 160px;width:auto","aria-label":"Show",onchange:e=>{S.msgFilter=e.target.value; render();}},
-        [["all","Everyone"],["yes","Replied"],["no","Didn't reply"]].map(([v,l])=>h("option",{value:v,selected:S.msgFilter===v?"selected":null},l)))),
-    h("div",{class:"row",style:"justify-content:space-between"},h("p",{class:"muted small",style:"margin:0"},others.length?"People who replied most often in earlier weeks are listed first.":"Check off each person who replied."),
-      copyBtn(list.map(x=>x.p),S.msgFilter==="no"?`Copy numbers of the ${list.filter(x=>ten(x.p.phone)).length} who didn't reply`:undefined)),
-    list.length?h("div",{class:"list"},list.map(x=>h("label",{class:"res check"+(x.r?" on":"")},
-      h("input",{type:"checkbox",checked:x.r||null,disabled:!S.canWrite||null,onchange:e=>setResponded(m,x.p.id,e.target.checked)}),
-      h("span",{style:"min-width:0;flex:1"},h("span",{class:"name",style:"display:block"},x.p.name),
-        h("span",{class:"meta"},[x.p.role||"Student",others.length?`replied ${x.n} of ${others.length} earlier`:null].filter(Boolean).join(" · "))),
-      x.r?h("span",{class:"pill"},"Replied"):null)))
-      :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search.":"Add people to the roster first."),
-    S.canWrite?(S.confirm==="msgdel"?h("div",{class:"confirm"},h("span",null,"Delete this week and its replies?"),
+    h("div",{class:"row",style:"justify-content:space-between;align-items:flex-start"},h("div",null,h("h1",null,m.title),
+      h("p",{class:"lead"},`${fmt(m.date)} · `,h("b",{style:"color:var(--ink)"},`${nSent} texted · ${count} replied`),` of ${S.people.length}`)),
+      h("button",{class:"btn small",onclick:()=>exportWeek(m)},"Export (CSV)")),
+    h("div",{class:"card"},
+      h("div",{class:"card-h"},h("h2",null,"The message"),m.text&&!S.editMsg&&S.canWrite?h("button",{class:"link small",onclick:()=>{S.editMsg=true; render();}},"Edit"):null),
+      (S.editMsg||!m.text)&&S.canWrite?msgForm:h("p",{class:"msgtext"},m.text||"No message written."),
+      m.text&&!S.editMsg?h("p",{class:"muted small",style:"margin:0"},"Tap Text or WhatsApp next to someone: the message opens with their name filled in, ready to send. It's also copied, in case your phone doesn't fill it in."):null),
+    next?h("div",{class:"card nextup"},
+      h("div",{class:"card-h"},h("span",null,h("span",{class:"muted small",style:"display:block"},`Next up · ${nTodo} left to text`),h("b",{style:"font-size:1.15rem"},next.p.name)),textButtons(m,next.p,true)),
+      h("p",{class:"msgtext",style:"font-size:.92rem"},personalize(m.text,next.p))):null,
+    h("input",{id:"msg_q",type:"search",placeholder:"Search by name or phone",value:S.msgQ,autocomplete:"off","aria-label":"Search",oninput:e=>{S.msgQ=e.target.value; render();}}),
+    h("div",{class:"chips",role:"group","aria-label":"Show"},
+      chip("all","Everyone",S.people.length),chip("todo","Not texted yet",nTodo),chip("waiting","Texted, no reply",all.filter(x=>x.t&&!x.r).length),chip("yes","Replied",count),chip("no","Didn't reply",S.people.length-count)),
+    h("div",{class:"row",style:"justify-content:space-between"},h("p",{class:"muted small",style:"margin:0"},others.length?"People who replied most in earlier weeks come first. Tick the box when someone replies.":"Tick the box when someone replies."),
+      copyBtn(list.map(x=>x.p))),
+    list.length?h("div",{class:"list"},list.map(x=>h("div",{class:"mrow"+(x.r?" on":"")},
+      h("label",null,h("input",{type:"checkbox",checked:x.r||null,disabled:!S.canWrite||null,"aria-label":`${x.p.name} replied`,onchange:e=>setResponded(m,x.p.id,e.target.checked)}),
+        h("span",{style:"min-width:0;flex:1"},h("span",{class:"name",style:"display:block"},x.p.name),
+          h("span",{class:"meta"},[x.r?"Replied":x.t?`Texted ${fmtWhen(x.t.at)}${x.t.by&&x.t.by!==S.myId?" by "+memberName(x.t.by):""}`:"Not texted",others.length?`replied ${x.n} of ${others.length} before`:null].filter(Boolean).join(" · ")))),
+      m.text&&S.canWrite&&!x.r?textButtons(m,x.p,false):null)))
+      :h("div",{class:"empty"},h("b",null,S.people.length?"No one here":"The roster is empty"),S.people.length?"Try another filter or search.":"Add people to the roster first."),
+    S.canWrite?(S.confirm==="msgdel"?h("div",{class:"confirm"},h("span",null,"Delete this week, its texted and replied marks?"),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{ if(await write(db=>db.doc("messages/"+m.id).delete(),"Week deleted")) back(); }},"Delete"),h("button",{class:"btn",onclick:()=>{S.confirm=null; render();}},"Keep")))
       :h("button",{class:"link small",style:"color:var(--alert);align-self:flex-start",onclick:()=>{S.confirm="msgdel"; render();}},"Delete this week")):null);
 }
@@ -925,7 +1040,9 @@ function vMessage(){
 function vMeetings(){
   const ms=S.meetings.slice().sort((a,b)=>a.date<b.date?1:-1);
   return h("div",{class:"stack"},
-    h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"Club meetings"),S.canWrite?h("button",{class:"btn primary",onclick:()=>{S.stack.push({screen:S.screen}); Object.assign(S,{screen:"meeting",meetingId:"new"}); render();}},"Start a new meeting"):null),
+    h("h1",null,"Club meetings"),
+    S.canWrite?(()=>{ const tm=todaysMeeting(); return h("button",{class:"tile meet",style:"min-height:0;width:100%",onclick:()=>nav("meeting",{meetingId:tm?tm.id:"new"})},h("b",null,tm?`Continue today's meeting: ${tm.title||"Club meeting"}`:"Log today's meeting"),h("span",null,tm?`${plural(presentOf(tm).filter(id=>personById(id)).length,"person","people")} checked in so far`:"Start it, then check people in as they arrive."),h("span",{class:"go"},tm?"Continue →":"Start →")); })():null,
+    ms.length?h("h2",{style:"font-size:1.05rem;color:var(--muted);margin-top:8px"},"Past meetings"):null,
     ms.length?h("div",{class:"list"},ms.map(m=>h("button",{class:"res",onclick:()=>nav("meeting",{meetingId:m.id})},
       h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.title||"Club meeting"),h("span",{class:"meta"},[fmt(m.date),m.speaker?"talk by "+m.speaker:null].filter(Boolean).join(" · "))),
       h("span",{class:"pill"},`${presentOf(m).filter(id=>personById(id)).length} came`))))
@@ -949,7 +1066,6 @@ function vInsights(){
   const card=(title,sub,items,empty)=>h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},title),sub?h("p",{class:"muted small",style:"margin:0"},sub):null,items.length?h("div",{class:"list"},items):h("p",{class:"muted",style:"margin:0"},empty));
   return h("div",{class:"stack",style:"gap:28px"},
     h("div",{class:"row",style:"justify-content:space-between"},h("h1",null,"Insights"),h("button",{class:"btn",onclick:exportCsv,disabled:!S.people.length||null},"Export roster (CSV)")),
-    backupBox(),
     h("div",{class:"stats"},stat(S.people.length,"on the roster"),stat(active30,"came in the last 30 days"),stat(avg4==null?"—":avg4,"average, last 4 meetings"),stat(newThisMonth,"new this month")),
     h("p",{class:"muted",style:"margin:-14px 0 0"},ROLES.map(r=>plural(S.people.filter(p=>(p.role||"Student")===r).length,r)).join(" · ")),
     h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Attendance by meeting"),ms.length?chart(ms.slice(-16),countOf):h("p",{class:"muted"},"Record meetings to see the trend.")),
@@ -1107,6 +1223,22 @@ function vDupes(){
       admin&&S.canWrite?h("button",{class:"link small",style:"align-self:flex-start",onclick:()=>write(db=>db.doc("config/app").set({...S.config,dupIgnore:[...(S.config.dupIgnore||[]),g.key],...stamp()}),"Marked as different people")},"These are different people"):null))
     :h("div",{class:"empty"},h("b",null,"No duplicates found"),"Everyone on the roster has their own phone number and name."),
     !admin?h("p",{class:"muted small"},"Only admins can merge records."):null);
+}
+
+// ---------- More ----------
+function vMore(){
+  const admin=isAdminNow(), dupes=admin?findDupes().length:0;
+  const item=(title,sub,go,tone)=>h("button",{class:"arow",onclick:go},h("span",{class:"ic "+(tone||"")}),h("span",{class:"t"},h("span",{class:"n",style:"display:block"},title),h("span",{class:"muted small"},sub)));
+  return h("div",{class:"stack",style:"gap:18px"},
+    h("h1",null,"More"),
+    h("div",{class:"alist"},
+      item("Insights","Attendance trends, birthdays, cooks, roster export",()=>nav("insights")),
+      item("Our team and activity","Who looks after whom, recent activity",()=>nav("team")),
+      admin?item("Import from a sheet","Paste contacts from Google Sheets",()=>nav("import",{importText:""})):null,
+      admin?item(dupes?plural(dupes,"possible duplicate"):"Check for duplicates","Merge people added twice",()=>nav("dupes"),dupes?"gold":""):null,
+      item("Edit my profile","Your name and role on the team",()=>nav("me",{meRole:undefined}))),
+    backupBox(),
+    h("button",{class:"btn block",onclick:signOutNow},"Sign out"));
 }
 
 // ---------- Full backup ----------
@@ -1275,6 +1407,6 @@ let started=false;
 window.startApp=()=>{ if(started) return; started=true; render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=8"></script>
+<script type="module" src="./app-firebase.js?v=9"></script>
 </body>
 </html>
