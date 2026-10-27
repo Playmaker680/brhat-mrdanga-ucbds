@@ -432,7 +432,7 @@ function enterGuest(){
   Object.assign(S,{menu:false,newWeek:false,editMsg:false,editMeeting:null,assigning:false,copyText:null});
   home(); toast("You're in guest view. Nothing can be changed or downloaded.");
 }
-function exitGuest(){ S.guest=false; S.canWrite=S.realCanWrite!==false; S.menu=false; home(); toast("Back to your normal view"); }
+function exitGuest(){ if(S.guestLocked){ signOutNow(); return; } S.guest=false; S.canWrite=S.realCanWrite!==false; S.menu=false; home(); toast("Back to your normal view"); }
 function guardDb(db){
   // Belt and braces: in guest view every save, update, delete or add is refused before it reaches the database.
   const W=new Set(["set","update","delete","add"]);
@@ -520,13 +520,14 @@ function searchPeople(q,exclude){ q=q.trim().toLowerCase(); if(!q) return [];
 async function init(){
   const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
   S.db=db?guardDb(db):db; S.user=user;
-  if(user){ const me=await user.me(); S.myId=me.id; S.meName=me.name||""; S.avatar=me.avatarUrl; if((await user.can("data.write"))===false) S.canWrite=false; }
+  if(user){ const me=await user.me(); S.myId=me.id; S.meName=me.name||""; S.avatar=me.avatarUrl; if((await user.can("data.write"))===false) S.canWrite=false; if(S.guestLocked){ S.meName="Guest"; S.avatar=""; } }
   if(!db){ S.offline=true; render(); return; }
   const sub=(path,key,after)=>db.collection(path).onSnapshot(snap=>{ S[key]=snap.docs.map(d=>({id:d.id,...d.data()})); S.loadedGlobal.add(key); if(after) after(); soon(); },
     err=>{ S.loadedGlobal.add(key); if(err.code==="revoked") S.offline=true; if(after) after(); soon(); });
   sub("team","team");
   sub("schools","schools",()=>{ const key=S.schools.map(x=>x.id).sort().join(","); if(key!==S._schoolKey||!S.schoolsChecked){ S._schoolKey=key; checkMemberships(); } else pickSchool(); });
-  if(window.FB&&window.FB.isAdmin) sub("members","members");
+  if(window.FB&&window.FB.isAdmin){ sub("members","members");
+    try{ db.doc("config/guest").onSnapshot(d=>{ S.guestCfg=d.exists?d.data():null; soon(); },()=>{}); }catch(e){} }
   if(isAdminNow()) checkLegacy();
   if(S.myId&&S.canWrite){ try{ const ref=db.doc("team/"+S.myId), s=await ref.get(); const role=(window.FB&&TEAM_ROLES.includes(window.FB.role))?window.FB.role:""; if(!s.exists) await ref.set({name:S.meName,title:role,account:true,joinedAt:new Date().toISOString()}); else if(role&&!TEAM_ROLES.includes((s.data()||{}).title)) await ref.update({title:role});
     if(s.exists&&(s.data()||{}).removed) await ref.update({removed:false});
@@ -545,7 +546,7 @@ const schoolName=id=>{ const x=schoolById(id); return x?(x.name||id):""; };
 const accessibleSchools=()=>S.schools.filter(x=>isAdminNow()||S.guest||S.mySchools.has(x.id)).sort(byName);
 let schoolSubs=[], memberRun=0;
 async function checkMemberships(){
-  const db=S.db, me=S.myId; if(!db||!me){ S.schoolsChecked=true; soon(); return; }
+  const db=S.db, me=S.myId; if(!db||!me||S.guestLocked){ S.schoolsChecked=true; if(S.guestLocked) pickSchool(); soon(); return; }
   const run=++memberRun, mine=new Set(), blocked=new Set();
   await Promise.all(S.schools.map(async sc=>{
     try{ const a=await db.doc(`schools/${sc.id}/staff/${me}`).get(); if(a.exists) mine.add(sc.id); }catch(e){}
@@ -729,7 +730,7 @@ function render(){
     bell(), profileMenu()]);
   document.body.classList.toggle("guest",!!S.guest);
   const gb=document.getElementById("guestbar");
-  if(gb){ gb.hidden=!S.guest; patch(gb,S.guest?[h("div",{class:"in"},h("div",{class:"t"},h("b",null,h("span",{class:"gtag"},"GUEST"),"Viewing as a guest"),h("span",null,"Read-only · nothing can be copied or downloaded")),h("button",{onclick:exitGuest},"Exit"))]:[]); }
+  if(gb){ gb.hidden=!S.guest; patch(gb,S.guest?[h("div",{class:"in"},h("div",{class:"t"},h("b",null,h("span",{class:"gtag"},"GUEST"),"Viewing as a guest"),h("span",null,"Read-only · nothing can be copied or downloaded")),h("button",{onclick:exitGuest},S.guestLocked?"Leave":"Exit"))]:[]); }
   const band=document.getElementById("band");
   if(band){ const show=!!S.schoolId; band.hidden=!show; band.classList.toggle("wide",["insights","people","meetings"].includes(S.screen));
     if(show){ document.documentElement.style.setProperty("--sc",schoolColor(S.schoolId)); patch(band,[schoolBand()]); } }
@@ -747,9 +748,9 @@ function render(){
   need(keysFor());
   const fn={schools:vSchools,more:vMore,home:vHome,meeting:vMeeting,add:vAdd,person:vPerson,people:vPeople,meetings:vMeetings,insights:vInsights,team:vTeam,me:vMe,notes:vNotes,messages:vMessages,message:vMessage,member:vMember,import:vImport,dupes:vDupes}[S.screen]||vHome;
   const copyBox=S.copyText?h("div",{class:"overlay",role:"dialog","aria-modal":"true"},h("div",{class:"box stack modal"},
-    h("h2",null,"Copy these numbers"),h("p",{style:"margin:0"},"Select all and copy, then paste into a group text."),
+    h("h2",null,S.copyTitle||"Copy these numbers"),h("p",{style:"margin:0"},S.copyTitle?"Select all and copy, then paste it into a text or email.":"Select all and copy, then paste into a group text."),
     h("textarea",{readonly:true,style:"min-height:120px",onfocus:e=>e.target.select()},S.copyText),
-    h("button",{class:"btn primary",onclick:()=>{S.copyText=null; render();}},"Done"))):null;
+    h("button",{class:"btn primary",onclick:()=>{S.copyText=null; S.copyTitle=null; render();}},"Done"))):null;
   const gate=schoolGate();
   patch(main,[...top, gate||fn(), copyBox, setupPrompt(), switchAsk()]);
   resolveIds([...S.team.map(t=>t.id),...S.notes.map(x=>x.by),...S.progress.map(x=>x.by),...S.people.flatMap(p=>[p.createdBy,p.updatedBy]),...S.meetings.flatMap(m=>[m.by,m.updatedBy,m.talkBy])]);
@@ -820,7 +821,7 @@ function vHome(){
         h("div",null,h("b",null,newWeek),h("span",null,"new people added this week")))));
 }
 function myPeopleBox(){
-  if(!S.myId) return null;
+  if(!S.myId||S.guestLocked) return null;
   const here=S.staff.includes(S.myId);
   const mine=S.people.filter(p=>contactsOf(p).includes(S.myId)).map(p=>({p,s:stats(p)}))
     .sort((a,b)=>(!!b.s.bucket-!!a.s.bucket)||byName(a.p,b.p));
@@ -950,13 +951,13 @@ function profileMenu(){
     h("button",{class:"avbtn","aria-haspopup":"true","aria-expanded":String(S.menu==="me"),"aria-label":"Your profile and sign out",onclick:e=>{ e.stopPropagation(); S.menu=S.menu==='me'?false:'me'; render(); }},
       S.avatar?h("img",{src:S.avatar,alt:""}):h("span",{class:"ini"},initials(name)),h("span",{class:"nm"},name.split(" ")[0])),
     S.menu==="me"?h("div",{class:"menu",role:"menu"},
-      h("div",{class:"who"},h("div",{style:"font-weight:700"},name),h("div",{class:"row",style:"gap:6px;margin-top:4px"},h("span",{class:"pill"},role||"No role yet"),S.guest?h("span",{class:"pill gold"},"Guest view"):isAdminNow()?h("span",{class:"pill gold"},"Admin"):null),
+      h("div",{class:"who"},h("div",{style:"font-weight:700"},name),h("div",{class:"row",style:"gap:6px;margin-top:4px"},S.guestLocked?null:h("span",{class:"pill"},role||"No role yet"),S.guest?h("span",{class:"pill gold"},"Guest view"):isAdminNow()?h("span",{class:"pill gold"},"Admin"):null),
         window.FB&&window.FB.email&&!S.guest?h("div",{class:"muted small",style:"margin-top:4px;overflow-wrap:anywhere"},window.FB.email):null,
         S.mySchools.size?h("div",{class:"tchips"},[...S.mySchools].filter(schoolById).map(id=>schoolTag(id))):null),
-      S.guest?h("button",{role:"menuitem",style:"font-weight:700",onclick:exitGuest},"Exit guest view"):h("button",{role:"menuitem",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"),
+      S.guest?h("button",{role:"menuitem",style:"font-weight:700",onclick:exitGuest},S.guestLocked?"Leave guest view":"Exit guest view"):h("button",{role:"menuitem",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"),
       !S.guest&&realAdmin()?h("button",{role:"menuitem",onclick:enterGuest},h("span",{style:"display:block"},"View as a guest"),h("span",{class:"muted small",style:"display:block;font-weight:400"},"See the team member view, read-only")):null,
-      h("button",{role:"menuitem",onclick:()=>nav("member",{memberId:S.myId})},"My activity"),
-      h("button",{role:"menuitem",onclick:()=>{ S.menu=false; signOutNow(); }},"Sign out")):null);
+      S.guest?null:h("button",{role:"menuitem",onclick:()=>nav("member",{memberId:S.myId})},"My activity"),
+      S.guestLocked?null:h("button",{role:"menuitem",onclick:()=>{ S.menu=false; signOutNow(); }},"Sign out")):null);
 }
 function vMe(){
   const t=S.team.find(x=>x.id===S.myId);
@@ -1308,7 +1309,7 @@ function vPeople(){
     h("div",{class:"row",style:"justify-content:space-between"},h("span",null,h("h1",null,"People"),h("span",{class:"muted small"},`Everyone on ${schoolName(S.schoolId)}'s roster. Tap a person for their profile`)),S.canWrite?h("button",{class:"btn primary small",style:"flex:none",onclick:()=>nav("add",{addMore:false,fc:undefined})},"+ Add"):null),
     h("input",{id:"pq",type:"search",placeholder:"Search name, phone, contact",value:S.peopleQ,"aria-label":"Search people",oninput:e=>{S.peopleQ=e.target.value; S.showAllPeople=false; render();}}),
     h("div",{class:"chips",role:"group","aria-label":"Show"},
-      chip("all","Everyone"),chip("mine","Mine",nMine),chip("follow","Potential bloopers",nFollow),chip("unassigned","No contact",nUn),
+      chip("all","Everyone"),S.guestLocked?null:chip("mine","Mine",nMine),chip("follow","Potential bloopers",nFollow),chip("unassigned","No contact",nUn),
     S.filter!=="follow"?h("select",{id:"roleF",class:"chipsel"+(S.roleF?" on":""),"aria-label":"Filter by role",onchange:e=>{S.roleF=e.target.value; S.showAllPeople=false; render();}},
       h("option",{value:"",selected:!S.roleF?"selected":null},"All roles"),ROLES.map(r=>h("option",{value:r,selected:S.roleF===r?"selected":null},r+"s"))):null),
     ({mine:"People you're the contact for",follow:"People to reach out to, based on meeting check-ins and message replies",unassigned:"Came or replied, but no one is their contact yet. Open someone and tap “I'll look after them”"}[S.filter])?h("p",{class:"muted small",style:"margin:0"},{mine:"People you're the contact for",follow:"People to reach out to, based on meeting check-ins and message replies",unassigned:"Came or replied, but no one is their contact yet. Open someone and tap “I'll look after them”"}[S.filter]):null,
@@ -1664,7 +1665,38 @@ function vMore(){
       admin?item("Import from a sheet",`Paste contacts into ${schoolName(S.schoolId)}`,()=>nav("import",{importText:""})):null,
       admin?item(dupes?plural(dupes,"possible duplicate"):"Check for duplicates","Merge people added twice",()=>nav("dupes"),dupes?"gold":""):null,
       admin&&S.people.some(p=>p._raw)?item(`Fix ${plural(S.people.filter(p=>p._raw).length,"name")} in lowercase or all-caps`,"e.g. “adia” becomes “Adia”. One tap",fixNames,"gold"):null),
+    admin?guestBox():null,
     backupBox());
+}
+
+// ---------- Guest codes ----------
+// Admins make a short code that lets someone (e.g. a senior devotee) look around read-only without a Google account.
+// The database rules check the code and its end date on every read, so a new code or "Turn off" cuts access right away.
+const GUEST_ABC="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function newGuestCode(){ const a=new Uint32Array(6); crypto.getRandomValues(a); return [...a].map(x=>GUEST_ABC[x%GUEST_ABC.length]).join(""); }
+const siteLink=()=>location.href.split("#")[0].split("?")[0];
+function guestInvite(c){ return `Hare Kṛṣṇa! Here's a read-only look at our Bṛhat Mṛdaṅga Database, so you can see how we track our students and give us advice.\n\n1. Open ${siteLink()}\n2. Tap "Have a guest code?"\n3. Enter ${c.code}\n\nThe code works until ${new Date(c.expiresMs).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}. Phone numbers are hidden and nothing can be changed.`; }
+async function makeGuestCode(){
+  const days=+(document.getElementById("g_days")||{}).value||7;
+  await write(db=>db.doc("config/guest").set({code:newGuestCode(),expiresMs:Date.now()+days*86400000,setBy:S.myId||null,setAt:new Date().toISOString()}),"Guest code ready");
+}
+function guestBox(){
+  const c=S.guestCfg, live=c&&c.code&&c.expiresMs>Date.now();
+  const days=h("select",{id:"g_days","aria-label":"How long the code works",style:"flex:0 1 auto"},[["1","For 1 day"],["7","For 1 week"],["30","For 1 month"]].map(([v,l])=>h("option",{value:v,selected:v==="7"||null},l)));
+  return h("div",{class:"box stack",style:"gap:10px"},
+    h("h2",{style:"font-size:1.1rem"},"Guest access"),
+    live?[
+      h("p",{style:"margin:0"},"Guest code ",h("b",{style:"font-size:1.25rem;letter-spacing:.12em;margin:0 4px"},c.code)," works until ",h("b",null,new Date(c.expiresMs).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})),"."),
+      h("p",{class:"muted small",style:"margin:0"},"Anyone with the code can look at every school, read-only. Phone numbers and emails are hidden. Nothing can be changed, copied or downloaded."),
+      h("div",{class:"row"},
+        h("button",{class:"btn primary",onclick:async()=>{ try{ await navigator.clipboard.writeText(guestInvite(c)); toast("Invite copied. Paste it into a text or email"); }catch(e){ S.copyText=guestInvite(c); S.copyTitle="Copy the guest invite"; render(); } }},"Copy invite"),
+        S.confirm==="goff"?h("span",{class:"row"},h("span",null,"Turn off? Guests lose access right away."),
+            h("button",{class:"btn danger small",onclick:async()=>{ S.confirm=null; await write(db=>db.doc("config/guest").update({expiresMs:0}),"Guest access turned off"); }},"Turn off"),
+            h("button",{class:"btn small",onclick:()=>{S.confirm=null; render();}},"Keep"))
+          :h("button",{class:"btn",onclick:()=>{S.confirm="goff"; render();}},"Turn off")),
+      h("div",{class:"row"},days,h("button",{class:"link small",onclick:makeGuestCode},"Make a new code (the old one stops working)"))]
+    :[h("p",{class:"muted small",style:"margin:0"},"Let seniors look around the app and give advice, without a Google account. They enter a short code on the sign-in page. Read-only, with phone numbers and emails hidden."),
+      h("div",{class:"row"},days,h("button",{class:"btn primary",onclick:makeGuestCode},"Make a guest code"))]);
 }
 
 // ---------- Full backup ----------
@@ -1799,11 +1831,12 @@ function vTeam(){
           h("span",{class:"tchips"},schoolsOf(t.id).map(x=>schoolTag(x.id)))),
         h("span",{class:"meta",style:"color:var(--blue);font-weight:700"},"View →")); }))
       :h("div",{class:"empty"},sel==="all"?"No one has joined your schools yet.":`No one has joined ${schoolName(sel)} yet.`),
-    !isAdminNow()?h("p",{class:"muted small",style:"margin:0"},"You can see teammates at the schools you work at."):null,
+    !isAdminNow()&&!S.guest?h("p",{class:"muted small",style:"margin:0"},"You can see teammates at the schools you work at."):null,
     accessBox());
 }
 function accessBox(){
   const FB=window.FB||{};
+  if(S.guest) return null;
   if(!isAdminNow()) return h("div",{class:"box"},h("h2",{style:"font-size:1.1rem"},"Adding a teammate"),
     h("p",{style:"margin:8px 0 0"},"Ask an admin to add the person's Google email. Once added, they sign in with Google, pick their school, and appear here."));
   const f=h("form",{class:"stack",style:"gap:10px",onsubmit:async e=>{
@@ -1828,9 +1861,11 @@ function accessBox(){
 
 // ---------- boot ----------
 let started=false;
-window.startApp=()=>{ if(started) return; started=true; render(); init(); };
+window.startApp=()=>{ if(started) return; started=true;
+  if(window.FB&&window.FB.guest) Object.assign(S,{guest:true,guestLocked:true,canWrite:false,realCanWrite:false});
+  render(); init(); };
 })();
 </script>
-<script type="module" src="./app-firebase.js?v=14"></script>
+<script type="module" src="./app-firebase.js?v=15"></script>
 </body>
 </html>

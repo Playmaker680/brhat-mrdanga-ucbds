@@ -78,6 +78,22 @@ Team members only see the schools they work at; admins can open every school.
 3. An admin opens the site. It shows **Set up schools**: keep the name "UC Berkeley" and tap **Create school and move my data**. Keep the page open until it finishes (under a minute).
 4. Everyone already on the team is added to UC Berkeley automatically. New teammates choose their school when they first sign in.
 
+## Guest access (for seniors and visitors)
+
+Lets someone look around the app read-only, without a Google account, so they can give advice.
+
+**One-time setup:** Firebase console → **Authentication → Sign-in method → Add new provider → Anonymous → Enable → Save**.
+
+**Making a code:** an admin opens **More → Guest access**, picks how long it should work (1 day, 1 week or 1 month) and taps **Make a guest code**. **Copy invite** gives a ready-to-send message with the link and code.
+
+**What guests can do:** on the sign-in page they tap **Have a guest code?** and enter it. They see the regular team-member view of every school, with a "Viewing as a guest" bar on every page.
+- Nothing can be changed. The database rules refuse every write from a guest.
+- Phone numbers and emails are masked; call/text links, copying, exports, backups and printing are off.
+- **Turn off** or **Make a new code** cuts off everyone using the old code straight away. Codes also stop working on their end date.
+- When a guest taps **Leave**, the copy of the data their browser kept is wiped.
+
+Admins can also preview this view themselves: initials menu → **View as a guest**.
+
 ## Making changes later (with Claude)
 
 **Easiest:** start a chat with Claude, connect it to your GitHub repo (`brhat-mrdanga-database`), and describe the change. Claude edits the files and pushes them; GitHub Pages republishes the site within a couple of minutes.

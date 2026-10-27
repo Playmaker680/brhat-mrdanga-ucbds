@@ -8,6 +8,7 @@ rules_version = '2';
 //   people who work at that school (/schools/<schoolId>/staff/<uid>), or by admins.
 // - Team members add themselves to a school when they first sign in, unless an admin has
 //   removed them from it (/schools/<schoolId>/blocked/<uid>).
+// - Guests (anonymous sign-in with a current guest code) can read schools and the team, never write.
 // - Admins (members with admin: true) create schools, manage the access list, and can open every school.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -30,6 +31,16 @@ service cloud.firestore {
     function inSchool(sid) {
       return isAdmin() || (isMember() && worksAt(sid));
     }
+    // Guests: someone with a guest code an admin made (More -> Guest access). They sign in anonymously,
+    // and can READ while their code matches the current one and it hasn't ended. They can never write.
+    function isGuest() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == "anonymous"
+        && exists(/databases/$(database)/documents/config/guest)
+        && exists(/databases/$(database)/documents/guests/$(request.auth.uid))
+        && get(/databases/$(database)/documents/guests/$(request.auth.uid)).data.code == get(/databases/$(database)/documents/config/guest).data.code
+        && request.time.toMillis() < get(/databases/$(database)/documents/config/guest).data.expiresMs;
+    }
     function blockedAt(sid) {
       return exists(/databases/$(database)/documents/schools/$(sid)/blocked/$(request.auth.uid));
     }
@@ -42,25 +53,39 @@ service cloud.firestore {
 
     // Team profiles (name, role). Everyone on the access list can see names; you edit your own.
     match /team/{uid} {
-      allow read: if isMember();
+      allow read: if isGuest() || isMember();
       allow create, update: if isMember() && (uid == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
     }
 
+    // config/guest holds the guest code, so only admins can see it.
     match /config/{doc} {
-      allow read: if isMember();
+      allow read: if isAdmin() || (isMember() && doc != "guest");
       allow write: if isAdmin();
+    }
+
+    // A guest proves they have the code by writing it here; the rule compares it with config/guest.
+    match /guests/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.auth.token.firebase.sign_in_provider == "anonymous"
+        && request.resource.data.keys().hasOnly(["code", "at"])
+        && request.resource.data.code is string
+        && exists(/databases/$(database)/documents/config/guest)
+        && request.resource.data.code == get(/databases/$(database)/documents/config/guest).data.code
+        && request.time.toMillis() < get(/databases/$(database)/documents/config/guest).data.expiresMs;
+      allow delete: if isAdmin();
     }
 
     match /schools/{sid} {
       // School names are visible to every member so they can pick their school.
-      allow read: if isMember();
+      allow read: if isGuest() || isMember();
       allow create, delete: if isAdmin();
       // Staff can update school settings (backup date, duplicate choices) but only admins rename.
       allow update: if isAdmin() || (isMember() && worksAt(sid) && request.resource.data.name == resource.data.name);
 
       match /staff/{uid} {
-        allow read: if inSchool(sid) || (isMember() && uid == request.auth.uid);
+        allow read: if isGuest() || inSchool(sid) || (isMember() && uid == request.auth.uid);
         allow create: if isAdmin() || (isMember() && uid == request.auth.uid && !blockedAt(sid));
         allow update: if isAdmin();
         allow delete: if isAdmin() || (isMember() && uid == request.auth.uid);
@@ -73,7 +98,8 @@ service cloud.firestore {
 
       // People, notes, reading/chanting logs, meetings and message weeks for this school.
       match /{coll}/{docId} {
-        allow read, write: if coll != "staff" && coll != "blocked" && inSchool(sid);
+        allow read: if coll != "staff" && coll != "blocked" && (isGuest() || inSchool(sid));
+        allow write: if coll != "staff" && coll != "blocked" && inSchool(sid);
       }
     }
 

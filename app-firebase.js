@@ -2,14 +2,16 @@
 // The app (index.html) talks to the small adapter below, so app code and this file can change independently.
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, terminate, clearIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const card = document.getElementById("gateCard");
 const CLUB = "Bṛhat Mṛdaṅga Database";
 const GOOGLE = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
 
+let guestFlow = false, leaving = false, onGuestScreen = false;
 function gate(html){
+  onGuestScreen = false;
   document.getElementById("gate").hidden = false;
   document.querySelector("header").hidden = true;
   document.getElementById("main").hidden = true;
@@ -47,7 +49,9 @@ function showOpenInBrowser(note){
     </ol>
     <button class="btn primary block" id="copyLink">Copy link</button>
     <p id="linkTxt" style="margin:0;font-size:.85rem;word-break:break-all;user-select:all;color:var(--muted)">${location.href.split("#")[0].replace(/[<>"]/g,"")}</p>
-    <button class="btn block" id="tryAnyway">Try signing in here anyway</button>`);
+    <button class="btn block" id="tryAnyway">Try signing in here anyway</button>
+    <button class="link" id="guestLink" style="margin-top:4px">Have a guest code?</button>`);
+  document.getElementById("guestLink").onclick = () => showGuestCode();
   document.getElementById("copyLink").onclick = async () => {
     try { await navigator.clipboard.writeText(location.href.split("#")[0]); document.getElementById("copyLink").textContent = "Copied ✓"; }
     catch (e) { const r = document.createRange(); r.selectNodeContents(document.getElementById("linkTxt")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
@@ -59,7 +63,9 @@ function showSignIn(message, forced){
   gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1>
     <p class="muted" style="margin:0">Hare Kṛṣṇa. Sign in with the Google account your team added.</p>
     ${message ? `<p style="margin:0;color:var(--alert)">${message}</p>` : ""}
-    <button class="btn primary block gbtn" id="signIn"><span style="background:#fff;border-radius:50%;padding:3px;display:inline-flex">${GOOGLE}</span>Sign in with Google</button>`);
+    <button class="btn primary block gbtn" id="signIn"><span style="background:#fff;border-radius:50%;padding:3px;display:inline-flex">${GOOGLE}</span>Sign in with Google</button>
+    <button class="link" id="guestLink" style="margin-top:4px">Have a guest code?</button>`);
+  document.getElementById("guestLink").onclick = () => showGuestCode();
   document.getElementById("signIn").onclick = async () => {
     try { await signInWithPopup(auth, provider); }
     catch (e) {
@@ -67,6 +73,58 @@ function showSignIn(message, forced){
       else if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") showSignIn("Sign-in didn't finish. Please try again.", true);
     }
   };
+}
+
+// ---------- Guest codes ----------
+// Seniors and visitors look around read-only with a code an admin made (More -> Guest access).
+// They get a temporary anonymous login; the database rules only let it READ, and only while the code is current.
+function showGuestCode(message){
+  gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1>
+    <p style="margin:0;font-weight:700">Look around as a guest</p>
+    <p class="muted" style="margin:0">Enter the code the team sent you. Guests can view everything but can't change anything.</p>
+    ${message ? `<p style="margin:0;color:var(--alert)">${message}</p>` : ""}
+    <form id="gForm" style="display:flex;flex-direction:column;gap:10px;margin:0">
+      <input id="gCode" class="big" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="Guest code" aria-label="Guest code" style="text-align:center;letter-spacing:.15em;text-transform:uppercase;font-weight:700">
+      <button class="btn primary block" id="gGo" type="submit">View as a guest</button>
+    </form>
+    <button class="link" id="gBack">Team member? Sign in with Google</button>`);
+  onGuestScreen = true;
+  const input = document.getElementById("gCode"); input.focus();
+  document.getElementById("gBack").onclick = () => showSignIn("", true);
+  document.getElementById("gForm").onsubmit = async e => {
+    e.preventDefault();
+    const code = input.value.replace(/[^a-z0-9]/gi, "").toUpperCase();
+    if (code.length < 4) { input.focus(); return; }
+    const btn = document.getElementById("gGo"); btn.disabled = true; btn.textContent = "Checking…";
+    guestFlow = true;
+    try {
+      const cred = auth.currentUser && auth.currentUser.isAnonymous ? { user: auth.currentUser } : await signInAnonymously(auth);
+      await setDoc(doc(fs, "guests/" + cred.user.uid), { code, at: new Date().toISOString() });
+      startGuest(cred.user);
+    } catch (err) {
+      guestFlow = false;
+      try { if (auth.currentUser && auth.currentUser.isAnonymous) await signOut(auth); } catch (x) {}
+      if (err && err.code === "auth/operation-not-allowed") showGuestCode("Guest access isn't switched on for this site yet. Ask the team.");
+      else if (err && err.code === "auth/network-request-failed") showGuestCode("No connection. Check your internet and try again.");
+      else showGuestCode("That code didn't work. Check it with the person who sent it. It may have ended.");
+    }
+  };
+}
+function startGuest(u){
+  started = true; guestFlow = false;
+  // Leaving wipes the copy of the data this browser kept, so nothing stays behind on a guest's device.
+  window.FB = { email: null, isAdmin: false, role: "", guest: true, signOut: async () => {
+    leaving = true;
+    try { await terminate(fs); await clearIndexedDbPersistence(fs); } catch (e) {}
+    try { await signOut(auth); } catch (e) {}
+    location.reload();
+  } };
+  // No downloads at all for guests.
+  window.claude = { use: async name => ({ db, user: userApi(u) })[name] || null };
+  document.getElementById("gate").hidden = true;
+  document.querySelector("header").hidden = false;
+  document.getElementById("main").hidden = false;
+  window.startApp();
 }
 
 // Firestore errors -> the error codes the app already understands
@@ -148,8 +206,18 @@ const downloads = {
 
 let started = false;
 onAuthStateChanged(auth, async u => {
-  if (!u) { if (started) location.reload(); else showSignIn(); return; }
-  if (started) return;
+  if (!u) { if (leaving) return; if (started) location.reload(); else if (!onGuestScreen && !guestFlow) showSignIn(); return; }
+  if (started || guestFlow) return;
+  if (u.isAnonymous) {
+    // A guest coming back: check their code still works before showing anything.
+    try { await getDocs(query(collection(fs, "schools"))); startGuest(u); }
+    catch (e) {
+      if (!navigator.onLine) { gate(`<img class="logo" src="logo.jpg" alt=""><h1>${CLUB}</h1><p style="margin:0">You're offline. Connect to the internet to continue.</p><button class="btn block" onclick="location.reload()">Try again</button>`); return; }
+      try { await signOut(auth); } catch (x) {}
+      showGuestCode("Your guest code has ended. Ask the team for a new one.");
+    }
+    return;
+  }
   const email = (u.email || "").toLowerCase();
   let member;
   try { member = await getDoc(doc(fs, "members/" + email)); }
