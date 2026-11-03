@@ -82,7 +82,9 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .band .chg{flex:none;font:700 .82rem var(--font);color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.45);border-radius:99px;padding:5px 14px;cursor:pointer;min-height:36px}
 .band .in{min-height:44px}
 .band .menu{color:var(--ink)}
-.stag{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);white-space:nowrap}
+.stag{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);white-space:nowrap;max-width:100%;min-width:0;vertical-align:bottom}
+.stag{overflow:hidden}
+.stag>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .stag i{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
 .saving{margin:0;font-size:.9rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .swatches{display:flex;gap:8px;flex-wrap:wrap}
@@ -258,6 +260,8 @@ table{border-collapse:collapse;width:100%;font-size:.92rem}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
 tr:last-child td{border-bottom:0}
 th{font-size:.82rem;color:var(--muted);font-weight:700}
+.sortpick{display:inline-flex;align-items:center;gap:6px;flex:none}
+.sortpick select{min-height:40px;padding:0 30px 0 12px;font-size:.9rem;width:auto;max-width:170px}
 th .sortbtn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:4px;min-height:32px;cursor:pointer;color:inherit;font:inherit;white-space:nowrap}
 th .sortbtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
 th .sortbtn .car{font-size:.75rem;opacity:.45}
@@ -327,7 +331,7 @@ body.guest input,body.guest textarea{-webkit-user-select:text;user-select:text}
 .bullets li > span:first-child{display:block}
 .bullets .by{display:block;font-size:.85rem;color:var(--muted)}
 .confirm{padding:14px;border-radius:12px;background:var(--alert-soft);display:flex;flex-direction:column;gap:10px}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));text-align:center;background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:700;z-index:20;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));text-align:center;background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:16px;font-weight:700;z-index:20;max-width:min(440px,calc(100% - 32px));width:max-content;overflow-wrap:anywhere}
 .empty{padding:22px 4px;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-size:1.1rem}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
@@ -415,7 +419,7 @@ function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
 const TAB_SCREENS=["home","people","meetings","messages","more"];
-const TAB_OF={home:"home",people:"people",person:"people",notes:"people",add:"people",meetings:"meetings",meeting:"meetings",messages:"messages",message:"messages",more:"more",insights:"more",team:"more",member:"more",me:"more",import:"more",dupes:"more",schools:"more"};
+const TAB_OF={home:"home",people:"people",person:"people",notes:"people",add:"people",meetings:"meetings",meeting:"meetings",messages:"messages",message:"messages",more:"more",insights:"more",team:"more",member:"more",me:"more",import:"more",dupes:"more",schools:"more",export:"more"};
 const SCREENS=["schools","more","home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes","export"];
 const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
 const initials=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("");
@@ -570,7 +574,7 @@ async function init(){
 const PALETTE=["#1f5f99","#2d7a4b","#7a3fb0","#0f766e","#a3324f","#b45309","#3949ab","#6b5a1e"];
 function schoolColor(id){ const x=schoolById(id); if(x&&x.color&&PALETTE.includes(x.color)) return x.color; let h0=0; for(const ch of String(id||"")) h0=(h0*31+ch.charCodeAt(0))>>>0; return PALETTE[h0%PALETTE.length]; }
 const nextColor=()=>{ const used=new Set(S.schools.map(x=>schoolColor(x.id))); return PALETTE.find(c=>!used.has(c))||PALETTE[S.schools.length%PALETTE.length]; };
-const schoolTag=(id=S.schoolId)=>id?h("span",{class:"stag"},h("i",{style:`background:${schoolColor(id)}`}),schoolName(id)):null;
+const schoolTag=(id=S.schoolId)=>id?h("span",{class:"stag"},h("i",{style:`background:${schoolColor(id)}`}),h("span",null,schoolName(id))):null;
 const savingTo=(verb="Saving to")=>S.schoolId?h("p",{class:"saving"},verb+" ",schoolTag()):null;
 const SP=c=>`schools/${S.schoolId}/${c}`;
 const schoolById=id=>S.schools.find(x=>x.id===id);
@@ -1341,6 +1345,9 @@ function vBloopers(rows){
     col(`Never engaged · ${never.length}`,"Never replied or came. Added over a week ago",never,"No one here."),
     col(`Gone quiet · ${quiet.length}`,"Came or replied before, nothing in 3+ weeks",quiet,"No one here."));
 }
+// The People sort choice is remembered on this device.
+const peopleSort=()=>{ if(S.peopleSort) return S.peopleSort; let v="az"; try{ v=localStorage.getItem("bm.peopleSort")||"az"; }catch(e){} return S.peopleSort=["az","new","old"].includes(v)?v:"az"; };
+function setPeopleSort(v){ S.peopleSort=v; S.showAllPeople=false; try{ localStorage.setItem("bm.peopleSort",v); }catch(e){} render(); }
 function vPeople(){
   const q=S.peopleQ.trim().toLowerCase();
   let rows=S.people.map(p=>({kind:"p",p,s:stats(p),name:p.name||"",role:p.role||"Student"}));
@@ -1349,7 +1356,11 @@ function vPeople(){
   else if(S.filter==="mine") rows=rows.filter(r=>contactsOf(r.p).includes(S.myId));
   else if(S.filter==="unassigned") rows=rows.filter(r=>r.kind==="p"&&needsContact(r.p));
   if(S.roleF) rows=rows.filter(r=>r.role===S.roleF);
-  rows.sort((a,b)=>a.name.localeCompare(b.name));
+  // Sort: A–Z, or by when they were added to the roster (imports count from the day they were imported).
+  const ps=peopleSort(), added=p=>p.importedAt||p.createdAt||"";
+  if(ps==="az") rows.sort((a,b)=>a.name.localeCompare(b.name));
+  else rows.sort((a,b)=>{ const x=added(a.p), y=added(b.p); if(!x||!y) return x?-1:y?1:a.name.localeCompare(b.name);
+    return (x<y?-1:x>y?1:((a.p.createdAt||"")<(b.p.createdAt||"")?-1:(a.p.createdAt||"")>(b.p.createdAt||"")?1:0))*(ps==="new"?-1:1); });
   const nFollow=S.people.filter(p=>stats(p).followUp).length, nMine=S.people.filter(p=>contactsOf(p).includes(S.myId)).length, nUn=S.people.filter(needsContact).length;
   const chip=(v,l,c)=>h("button",{class:"chip","aria-pressed":String(S.filter===v),onclick:()=>{S.filter=v; S.showAllPeople=false; render();}},l,c!=null?h("span",{class:"c"},String(c)):null);
   return h("div",{class:"stack"},
@@ -1360,11 +1371,15 @@ function vPeople(){
     S.filter!=="follow"?h("select",{id:"roleF",class:"chipsel"+(S.roleF?" on":""),"aria-label":"Filter by role",onchange:e=>{S.roleF=e.target.value; S.showAllPeople=false; render();}},
       h("option",{value:"",selected:!S.roleF?"selected":null},"All roles"),ROLES.map(r=>h("option",{value:r,selected:S.roleF===r?"selected":null},r+"s"))):null),
     ({mine:"People you're the contact for",follow:"People to reach out to, based on meeting check-ins and message replies",unassigned:"Came or replied, but no one is their contact yet. Open someone and tap “I'll look after them”"}[S.filter])?h("p",{class:"muted small",style:"margin:0"},{mine:"People you're the contact for",follow:"People to reach out to, based on meeting check-ins and message replies",unassigned:"Came or replied, but no one is their contact yet. Open someone and tap “I'll look after them”"}[S.filter]):null,
-    S.filter==="follow"?vBloopers(rows):[h("p",{class:"muted small",style:"margin:0"},rows.length>25&&!S.showAllPeople?`Showing 25 of ${rows.length}${q?"":" · search to find anyone"}`:plural(rows.length,"person","people")),
+    S.filter==="follow"?vBloopers(rows):[h("div",{class:"row",style:"justify-content:space-between;gap:10px;flex-wrap:nowrap"},
+      h("p",{class:"muted small",style:"margin:0;min-width:0"},rows.length>25&&!S.showAllPeople?`Showing 25 of ${rows.length}`:plural(rows.length,"person","people")),
+      h("label",{class:"sortpick"},h("span",{class:"muted small"},"Sort"),h("select",{id:"peopleSort","aria-label":"Sort people",onchange:e=>setPeopleSort(e.target.value)},
+        [["az","A–Z"],["new","Newest first"],["old","Oldest first"]].map(([v,l])=>h("option",{value:v,selected:ps===v?"selected":null},l))))),
     rows.length?h("div",{class:"list"},(S.showAllPeople?rows:rows.slice(0,25)).map(r=>r.kind==="p"
       ? h("button",{class:"res",onclick:()=>nav("person",{personId:r.p.id})},
           h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},r.p.name),h("span",{class:"meta"},[r.role,contactsOf(r.p).length?"with "+contactNames(r.p):null].filter(Boolean).join(" · "))),
-          r.s.followUp?blooperPill(r.s):h("span",{class:"meta"},r.s.last?"came "+fmtShort(r.s.last):r.s.lastReply?"replied "+fmtShort(r.s.lastReply):"new"))
+          ps!=="az"?h("span",{class:"meta"},added(r.p)?"added "+fmtShort(added(r.p)):"—")
+            :r.s.followUp?blooperPill(r.s):h("span",{class:"meta"},r.s.last?"came "+fmtShort(r.s.last):r.s.lastReply?"replied "+fmtShort(r.s.lastReply):"new"))
       : null))
       :h("div",{class:"empty"},h("b",null,S.people.length?"No one matches":"The roster is empty"),S.people.length?"Try another search or filter.":"Add the first person from the home screen."),
     rows.length>25&&!S.showAllPeople?h("button",{class:"btn block",onclick:()=>{S.showAllPeople=true; render();}},`Show all ${rows.length}`):null]);
