@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Bṛhat Mṛdaṅga">
 <title>Bṛhat Mṛdaṅga Database</title>
+<script>try{var t=localStorage.getItem("bm.theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <link rel="icon" href="logo.jpg">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +20,7 @@
   --bg:#f6f7f9; --surface:#ffffff; --ink:#1c2631; --muted:#5b6674; --line:#dde2e8;
   --blue:#1d5a86; --blue-ink:#ffffff; --blue-soft:#e5eef6;
   --marigold:#b97c06; --marigold-soft:#fbf0d6;
-  --alert:#b23a2a; --alert-soft:#fbe8e4; --good:#2e7d4f;
+  --alert:#b23a2a; --alert-soft:#fbe8e4; --good:#2e7d4f; --badge:#c0392b;
   --font:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
   --r:14px;
 }
@@ -70,7 +71,7 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .tabbar button svg{width:25px;height:25px}
 .tabbar button[aria-current="page"]{color:var(--blue)}
 .tabbar button[aria-current="page"]::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--blue)}
-.tabbar .dot{position:absolute;top:6px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--alert);color:#fff;font-size:.68rem;display:grid;place-items:center}
+.tabbar .dot{position:absolute;top:6px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--badge);color:#fff;font-size:.68rem;display:grid;place-items:center}
 .menu-wrap{position:relative}
 .band{background:var(--sc,#1f5f99);color:#fff}
 .band .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;min-height:38px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -100,7 +101,7 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .msgfold .tx b{color:var(--ink)}
 .bell{position:relative;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:none;color:var(--ink);cursor:pointer}
 .bell svg{width:22px;height:22px}
-.bell .dot{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:var(--alert);color:#fff;font:700 .72rem var(--font);display:grid;place-items:center}
+.bell .dot{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:var(--badge);color:#fff;font:700 .72rem var(--font);display:grid;place-items:center}
 .avbtn{display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);border-radius:99px;padding:3px 10px 3px 3px;cursor:pointer;font:700 .9rem var(--font);color:var(--ink);min-height:44px}
 .avbtn img,.avbtn .ini{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:.8rem}
 .avbtn .nm{max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -257,6 +258,17 @@ table{border-collapse:collapse;width:100%;font-size:.92rem}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
 tr:last-child td{border-bottom:0}
 th{font-size:.82rem;color:var(--muted);font-weight:700}
+th .sortbtn{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:4px;min-height:32px;cursor:pointer;color:inherit;font:inherit;white-space:nowrap}
+th .sortbtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+th .sortbtn .car{font-size:.75rem;opacity:.45}
+th .sortbtn.on{color:var(--ink)}
+th .sortbtn.on .car{opacity:1;color:var(--blue)}
+th.num .sortbtn{flex-direction:row-reverse}
+.themepick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:none;color:var(--ink);font:inherit;font-size:.85rem;padding:0 12px;min-height:36px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--blue);color:var(--blue-ink);font-weight:700}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 td.wrap{white-space:normal;min-width:160px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
@@ -391,7 +403,9 @@ const ICON = {
 const pad=n=>String(n).padStart(2,"0");
 const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const today=()=>iso(new Date());
-const parse=s=>{ if(!s) return null; const [y,m,d]=s.slice(0,10).split("-").map(Number); return new Date(y,m-1,d); };
+// A full timestamp (e.g. createdAt "2026-11-03T04:12:00Z") is turned into the LOCAL day, so evening entries don't show as tomorrow.
+const dayOf=ts=>{ if(!ts) return ""; ts=String(ts); if(ts.length<=10||!ts.includes("T")) return ts.slice(0,10); const d=new Date(ts); return isNaN(d)?ts.slice(0,10):iso(d); };
+const parse=s=>{ if(!s) return null; const [y,m,d]=dayOf(s).split("-").map(Number); return new Date(y,m-1,d); };
 const fmt=s=>{ const d=parse(s); return d?d.toLocaleDateString(undefined,{weekday:"short",month:"long",day:"numeric"}):"—"; };
 const fmtShort=s=>{ const d=parse(s); return d?d.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"—"; };
 const fmtWhen=s=>s?new Date(s).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
@@ -415,7 +429,7 @@ const S={ staffBy:{}, inflight:0, switchAsk:null, roleF:"", newWeek:false, teamS
   screen: SCREENS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home", stack:[],
   personId:null, meetingId:null, editing:false, confirm:null, open:new Set(["notes"]),
   homeQ:"", menu:false, editMsg:false, backingUp:null, merging:null, copyText:null, dupWarn:null, dupOK:null, importText:"", importing:null, assignQ:"", assigning:false, msgId:null, memberId:null, rpName:null, msgQ:"", msgFilter:"all", roleDismissed:false, promptRole:null, fc:undefined, fcFor:null, attQ:"", attHl:0, quickAdd:null, peopleQ:"", filter:"all", addMore:false,
-  db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, offline:false, profiles:{}, dirty:new Set() };
+  sorts:{}, db:null, user:null, myId:null, meName:"", avatar:"", canWrite:true, offline:false, profiles:{}, dirty:new Set() };
 Object.defineProperty(S,"ready",{get(){ return S.offline||(S.schoolsChecked&&(!S.schoolId||["people","meetings","messages"].every(k=>S.loadedKeys.has(k)))); }});
 document.addEventListener("input",e=>{ if(e.target.id) S.dirty.add(e.target.id); });
 document.addEventListener("toggle",e=>{ const d=e.target; if(d.tagName==="DETAILS"&&d.dataset.key){ d.open?S.open.add(d.dataset.key):S.open.delete(d.dataset.key); } },true);
@@ -506,7 +520,7 @@ function lowerBound(arr,v){ let lo=0,hi=arr.length; while(lo<hi){ const mid=(lo+
 function stats(p){
   const I=idx(); let r=I.stats.get(p.id); if(r) return r;
   const att=I.att.get(p.id)||[];
-  const first=att[0]||(p.createdAt||"").slice(0,10)||today();
+  const first=att[0]||dayOf(p.createdAt)||today();
   const from=lowerBound(I.dates,first), eligible=I.ms.length-from;
   let streak=0; for(let i=I.ms.length-1;i>=from;i--){ if(I.pres.get(I.ms[i].id).has(p.id)) streak++; else break; }
   const last=att[att.length-1]||null, gap=last?daysBetween(last,today()):null;
@@ -585,7 +599,7 @@ function openSchool(sid){
   if(!sid||!S.db){ soon(); return; }
   const db=S.db;
   const col=(c,key)=>schoolSubs.push(db.collection(`schools/${sid}/${c}`).onSnapshot(snap=>{ if(S.schoolId!==sid) return; S[key]=snap.docs.map(d=>{ const x={id:d.id,...d.data()}; if(key==="people"&&x.name){ const t=tidyName(x.name); if(t!==x.name){ x._raw=x.name; x.name=t; } } return x; }); S.loadedKeys.add(key); soon(); },
-    err=>{ if(S.schoolId!==sid) return; S.loadedKeys.add(key); if(err&&err.code==="invalid_argument") checkMemberships(); soon(); }));
+    err=>{ if(S.schoolId!==sid) return; S.loadedKeys.add(key); if(err&&err.code==="invalid_argument"){ if(S.guestLocked) S.guestEnded=true; else checkMemberships(); } soon(); }));
   col("people","people"); col("meetings","meetings"); col("messages","messages");
   schoolSubs.push(db.collection(`schools/${sid}/staff`).onSnapshot(snap=>{ if(S.schoolId!==sid) return; S.staff=snap.docs.map(d=>d.id); S.loadedKeys.add("staff"); soon(); },()=>{ S.loadedKeys.add("staff"); soon(); }));
   schoolSubs.push(db.doc(`schools/${sid}`).onSnapshot(x=>{ if(S.schoolId!==sid) return; S.schoolDoc=x.exists?x.data():{}; soon(); },()=>{}));
@@ -761,6 +775,7 @@ function render(){
 
   const top=[];
   if(!navigator.onLine) top.push(h("div",{class:"banner"},"You're offline. Check-ins and notes are saved on this device and will sync when you're back online."));
+  if(S.guestEnded) top.push(h("div",{class:"banner",style:"background:var(--alert-soft)"},h("b",null,"Your guest code has ended. "),"What you see may be out of date. Tap Leave at the top, then ask the team for a new code."));
   if(S.offline) top.push(h("div",{class:"banner"},"Can't reach the database right now. Check your connection and reload the page."));
   else if(!S.canWrite&&!S.guest) top.push(h("div",{class:"banner"},"Some changes aren't going through. Ask an admin to check your access, then reload."));
   need(keysFor());
@@ -786,12 +801,12 @@ function attentionRows(){
   const bdays=S.people.filter(p=>{const b=nextBirthday(p.birthday); return b&&b.days<=7;});
   const dupes=canTools()?findDupes().length:0;
   return [
-    unassigned?["",`${plural(unassigned,"person","people")} with no one looking after them`,"They came or replied, but nobody is their contact. Tap to claim them.",()=>nav("people",{filter:"unassigned"})]:null,
+    unassigned?["",`${plural(unassigned,"person","people")} with no one looking after them`,S.guest?"They came or replied, but nobody is their contact.":"They came or replied, but nobody is their contact. Tap to claim them.",()=>nav("people",{filter:"unassigned"})]:null,
     quiet?["warn",`${plural(quiet,"person","people")} gone quiet`,"Came or replied before, nothing in 3+ weeks",()=>nav("people",{filter:"follow"})]:null,
     never?["warn",`${plural(never,"person","people")} never engaged`,"Never replied to a text or came to a meeting",()=>nav("people",{filter:"follow"})]:null,
     bdays.length?["gold",bdays.length===1?`${bdays[0].name}'s birthday is coming up`:`${bdays.length} birthdays this week`,"In the next 7 days",()=>bdays.length===1?nav("person",{personId:bdays[0].id}):nav("insights")]:null,
     dupes?["gold",plural(dupes,"possible duplicate"),"Same phone or name. Review and merge in More",()=>nav("dupes")]:null,
-    S.ready&&backupDue()?["gold","Monthly backup is due","More → Export → Back up everything",()=>nav("export")]:null].filter(Boolean);
+    S.ready&&!S.guest&&backupDue()?["gold","Monthly backup is due","More → Export → Back up everything",()=>nav("export")]:null].filter(Boolean);
 }
 function bell(){
   if(!S.myId) return null;
@@ -962,6 +977,15 @@ function manageSchool(x){
         h("select",{id:"add_staff",class:"grow",style:"flex:1 1 200px","aria-label":"Add a team member to this school"},h("option",{value:""},"Add a team member to this school…"),others.map(t=>h("option",{value:t.id},memberName(t.id)))),
         h("button",{class:"btn",type:"submit"},"Add")):null]);
 }
+// Appearance: Auto follows the phone's setting; Light/Dark stick on this device.
+const themeNow=()=>{ try{ const t=localStorage.getItem("bm.theme"); return t==="light"||t==="dark"?t:"auto"; }catch(e){ return S.theme||"auto"; } };
+function setTheme(v){
+  S.theme=v; try{ v==="auto"?localStorage.removeItem("bm.theme"):localStorage.setItem("bm.theme",v); }catch(e){}
+  if(v==="auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme",v);
+  const dark=v==="dark"||(v==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content",dark?"#11161c":"#1d5a86");
+  render();
+}
 function profileMenu(){
   if(!S.myId) return null;
   const t=S.team.find(x=>x.id===S.myId), name=memberName(S.myId), role=t&&TEAM_ROLES.includes(t.title)?t.title:null;
@@ -975,6 +999,8 @@ function profileMenu(){
       S.guest?h("button",{role:"menuitem",style:"font-weight:700",onclick:exitGuest},S.guestLocked?"Leave guest view":"Exit guest view"):h("button",{role:"menuitem",onclick:()=>nav("me",{meRole:undefined})},"Edit my profile"),
       !S.guest&&realAdmin()?h("button",{role:"menuitem",onclick:enterGuest},h("span",{style:"display:block"},"View as a guest"),h("span",{class:"muted small",style:"display:block;font-weight:400"},"See the team member view, read-only")):null,
       S.guest?null:h("button",{role:"menuitem",onclick:()=>nav("member",{memberId:S.myId})},"My activity"),
+      h("div",{class:"themepick",role:"group","aria-label":"Appearance"},h("span",{class:"muted small"},"Appearance"),
+        h("div",{class:"seg"},[["auto","Auto"],["light","Light"],["dark","Dark"]].map(([v,l])=>h("button",{type:"button","aria-pressed":String(themeNow()===v),onclick:e=>{ e.stopPropagation(); setTheme(v); }},l)))),
       S.guestLocked?null:h("button",{role:"menuitem",onclick:()=>{ S.menu=false; signOutNow(); }},"Sign out")):null);
 }
 function vMe(){
@@ -1131,9 +1157,10 @@ function vPerson(){
     sec("reading","Reading log", reading.length?`${pages} pages · last ${fmtShort(reading[0].date)}`:"Nothing logged",[
       reading.length?h("p",{style:"margin:0"},`${pages} pages logged in total. `,perBook.filter(([,n])=>n>0).map(([b,n])=>`${b}: ${n} pages`).join(" · ")):null,
       S.canWrite?rf:null,
-      reading.length?h("div",{class:"tablewrap"},h("table",null,
-        h("thead",null,h("tr",null,h("th",null,"When"),h("th",null,"Book"),h("th",{class:"num"},"Pages"),h("th",null,"Note"),h("th",null,"Logged by"),h("th",null,""))),
-        h("tbody",null,reading.slice(0,20).map(x=>h("tr",null,h("td",null,fmtShort(x.date)),h("td",{class:"wrap"},x.book),h("td",{class:"num"},x.pages??"—"),h("td",{class:"wrap"},x.note||"—"),h("td",null,memberName(x.by)),h("td",null,del(x,"Removed"))))))):null]),
+      reading.length?stable("reading",[
+        {label:"When",val:x=>x.date||"",cell:x=>fmtShort(x.date),first:-1},{label:"Book",val:x=>x.book||"",cell:x=>x.book,wrap:1},
+        {label:"Pages",val:x=>x.pages==null||x.pages===""?null:Number(x.pages),cell:x=>x.pages??"—",num:1,first:-1},{label:"Note",val:x=>x.note||"",cell:x=>x.note||"—",wrap:1},
+        {label:"Logged by",val:x=>memberName(x.by),cell:x=>memberName(x.by)},{label:"",cell:x=>del(x,"Removed")}],reading.slice(0,20),{i:0,dir:-1}):null]),
     h("p",{class:"muted small",style:"margin:4px 0 0"},p.importedAt?`Signed up ${p.createdAt?fmtShort(p.createdAt):"(no date)"} · imported ${fmtShort(p.importedAt)} by ${memberName(p.createdBy)}`:`Added by ${memberName(p.createdBy)}${p.createdAt?" on "+fmtShort(p.createdAt):""}`,p.updatedBy&&p.updatedAt&&p.updatedAt!==p.createdAt?` · last edited by ${memberName(p.updatedBy)}`:""),
     S.canWrite?(S.confirm==="del"?h("div",{class:"confirm"},h("span",null,`Delete ${p.name}, their notes, reading and chanting records? This can't be undone.`),
       h("div",{class:"row"},h("button",{class:"btn danger",onclick:async()=>{
@@ -1396,7 +1423,7 @@ function vMessages(){
     S.canWrite&&S.newWeek?f:null,
     ms.length?h("div",{class:"list"},ms.map(m=>{ const n=respondedOf(m).filter(id=>personById(id)).length;
       return h("button",{class:"res",onclick:()=>nav("message",{msgId:m.id,msgQ:"",msgFilter:"all"})},
-        h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.title),h("span",{class:"meta"},`Sent ${fmt(m.date)} · by ${memberName(m.by)}`)),
+        h("span",{style:"min-width:0"},h("span",{class:"name",style:"display:block"},m.title),h("span",{class:"meta"},`Sent ${fmt(m.date)}${m.by?" · by "+memberName(m.by):""}`)),
         h("span",{class:"pill"},`${n} of ${total} replied`)); }))
       :h("div",{class:"empty"},h("b",null,"No weeks yet"),"Tap “Start a new week” to create the first one."),
     null);
@@ -1414,7 +1441,7 @@ function vMessage(){
   if(f==="todo") list=list.filter(x=>!x.t&&!x.r); else if(f==="waiting") list=list.filter(x=>x.t&&!x.r);
   else if(f==="yes") list=list.filter(x=>x.r); else if(f==="no") list=list.filter(x=>!x.r);
   list.sort((a,b)=>b.n-a.n||byName(a.p,b.p));
-  const count=[...resp].filter(id=>personById(id)).length, nSent=Object.keys(sent).filter(id=>personById(id)).length;
+  const count=[...resp].filter(id=>personById(id)).length, nSent=Object.keys(sent).filter(id=>sent[id]&&personById(id)).length;
   const all=S.people.map(p=>({p,t:sent[p.id],r:resp.has(p.id)}));
   const nTodo=all.filter(x=>!x.t&&!x.r).length;
   const next=m.text&&S.canWrite?list.find(x=>!x.t&&!x.r&&ten(x.p.phone))||all.filter(x=>!x.t&&!x.r&&ten(x.p.phone)).sort((a,b)=>hist(b.p.id)-hist(a.p.id)||byName(a.p,b.p))[0]:null;
@@ -1478,7 +1505,7 @@ function vInsights(){
   const countOf=m=>presentOf(m).filter(id=>personById(id)).length;
   const last4=ms.slice(-4), avg4=last4.length?Math.round(last4.reduce((a,m)=>a+countOf(m),0)/last4.length):null;
   const monthStart=today().slice(0,8)+"01";
-  const newThisMonth=rows.filter(r=>(r.s.first||(r.p.createdAt||"").slice(0,10))>=monthStart).length;
+  const newThisMonth=rows.filter(r=>(r.s.first||dayOf(r.p.createdAt))>=monthStart).length;
   const active30=rows.filter(r=>r.s.last&&r.s.gap<=30).length;
   const follow=rows.filter(r=>r.s.followUp).sort((a,b)=>(a.s.bucket===b.s.bucket?0:a.s.bucket==="never"?-1:1)||((b.s.quietDays??0)-(a.s.quietDays??0)));
   const bdays=S.people.map(p=>({p,b:nextBirthday(p.birthday)})).filter(x=>x.b&&x.b.days<=30).sort((a,b)=>a.b.days-b.b.days);
@@ -1496,17 +1523,32 @@ function vInsights(){
       card("Birthdays coming up","Next 30 days.",bdays.map(({p,b})=>h("button",{class:"res",onclick:()=>nav("person",{personId:p.id})},h("span",{class:"name"},p.name),h("span",{class:"pill gold"},b.days===0?"today":fmtShort(iso(b.date))))),"No birthdays soon."),
       card("Who has been cooking","Times cooked across all meetings.",cookList.map(([n,c])=>h("div",{class:"res",style:"cursor:default"},h("span",{class:"name"},n),h("span",{class:"meta"},plural(c,"time")))),"No prasadam recorded yet.")),
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Recent meetings"),
-      recent.length?h("div",{class:"tablewrap"},h("table",null,
-        h("thead",null,h("tr",null,h("th",null,"Date"),h("th",null,"Meeting"),h("th",null,"Speaker"),h("th",null,"Topic"),h("th",{class:"num"},"Came"),h("th",null,"Prasadam"))),
-        h("tbody",null,recent.map(m=>h("tr",null,h("td",null,fmtShort(m.date)),h("td",null,m.title||"Club meeting"),h("td",null,m.speaker||"—"),h("td",{class:"wrap"},m.topic||"—"),h("td",{class:"num"},countOf(m)),
-          h("td",{class:"wrap"},prasadamOf(m).map(x=>x.cook?`${x.dish} (${x.cook})`:x.dish).join(", ")||"—")))))):h("p",{class:"muted",style:"margin:0"},"No meetings yet.")),
+      recent.length?stable("recentMeetings",[
+        {label:"Date",val:m=>m.date||"",cell:m=>fmtShort(m.date),first:-1},{label:"Meeting",val:m=>m.title||"Club meeting",cell:m=>m.title||"Club meeting"},
+        {label:"Speaker",val:m=>m.speaker||"",cell:m=>m.speaker||"—"},{label:"Topic",val:m=>m.topic||"",cell:m=>m.topic||"—",wrap:1},
+        {label:"Came",val:m=>countOf(m),cell:m=>countOf(m),num:1,first:-1},
+        {label:"Prasadam",val:m=>prasadamOf(m).map(x=>x.dish).join(", "),cell:m=>prasadamOf(m).map(x=>x.cook?`${x.dish} (${x.cook})`:x.dish).join(", ")||"—",wrap:1}],recent,{i:0,dir:-1}):h("p",{class:"muted",style:"margin:0"},"No meetings yet.")),
     h("div",{class:"stack",style:"gap:8px"},h("h2",{style:"font-size:1.1rem"},"Everyone"),
-      rows.length?h("div",{class:"tablewrap"},h("table",null,
-        h("thead",null,h("tr",null,h("th",null,"Name"),h("th",null,"Role"),h("th",null,"Looked after by"),h("th",{class:"num"},"Meetings"),h("th",{class:"num"},"Rate"),h("th",{class:"num"},"In a row"),h("th",null,"Last came"))),
-        h("tbody",null,rows.sort((a,b)=>(a.p.name||"").localeCompare(b.p.name||"")).map(({p,s})=>h("tr",null,h("td",{style:"font-weight:700"},p.name),h("td",null,p.role||"Student"),h("td",null,contactNames(p)||"—"),
-          h("td",{class:"num"},s.attended),h("td",{class:"num"},s.rate==null?"—":s.rate+"%"),h("td",{class:"num"},s.streak),h("td",null,s.last?fmtShort(s.last):"—")))))):h("p",{class:"muted",style:"margin:0"},"Add people to see everyone here.")));
+      rows.length?stable("everyone",[
+        {label:"Name",val:r=>r.p.name||"",cell:r=>r.p.name,style:"font-weight:700"},{label:"Role",val:r=>r.p.role||"Student",cell:r=>r.p.role||"Student"},
+        {label:"Looked after by",val:r=>contactNames(r.p),cell:r=>contactNames(r.p)||"—"},
+        {label:"Meetings",val:r=>r.s.attended,cell:r=>r.s.attended,num:1,first:-1},{label:"Rate",val:r=>r.s.rate,cell:r=>r.s.rate==null?"—":r.s.rate+"%",num:1,first:-1},
+        {label:"In a row",val:r=>r.s.streak,cell:r=>r.s.streak,num:1,first:-1},{label:"Last came",val:r=>r.s.last||"",cell:r=>r.s.last?fmtShort(r.s.last):"—",first:-1}],rows,{i:0,dir:1}):h("p",{class:"muted",style:"margin:0"},"Add people to see everyone here.")));
 }
 const stat=(v,l)=>h("div",{class:"stat"},h("b",null,v),h("span",null,l));
+// A table whose columns sort when you tap the header (tap again to flip). cols: [{label, val(item) for sorting, cell(item), num, wrap, style}]
+function stable(id,cols,items,def){
+  const st=S.sorts[id]||def||{i:0,dir:1}, c=cols[st.i]||cols[0];
+  const cmp=(a,b)=>{ const x=c.val(a), y=c.val(b), ex=x==null||x==="", ey=y==null||y==="";
+    if(ex||ey) return ex===ey?0:ex?1:-1;   // blanks always last
+    return (typeof x==="number"&&typeof y==="number"?x-y:String(x).localeCompare(String(y),undefined,{numeric:true,sensitivity:"base"}))*st.dir; };
+  const rows=c.val?items.slice().sort(cmp):items;
+  return h("div",{class:"tablewrap"},h("table",null,
+    h("thead",null,h("tr",null,cols.map((k,i)=>h("th",{class:k.num?"num":null,"aria-sort":i===st.i?(st.dir>0?"ascending":"descending"):null},
+      k.val?h("button",{type:"button",class:"sortbtn"+(i===st.i?" on":""),onclick:()=>{ S.sorts[id]={i,dir:i===st.i?-st.dir:(k.first||1)}; render(); }},
+        k.label,h("span",{class:"car","aria-hidden":"true"},i===st.i?(st.dir>0?"▴":"▾"):"▾")):k.label)))),
+    h("tbody",null,rows.map(it=>h("tr",{style:cols.rowStyle?cols.rowStyle(it):null},cols.map(k=>h("td",{class:[k.num?"num":"",k.wrap?"wrap":""].join(" ").trim()||null,style:k.style||null},k.cell(it))))))));
+}
 function chart(ms,countOf){
   const NS="http://www.w3.org/2000/svg",W=720,H=210,L=30,R=8,T=18,B=30;
   const vals=ms.map(countOf),max=Math.max(4,...vals),step=Math.ceil(max/4),top=step*4,bw=(W-L-R)/ms.length;
@@ -1579,12 +1621,12 @@ function vImport(){
       h("div",{class:"row"},h("span",{class:"pill"},`${n("new")} new`),n("exists")?h("span",{class:"pill gold"},`${n("exists")} already on roster`):null,n("repeat")?h("span",{class:"pill gold"},`${n("repeat")} repeated`):null,
         rows.some(r=>!r.name)?h("span",{class:"pill warn"},`${rows.filter(r=>!r.name).length} missing a name`):null),
       h("p",{class:"muted small",style:"margin:0"},"People already on the roster (same phone number) and repeats are skipped. Collectors who match a team member's name become that person's contact."),
-      h("div",{class:"tablewrap"},h("table",null,
-        h("thead",null,h("tr",null,h("th",null,"Name"),h("th",null,"Phone"),h("th",null,"Signed up"),h("th",null,"Collected by"),h("th",null,"Status"))),
-        h("tbody",null,rows.map(r=>{ const t=teamByName(r.collector); return h("tr",{style:r.status!=="new"?"opacity:.55":null},
-          h("td",{style:"font-weight:700"},r.name||h("span",{style:"color:var(--alert)"},"(no name)")),h("td",null,r.phone),h("td",null,r.date?fmtShort(iso(r.date)):"—"),
-          h("td",null,r.collector?(t?`${r.collector} → contact`:r.collector):"—"),
-          h("td",null,label[r.status]+(r.match?` (${r.match})`:""))); })))),
+      (()=>{ const cols=[
+        {label:"Name",val:r=>r.name||"",cell:r=>r.name||h("span",{style:"color:var(--alert)"},"(no name)"),style:"font-weight:700"},{label:"Phone",val:r=>r.key||"",cell:r=>r.phone},
+        {label:"Signed up",val:r=>r.date?iso(r.date):"",cell:r=>r.date?fmtShort(iso(r.date)):"—",first:-1},
+        {label:"Collected by",val:r=>r.collector||"",cell:r=>{ const t=teamByName(r.collector); return r.collector?(t?`${r.collector} → contact`:r.collector):"—"; }},
+        {label:"Status",val:r=>({new:0,exists:1,repeat:2})[r.status],cell:r=>label[r.status]+(r.match?` (${r.match})`:"")}];
+        cols.rowStyle=r=>r.status!=="new"?"opacity:.55":null; return stable("import",cols,rows,{i:4,dir:1}); })(),
       S.importing?h("p",{style:"font-weight:700"},`Adding ${S.importing.done} of ${S.importing.total}…`)
         :h("button",{class:"btn primary block",disabled:!n("new")||!S.canWrite||null,onclick:()=>runImport(rows)},n("new")?`Add ${plural(n("new"),"person","people")} to ${schoolName(S.schoolId)}`:"Nothing new to add"))
     :S.importText.trim()?h("p",{class:"muted"},"No rows with a phone number found. Make sure you copied the phone column."):null);
@@ -1612,7 +1654,10 @@ async function mergeInto(keep,others){
     for(const o of others){
       for(const c of ["notes","progress"]){ const snap=await db.collection(SP(c)).where("personId","==",o.id).get(); for(const d of snap.docs) await db.doc(SP(c)+"/"+d.id).update({personId:keep.id}); }
       for(const m of S.meetings) if(presentOf(m).includes(o.id)) await db.doc(SP("meetings")+"/"+m.id).update({att:{[o.id]:false,[keep.id]:true}});
-      for(const w of S.messages) if(respondedOf(w).includes(o.id)) await db.doc(SP("messages")+"/"+w.id).update({replies:{[o.id]:false,[keep.id]:true}});
+      for(const w of S.messages){ const up={};
+        if(respondedOf(w).includes(o.id)) up.replies={[o.id]:false,[keep.id]:true};
+        const sent=sentOf(w); if(sent[o.id]){ up.sent={[o.id]:null}; if(!sent[keep.id]) up.sent[keep.id]=sent[o.id]; }
+        if(Object.keys(up).length) await db.doc(SP("messages")+"/"+w.id).update(up); }
     }
     const fill={}; for(const f of ["phone","email","birthday","schedule"]) if(!keep[f]){ const src=others.find(o=>o[f]); if(src) fill[f]=src[f]; }
     const all=[keep,...others];
@@ -1728,7 +1773,7 @@ function exRange(E){
 }
 // Build one table as rows (header first) from the current school's data.
 function exTable(k,E,extra){
-  const [from,to]=exRange(E), inR=d=>{ d=String(d||"").slice(0,10); return (!from||d>=from)&&(!to||d<=to); };
+  const [from,to]=exRange(E), inR=d=>{ d=dayOf(d); return (!from||d>=from)&&(!to||d<=to); };
   const kind=exKind(k), cols=exCols(E,k), keys=new Set(cols.map(c=>c[0]));
   const all=S.people.slice().sort(byName), byId=new Map(all.map(p=>[p.id,p]));
   const P=E.who==="all"?all:E.who==="mine"?all.filter(p=>contactsOf(p).includes(S.myId)):all.filter(p=>(p.role||"Student")===E.who);
@@ -1737,10 +1782,10 @@ function exTable(k,E,extra){
   const pres=m=>presentOf(m), repl=m=>respondedOf(m), phone=p=>p&&p.phone?fmtPhone(p.phone):"";
   const pick=o=>cols.map(([c])=>o[c]);
   let head=cols.map(c=>c[1]), rows=[];
-  if(k==="contacts") rows=P.map(p=>{ const came=ms.filter(m=>pres(m).includes(p.id)), since=ms.filter(m=>!p.createdAt||m.date>=p.createdAt.slice(0,10));
+  if(k==="contacts") rows=P.map(p=>{ const came=ms.filter(m=>pres(m).includes(p.id)), since=ms.filter(m=>!p.createdAt||m.date>=dayOf(p.createdAt));
     return pick({name:p.name,role:p.role||"Student",phone:phone(p),email:p.email||"",birthday:p.birthday||"",schedule:p.schedule||"",contacts:contactNames(p),
       attended:came.length,rate:since.length?Math.round(100*came.length/since.length):"",last:came.length?came[came.length-1].date:"",replies:ws.filter(w=>repl(w).includes(p.id)).length,
-      addedBy:p.createdBy?memberName(p.createdBy):"",addedOn:(p.createdAt||"").slice(0,10)}); });
+      addedBy:p.createdBy?memberName(p.createdBy):"",addedOn:dayOf(p.createdAt)}); });
   else if(k==="meetings") rows=ms.map(m=>pick({date:m.date,title:m.title||"Club meeting",speaker:m.speaker||"",topic:m.topic||"",notes:m.notes||"",came:pres(m).filter(id=>byId.has(id)).length,
       prasadam:prasadamOf(m).map(x=>x.dish+(x.cook?` (${x.cook})`:"")).join("; "),by:m.by?memberName(m.by):""}));
   else if(k==="attendance") rows=ms.flatMap(m=>pres(m).filter(id=>pset.has(id)).map(id=>{ const p=byId.get(id); return pick({date:m.date,meeting:m.title||"Club meeting",name:p.name,role:p.role||"Student",phone:phone(p)}); }));
@@ -1758,7 +1803,7 @@ function exTable(k,E,extra){
       .map(x=>pick({date:x.date,name:pname(x.personId),rounds:x.rounds??x.chanting,by:x.by?memberName(x.by):""}));
   else if(k==="prasadam") rows=ms.flatMap(m=>prasadamOf(m).map(x=>pick({date:m.date,meeting:m.title||"Club meeting",dish:x.dish,cook:x.cook||"",by:x.by?memberName(x.by):""})));
   else if(k==="team") rows=activeTeam().sort((a,b)=>memberName(a.id).localeCompare(memberName(b.id))).map(t=>pick({name:memberName(t.id),role:t.title||"",email:t.email||"",
-      looks:S.people.filter(p=>contactsOf(p).includes(t.id)).length,seen:(t.lastSeen||"").slice(0,10)}));
+      looks:S.people.filter(p=>contactsOf(p).includes(t.id)).length,seen:dayOf(t.lastSeen)}));
   return [head,...rows];
 }
 const toCsv=rows=>"﻿"+rows.map(r=>r.map(csvEsc).join(",")).join("\r\n");
@@ -1776,6 +1821,7 @@ const isEverything=E=>EX_KINDS.every(x=>E.kinds.has(x.k))&&EX_KINDS.every(x=>!(E
 async function runExport(E){
   if(S.guest){ toast(GUEST_NO); return; }
   if(!S.db||!S.schoolId){ toast("Choose a school first"); return; }
+  if(!S.ready){ toast("Still loading this school's data. Try again in a moment."); return; }
   const kinds=EX_KINDS.map(x=>x.k).filter(k=>E.kinds.has(k));
   if(!kinds.length){ toast("Tick at least one thing to export"); return; }
   if(kinds.some(k=>!exCols(E,k).length)){ toast("Each ticked item needs at least one column"); return; }
@@ -1866,7 +1912,7 @@ function vExport(){
       h("p",{style:"margin:0"},b&&b.at?`Last full export of ${schoolName(S.schoolId)} ${ago(b.at)} by ${memberName(b.by)}.`:`No full export of ${schoolName(S.schoolId)} yet.`,backupDue()?" One is due.":""),
       h("p",{class:"muted small",style:"margin:0"},"Once a month, tap below and save the file somewhere safe, like a shared Google Drive folder."),
       h("div",{class:"row"},
-        h("button",{class:"btn",disabled:S.exporting||null,onclick:()=>{ EX_KINDS.forEach(x=>E.kinds.add(x.k)); E.off={}; E.range="all"; E.who="all"; E.fmt="xlsx"; E.open=null; render(); runExport(E); }},"Back up everything (Excel)"),
+        h("button",{class:"btn",disabled:S.exporting||null,onclick:()=>runExport({kinds:new Set(EX_KINDS.map(x=>x.k)),off:{},range:"all",from:"",to:"",who:"all",fmt:"xlsx"})},"Back up everything (Excel)"),
         h("button",{class:"link small",disabled:S.exporting||null,onclick:backupJson},"Exact copy for restoring (JSON)"))));
 }
 
