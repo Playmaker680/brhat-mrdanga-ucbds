@@ -109,6 +109,9 @@ Data is never in these files, so updating the code never touches your records.
 - If the club grows a lot, you can upgrade to the pay-as-you-go **Blaze** plan. It keeps the same free allowance and only bills usage beyond it. Set a **budget alert** (e.g. $1) in Google Cloud billing so nothing is a surprise.
 - Check usage any time in **Firestore Database → Usage**.
 
-## Backups
+## Backups and downloads
 
-In Firebase, you can export data with **Firestore → Import/Export** (needs Blaze), or use the app's **View Insights → Export roster (CSV)** for a spreadsheet of everyone.
+**More → Download data (CSV)**: pick a school (or **All schools**) and what you want (**Everything**, or one table such as People, Meetings, Attendance or Message replies).
+- One table for one school downloads as a single `.csv`.
+- Anything more comes as one `.zip` with a `.csv` for each table, in a separate folder for each school, so schools never mix in one file.
+- Do an **Everything** download about once a month; the app reminds you when it's due. **Exact copy for restoring (JSON)** is the full copy you'd use to rebuild the database.
