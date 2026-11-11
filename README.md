@@ -79,6 +79,10 @@ Team members only see the schools they work at; admins can open every school.
 3. An admin opens the site. It shows **Set up schools**: keep the name "UC Berkeley" and tap **Create school and move my data**. Keep the page open until it finishes (under a minute).
 4. Everyone already on the team is added to UC Berkeley automatically. New teammates choose their school when they first sign in.
 
+## Looks
+
+Everyone can pick the look they like: tap your initials → **Look** → Tulasī, Saffron, Night, Lotus or Mṛdaṅga. The choice is saved on that phone or computer only. New devices start on Tulasī (or Night if the phone is set to dark mode).
+
 ## Guest access (for seniors and visitors)
 
 Lets someone look around the app read-only, without a Google account, so they can give advice.

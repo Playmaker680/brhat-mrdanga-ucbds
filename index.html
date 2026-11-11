@@ -130,15 +130,11 @@ header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var
 .title-wrap{flex:1;min-width:0}
 .bar .apn{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar .title{width:100%;min-height:44px;flex:1;min-width:0;display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:var(--h2w);font-size:1.12rem;background:none;border:0;padding:0;color:var(--head-ink);text-align:left;font-family:inherit;cursor:pointer}
-.tt{display:flex;flex-direction:column;min-width:0;line-height:1.15}
-.tt .tn{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tt .ts{font-family:var(--font);font-weight:400;font-size:.72rem;opacity:.75}
-@media (max-width:520px){.title-wrap.nested .logo{display:none}.back{padding:0 10px 0 4px}}
+@media (max-width:380px){.title-wrap.nested .logo{display:none}}
 .logo{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--flame)}
 .gate .logo{width:96px;height:96px;margin:0 auto}
 .back{display:inline-grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid color-mix(in srgb,var(--head-ink) 22%,transparent);border-radius:50%;background:none;color:var(--head-ink);font:700 .95rem var(--font);cursor:pointer}
 .back svg{width:20px;height:20px}
-.avatar-sm{width:32px;height:32px;border-radius:50%}
 main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--tab-bg);border-top:1px solid var(--line);display:flex;justify-content:center;padding:4px max(6px,env(safe-area-inset-left,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px))}
 .tabbar .in{display:flex;width:100%;max-width:640px;justify-content:space-around}
@@ -149,17 +145,15 @@ main{padding-block:20px calc(110px + env(safe-area-inset-bottom,0px))}
 .tabbar .dot{position:absolute;top:6px;left:calc(50% + 8px);min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--tab-badge,var(--badge));color:var(--tab-badge-ink,var(--badge-ink));font-size:.68rem;font-weight:700;display:grid;place-items:center}
 .menu-wrap{position:relative}
 .band{background:color-mix(in srgb,var(--sc,#1f5f99) 13%,var(--surface));color:var(--ink);border-bottom:3px solid var(--sc,#1f5f99)}
-.band .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;min-height:38px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.band .in{max-width:640px;margin:0 auto;display:flex;align-items:center;gap:10px;min-height:44px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .wrap.wide~.band .in,.band.wide .in{max-width:980px}
 .band .sw{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:none;border:0;color:var(--ink);font:700 .98rem var(--font);text-align:left;cursor:pointer;min-height:38px;padding:0}
 .band .sw .nm{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .band .sw .lbl{font-weight:400;color:var(--muted);font-size:.85rem;white-space:nowrap}
 .band .sw .nm::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--sc,#1f5f99);margin-right:7px;vertical-align:1px}
 .band .chg{flex:none;font:600 .82rem var(--font);color:var(--ink);background:var(--surface);border:1px solid color-mix(in srgb,var(--sc,#1f5f99) 55%,var(--line));border-radius:99px;padding:5px 14px;cursor:pointer;min-height:36px}
-.band .in{min-height:44px}
 .band .menu{color:var(--ink)}
-.stag{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);white-space:nowrap;max-width:100%;min-width:0;vertical-align:bottom}
-.stag{overflow:hidden}
+.stag{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);white-space:nowrap;max-width:100%;min-width:0;vertical-align:bottom;overflow:hidden}
 .stag>span{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .stag i{width:11px;height:11px;border-radius:50%;flex:none;display:inline-block}
 .saving{margin:0;font-size:.9rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
@@ -303,8 +297,6 @@ a.btn{text-decoration:none}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;font-size:.85rem;background:var(--blue-soft);color:var(--blue);font-weight:700;white-space:nowrap}
 .pill.warn{background:var(--alert-soft);color:var(--alert)}
 .pill.gold{background:var(--marigold-soft);color:var(--marigold)}
-.shortcuts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.shortcuts button{border:0;cursor:pointer;font:700 .9rem var(--font);min-height:40px;padding:6px 14px}
 .more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 .more button{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px 40px 14px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font:inherit;color:var(--ink);text-align:left;cursor:pointer}
 .more button::after{content:"";position:absolute;right:16px;top:50%;width:8px;height:8px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:translateY(-50%) rotate(45deg)}
@@ -347,10 +339,6 @@ th .sortbtn.on{color:var(--ink)}
 th .sortbtn.on .car{opacity:1;color:var(--blue)}
 th.num .sortbtn{flex-direction:row-reverse}
 .themepick{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line)}
-.tseg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
-.tseg button{border:0;background:none;color:var(--ink);font:inherit;font-size:.85rem;padding:0 12px;min-height:36px;cursor:pointer}
-.tseg button+button{border-left:1px solid var(--line)}
-.tseg button[aria-pressed="true"]{background:var(--blue);color:var(--blue-ink);font-weight:700}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 td.wrap{white-space:normal;min-width:160px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
@@ -389,8 +377,6 @@ body.guest #main [style*="user-select"]{-webkit-user-select:none!important;user-
 body.guest input,body.guest textarea{-webkit-user-select:text;user-select:text}
 @media print{body.guest header,body.guest #main{display:none!important}body.guest::before{content:"Printing is turned off in guest view.";display:block;padding:40px;font:16px sans-serif}}
 .banner{padding:12px 16px;border-radius:var(--r);background:var(--marigold-soft);margin-bottom:18px}
-.me-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;margin-bottom:20px}
-.me-av{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-weight:700}
 .opt{display:flex;align-items:center;gap:12px;width:100%;min-height:62px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font:700 1.08rem var(--font);color:var(--ink);cursor:pointer;text-align:left}
 .opt:hover{border-color:var(--blue)}
 .opt[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
@@ -526,10 +512,10 @@ const fmtShort=s=>{ const d=parse(s); return d?d.toLocaleDateString(undefined,{m
 const fmtWhen=s=>s?new Date(s).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"";
 const daysBetween=(a,b)=>Math.round((parse(b)-parse(a))/86400000);
 const plural=(n,w,p)=>`${n} ${n===1?w:(p||w+"s")}`;
-function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,2400); }
+// Long messages stay up longer (about 60 ms per character, 2.4–7 s); tapping the toast dismisses it.
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,Math.min(7000,Math.max(2400,String(msg).length*60))); t.onclick=()=>{ clearTimeout(toast._t); t.hidden=true; }; }
 
 const ROLES=["Student","Volunteer","Student Leader","Speaker"];
-const TAB_SCREENS=["home","people","meetings","messages","more"];
 const TAB_OF={home:"home",people:"people",person:"people",notes:"people",add:"people",meetings:"meetings",meeting:"meetings",messages:"messages",message:"messages",more:"more",insights:"more",team:"more",member:"more",me:"more",import:"more",dupes:"more",schools:"more",export:"more"};
 const SCREENS=["schools","more","home","meeting","add","people","meetings","insights","team","me","notes","messages","message","member","import","dupes","export"];
 const TEAM_ROLES=["Volunteer","Student Leader","Speaker"];
@@ -876,7 +862,7 @@ function render(){
   const nested=S.stack.length>0;
   patch(bar,[
     nested?h("button",{class:"back",onclick:back,"aria-label":"Back"},h("span",{html:ICON.back})):null,
-    h("div",{class:"title-wrap"},h("button",{class:"title",onclick:()=>goTab("home"),"aria-label":"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",{class:"apn"},"Bṛhat Mṛdaṅga"))),
+    h("div",{class:"title-wrap"+(nested?" nested":"")},h("button",{class:"title",onclick:()=>goTab("home"),"aria-label":"Home"},h("img",{class:"logo",src:"logo.jpg",alt:""}),h("span",{class:"apn"},"Bṛhat Mṛdaṅga"))),
     bell(), profileMenu()]);
   document.body.classList.toggle("guest",!!S.guest);
   const gb=document.getElementById("guestbar");
@@ -903,7 +889,11 @@ function render(){
     h("textarea",{readonly:true,style:"min-height:120px",onfocus:e=>e.target.select()},S.copyText),
     h("button",{class:"btn primary",onclick:()=>{S.copyText=null; S.copyTitle=null; render();}},"Done"))):null;
   const gate=schoolGate();
-  patch(main,[...top, gate||fn(), copyBox, setupPrompt(), switchAsk()]);
+  // Until the school's people, meetings and messages have arrived, screens that depend on them show "Loading" rather than a misleading
+  // empty state (an empty roster, "No weeks yet", or a blank "Start a meeting" form that could create a duplicate).
+  const waiting=!gate&&S.schoolId&&!S.ready&&["people","meetings","messages","message","meeting","insights","dupes","team","member","notes"].includes(S.screen);
+  const view=waiting?h("div",{class:"empty",role:"status"},h("b",null,`Loading ${schoolName(S.schoolId)}…`),"Getting people, meetings and messages. This takes a moment on a slow connection."):null;
+  patch(main,[...top, gate||view||fn(), copyBox, setupPrompt(), switchAsk()]);
   resolveIds([...S.team.map(t=>t.id),...S.notes.map(x=>x.by),...S.progress.map(x=>x.by),...S.people.flatMap(p=>[p.createdBy,p.updatedBy]),...S.meetings.flatMap(m=>[m.by,m.updatedBy,m.talkBy])]);
 }
 const sec=(key,title,summary,body)=>h("details",{class:"sec","data-key":key,open:S.open.has(key)||null},h("summary",null,h("b",null,title),h("span",{class:"sum"},summary||"")),h("div",{class:"in"},body));
@@ -963,13 +953,13 @@ function vHome(){
       h("button",{class:"tile add",onclick:()=>nav("add",{addMore:false,fc:undefined})},
         h("span",{html:ICON.add}), h("b",null,"Add a person"), h("span",null,"Just a name. Phone number if you have it."),
         h("span",{class:"go"},"Add"))),
-    myPeopleBox(),
+    !S.ready&&S.schoolId?h("div",{class:"section card",role:"status"},h("p",{class:"muted",style:"margin:0"},"Loading your people and this week's numbers…")):[myPeopleBox(),
     h("div",{class:"section card"},
       h("div",{class:"card-h"},h("span",null,h("h2",null,"This week"),h("span",{class:"muted small"},"Quick numbers. Full charts are on the Insights page, under More.")),h("button",{class:"link small",onclick:()=>nav("insights")},"Insights")),
       h("div",{class:"snap"},
         h("div",null,h("b",null,lastM?presentOf(lastM).filter(id=>personById(id)).length:"—"),h("span",null,lastM?`came to ${lastM.title||"the last meeting"} (${fmtShort(lastM.date)})`:"no meetings yet")),
         h("div",null,h("b",null,lastW?`${respondedOf(lastW).filter(id=>personById(id)).length}/${S.people.length}`:"—"),h("span",null,lastW?`replied to “${lastW.title}”`:"no message weeks yet")),
-        h("div",null,h("b",null,newWeek),h("span",null,"new people added this week")))));
+        h("div",null,h("b",null,newWeek),h("span",null,"new people added this week"))))]);
 }
 function myPeopleBox(){
   if(!S.myId||S.guestLocked) return null;
@@ -1099,7 +1089,7 @@ function manageSchool(x){
 const LOOKS=[["tulasi","Tulasī","#e8ede4","#3e6b4a"],["saffron","Saffron","#ea8a1f","#5c1424"],["night","Night","#171b33","#d9b25f"],["lotus","Lotus","#f6e9ea","#7a2f5c"],["mrdanga","Mṛdaṅga","#f2b705","#20150e"]];
 const themeNow=()=>document.documentElement.getAttribute("data-theme")||"tulasi";
 function setTheme(v){
-  S.theme=v; try{ localStorage.setItem("bm.theme",v); }catch(e){}
+  try{ localStorage.setItem("bm.theme",v); }catch(e){}
   document.documentElement.setAttribute("data-theme",v);
   const head={tulasi:"#e8ede4",saffron:"#ea8a1f",night:"#171b33",lotus:"#f6e9ea",mrdanga:"#f7f6f2"}[v];
   document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.setAttribute("content",head); m.removeAttribute("media"); });
@@ -1150,10 +1140,6 @@ function vMe(){
 }
 
 // ---------- Add person ----------
-function teamOptions(selected){
-  const team=activeTeam().sort((a,b)=>memberName(a.id).localeCompare(memberName(b.id)));
-  return [h("option",{value:""},"Not assigned yet"),...team.map(t=>h("option",{value:t.id,selected:selected===t.id?"selected":null},memberName(t.id)+(t.id===S.myId?" (you)":"")))];
-}
 function vAdd(){ return personForm(null); }
 function personForm(p){
   const v=p||{role:"Student",contactIds:S.myId&&S.staff.includes(S.myId)?[S.myId]:[]};
@@ -1925,7 +1911,6 @@ function exTable(k,E,extra){
       prasadam:prasadamOf(m).map(x=>x.dish+(x.cook?` (${x.cook})`:"")).join("; "),by:m.by?memberName(m.by):""}));
   else if(k==="attendance") rows=ms.flatMap(m=>pres(m).filter(id=>pset.has(id)).map(id=>{ const p=byId.get(id); return pick({date:m.date,meeting:m.title||"Club meeting",name:p.name,role:p.role||"Student",phone:phone(p)}); }));
   else if(k==="replies"){
-    const wk=keys.has("weeks");
     head=cols.flatMap(([c,l])=>c==="weeks"?ws.map(w=>`${w.date} ${w.title||"Week"}`):[l]);
     rows=P.map(p=>{ const marks=ws.map(w=>repl(w).includes(p.id)?"Replied":sentOf(w)[p.id]?"Texted":"");
       return cols.flatMap(([c])=>c==="weeks"?marks:[{name:p.name,role:p.role||"Student",phone:phone(p),total:marks.filter(x=>x==="Replied").length}[c]]); });
