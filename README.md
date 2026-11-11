@@ -12,7 +12,7 @@ Only Google accounts on the team's access list can sign in.
 | `app-firebase.js` | Connects the app to Firebase (Google sign-in, database, access check) |
 | `firebase-config.js` | Your Firebase project's settings. You fill this in once. |
 | `firestore.rules` | Database security rules. Only people on the access list can read or write. |
-| `fonts/` | The Gentium Book Plus typeface used for headings (it shows ṛ, ṣ, ṅ properly). Keep the folder next to `index.html`. |
+| `fonts/` | The typefaces for the five looks people can pick (all show ṛ, ṣ, ṅ properly). Keep the folder next to `index.html`. |
 | `firebase.json` | Only used if you later deploy with the Firebase command-line tool. Safe to ignore. |
 
 ---
