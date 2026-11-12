@@ -66,6 +66,10 @@
 @font-face{font-family:"BM Epilogue";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/epilogue-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"BM Epilogue";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/epilogue-latin-800-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 @font-face{font-family:"BM Epilogue";font-style:normal;font-weight:800;font-display:swap;src:url(fonts/epilogue-latin-ext-800-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"BM Literata";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/literata-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"BM Literata";font-style:normal;font-weight:600;font-display:swap;src:url(fonts/literata-latin-ext-600-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"BM Unbounded";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/unbounded-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"BM Unbounded";font-style:normal;font-weight:500;font-display:swap;src:url(fonts/unbounded-latin-ext-500-normal.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 /* Five looks people choose from (profile menu). Each is just a set of tokens plus a signature detail or two at the end of this sheet.
    Every typeface here has the full transliteration set (ṛ ṣ ṅ ṇ ā ī ū ś ḥ ṭ ḍ) and is stored with the app, so it works offline. */
 :root,:root[data-theme="tulasi"]{
@@ -77,12 +81,12 @@
   --r:18px; --rb:14px; --bw:1px;
 }
 :root[data-theme="saffron"]{
-  --bg:#ffffff; --surface:#ffffff; --ink:#3a1018; --muted:#7a4a52; --line:#f0dcc4;
-  --blue:#5c1424; --blue-ink:#ffffff; --blue-soft:#fbeee0; --flame:#ea8a1f;
-  --marigold:#a3520a; --marigold-soft:#fdf0e0; --alert:#b0281d; --alert-soft:#fbe4df; --good:#2f7a4a; --badge:#5c1424; --badge-ink:#ffd9a8;
-  --head-bg:#ea8a1f; --head-ink:#3a1018; --tab-badge:#ffb85c; --tab-badge-ink:#3a1018; --tab-bg:#5c1424; --tab-ink:#e8c9b0; --tab-on:#ffb85c; --tab-pill:transparent;
-  --font:"BM Plus Jakarta Sans",-apple-system,"Segoe UI",Roboto,sans-serif; --display:"BM Literata",Georgia,serif; --h1w:800; --h2w:800;
-  --r:14px; --rb:12px; --bw:1.5px;
+  --bg:#fbf2e7; --surface:#fffaf4; --ink:#3d221b; --muted:#7a5a50; --line:#f0dcc6;
+  --blue:#8a3b26; --blue-ink:#fffaf4; --blue-soft:#f8e4cf; --flame:#d9822b;
+  --marigold:#9a560f; --marigold-soft:#fbead6; --alert:#a83224; --alert-soft:#f9e1da; --good:#3f7a4f; --badge:#c4691a; --badge-ink:#fffaf4;
+  --head-bg:var(--bg); --head-ink:var(--ink); --tab-bg:var(--surface); --tab-ink:var(--muted); --tab-on:#8a3b26; --tab-pill:#f8e0c3;
+  --font:"BM Plus Jakarta Sans",-apple-system,"Segoe UI",Roboto,sans-serif; --display:"BM Literata",Georgia,serif; --h1w:600; --h2w:600;
+  --r:16px; --rb:12px; --bw:1px;
 }
 :root[data-theme="night"]{
   --bg:#171b33; --surface:#20264a; --ink:#ece6d6; --muted:#a8a4b8; --line:#323a6a;
@@ -101,12 +105,12 @@
   --r:24px; --rb:999px; --bw:1.5px;
 }
 :root[data-theme="mrdanga"]{
-  --bg:#f7f6f2; --surface:#ffffff; --ink:#20150e; --muted:#5e4a3c; --line:#e4dccf;
-  --blue:#20150e; --blue-ink:#f7f6f2; --blue-soft:#efe9df; --flame:#f2b705;
-  --marigold:#8c5a2b; --marigold-soft:#f3e8d6; --alert:#b3261e; --alert-soft:#f8e1dc; --good:#2f6d3f; --badge:#20150e; --badge-ink:#f2b705;
-  --head-bg:var(--bg); --head-ink:var(--ink); --tab-bg:var(--bg); --tab-ink:var(--muted); --tab-on:var(--ink); --tab-pill:#f2b705;
-  --font:"BM Epilogue",-apple-system,"Segoe UI",Roboto,sans-serif; --display:"BM Unbounded","Arial Black",sans-serif; --h1w:700; --h2w:600;
-  --r:16px; --rb:12px; --bw:1.5px;
+  --bg:#f4f1ec; --surface:#fcfbf8; --ink:#2e241c; --muted:#6a5a4d; --line:#e3dacd;
+  --blue:#5e4330; --blue-ink:#fcfbf8; --blue-soft:#ece3d6; --flame:#d9a63a;
+  --marigold:#8a5a2b; --marigold-soft:#f3e8d6; --alert:#a8322a; --alert-soft:#f6e0db; --good:#3f6e48; --badge:#8a5a2b; --badge-ink:#fcfbf8;
+  --head-bg:var(--bg); --head-ink:var(--ink); --tab-bg:var(--surface); --tab-ink:var(--muted); --tab-on:#5e4330; --tab-pill:#f1e2bd;
+  --font:"BM Epilogue",-apple-system,"Segoe UI",Roboto,sans-serif; --display:"BM Unbounded","Arial Black",sans-serif; --h1w:500; --h2w:500;
+  --r:16px; --rb:12px; --bw:1px;
 }
 *{box-sizing:border-box}
 button,a,label,input,select,summary{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -406,11 +410,10 @@ body.guest input,body.guest textarea{-webkit-user-select:text;user-select:text}
 .tile.meet .go{background:var(--blue-ink);color:var(--blue)}
 .tile.add .go{border-color:var(--blue);color:var(--blue)}
 :root[data-theme="tulasi"] .greet h1,:root:not([data-theme]) .greet h1{font-style:italic}
-:root[data-theme="saffron"] header{box-shadow:none}
-:root[data-theme="saffron"] .greet{background:var(--flame);color:#3a1018;margin:-20px calc(-1*max(16px,env(safe-area-inset-left,0px))) 18px;padding:18px max(16px,env(safe-area-inset-left,0px)) 24px}
-:root[data-theme="saffron"] .greet .date{color:#3a1018;opacity:.8}
-:root[data-theme="saffron"] .greet h1{font-size:2.6rem;letter-spacing:-.01em}
-:root[data-theme="saffron"] .logo{box-shadow:0 0 0 2px #5c1424}
+:root[data-theme="saffron"] .greet{background:#f9e3c8;border-radius:22px;padding:22px 20px 20px}
+:root[data-theme="saffron"] .greet h1{font-size:2.3rem}
+:root[data-theme="saffron"] .greet h1::after{content:"";display:block;width:30px;height:3px;border-radius:2px;background:var(--flame);margin-top:12px}
+:root[data-theme="saffron"] .logo{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px #e3a05a}
 :root[data-theme="night"] .greet{align-items:center;text-align:center;padding-top:6px}
 :root[data-theme="night"] .greet::before{content:"";width:44px;height:44px;margin-bottom:6px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 46'%3E%3Cellipse cx='23' cy='25' rx='13' ry='17' fill='none' stroke='%233fa7a0' stroke-width='2'/%3E%3Cellipse cx='23' cy='27' rx='8' ry='10.5' fill='none' stroke='%23d9b25f' stroke-width='2'/%3E%3Ccircle cx='23' cy='29' r='4' fill='%232a4f9e'/%3E%3C/svg%3E") center/contain no-repeat}
 :root[data-theme="night"] h2,:root[data-theme="night"] .bar .title{color:#e3c27a}
@@ -420,12 +423,9 @@ body.guest input,body.guest textarea{-webkit-user-select:text;user-select:text}
 :root[data-theme="lotus"] .greet h1{font-size:2.3rem}
 :root[data-theme="lotus"] .tabbar{border-top:0;border-radius:22px 22px 0 0}
 :root[data-theme="mrdanga"] .greet{position:relative;padding-top:4px}
-:root[data-theme="mrdanga"] .greet::before{content:"";position:absolute;right:calc(-1*max(16px,env(safe-area-inset-left,0px)) - 110px);top:-40px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,#20150e 0 23%,#e9d3b2 23.5% 80%,#8c5a2b 80.5% 100%);z-index:-1;pointer-events:none}
+:root[data-theme="mrdanga"] .greet::before{content:"";position:absolute;right:calc(-1*max(16px,env(safe-area-inset-left,0px)) - 90px);top:-30px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(94,67,48,.10) 0 22%,transparent 22.5% 36%,rgba(217,166,58,.16) 36.5% 39%,transparent 39.5% 62%,rgba(94,67,48,.10) 62.5% 65%,transparent 65.5%);z-index:-1;pointer-events:none}
+:root[data-theme="mrdanga"] .greet h1{font-size:1.95rem;line-height:1.08;letter-spacing:-.015em;max-width:80%}
 :root[data-theme="mrdanga"] main{position:relative;z-index:0;overflow-x:clip}
-:root[data-theme="mrdanga"] .greet h1{font-size:2.15rem;line-height:1.02;letter-spacing:-.02em;max-width:72%}
-:root[data-theme="mrdanga"] .tabbar{border-top:1.5px solid var(--ink)}
-:root[data-theme="mrdanga"] .btn:not(.primary),:root[data-theme="mrdanga"] .tile.add{border-color:var(--ink)}
-:root[data-theme="mrdanga"] .chip[aria-pressed="true"]{background:var(--flame);border-color:var(--ink);color:var(--ink)}
 .looks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:6px 6px 10px}
 .looks button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:6px 2px;min-height:0;border-radius:10px;font:600 .72rem var(--font);color:var(--ink);text-align:center}
 .looks .sw{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);flex:none}
@@ -1086,12 +1086,12 @@ function manageSchool(x){
         h("button",{class:"btn",type:"submit"},"Add")):null]);
 }
 // Looks: each person picks the one they like; it's remembered on this device.
-const LOOKS=[["tulasi","Tulasī","#e8ede4","#3e6b4a"],["saffron","Saffron","#ea8a1f","#5c1424"],["night","Night","#171b33","#d9b25f"],["lotus","Lotus","#f6e9ea","#7a2f5c"],["mrdanga","Mṛdaṅga","#f2b705","#20150e"]];
+const LOOKS=[["tulasi","Tulasī","#e8ede4","#3e6b4a"],["saffron","Saffron","#f9e1c4","#8a3b26"],["night","Night","#171b33","#d9b25f"],["lotus","Lotus","#f6e9ea","#7a2f5c"],["mrdanga","Mṛdaṅga","#f1e2bd","#5e4330"]];
 const themeNow=()=>document.documentElement.getAttribute("data-theme")||"tulasi";
 function setTheme(v){
   try{ localStorage.setItem("bm.theme",v); }catch(e){}
   document.documentElement.setAttribute("data-theme",v);
-  const head={tulasi:"#e8ede4",saffron:"#ea8a1f",night:"#171b33",lotus:"#f6e9ea",mrdanga:"#f7f6f2"}[v];
+  const head={tulasi:"#e8ede4",saffron:"#fbf2e7",night:"#171b33",lotus:"#f6e9ea",mrdanga:"#f4f1ec"}[v];
   document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{ m.setAttribute("content",head); m.removeAttribute("media"); });
   render();
 }
@@ -1142,7 +1142,8 @@ function vMe(){
 // ---------- Add person ----------
 function vAdd(){ return personForm(null); }
 function personForm(p){
-  const v=p||{role:"Student",contactIds:S.myId&&S.staff.includes(S.myId)?[S.myId]:[]};
+  // A new person starts with no one looking after them; someone is only "your person" when you choose to (here, or "I'll look after them").
+  const v=p||{role:"Student",contactIds:[]};
   const showMore = !!p || S.addMore;
   const key=p?p.id:"new"; if(S.fc===undefined||S.fcFor!==key){ S.fc=contactsOf(v).slice(); S.fcFor=key; }
   const form=h("form",{class:"stack",onsubmit:async e=>{
@@ -1175,7 +1176,7 @@ function personForm(p){
           h("span",null,memberName(t.id)+(t.id===S.myId?" (you)":"")),t.title?h("span",{class:"muted small"},t.title):null)):h("p",{class:"muted small",style:"margin:0"},"No team members yet.")),
       p?null:h("label",{class:"f"},h("span",null,"Notes ",h("small",null,`optional · one point per line · signed as ${memberName(S.myId)}`)),h("textarea",{id:"f_notes",placeholder:"How you met\nWhat they're interested in"}))
     ] : h("div",{class:"box",style:"padding:14px 16px"},
-        h("p",{class:"small",style:"margin:0"},`Role: Student · Looked after by: ${S.myId&&S.staff.includes(S.myId)?memberName(S.myId)+" (you)":"no one yet"}`),
+        h("p",{class:"small",style:"margin:0"},"Role: Student · Looked after by: no one yet. You can choose someone below, or later from their profile."),
         h("button",{type:"button",class:"link",onclick:()=>{S.addMore=true; render(); setTimeout(()=>document.getElementById("f_email")?.focus(),0);}},"Add email, birthday, schedule, notes, or change role and who looks after them")),
     (!p&&S.dupWarn&&personById(S.dupWarn.id))?(()=>{ const ex=personById(S.dupWarn.id); return h("div",{class:"confirm",id:"dupWarn",style:"background:var(--marigold-soft)"},
       h("span",null,S.dupWarn.byPhone?[h("b",null,ex.name)," is already on the roster with ",h("b",null,ex.phone?fmtPhone(ex.phone):"this number"),". Adding again would create a duplicate."]:["Someone named ",h("b",null,ex.name)," is already on the roster",ex.phone?` · ${fmtPhone(ex.phone)}`:"",". Is this the same person?"]),
@@ -1237,7 +1238,7 @@ function vPerson(){
     h("div",null, h("h1",null,p.name),
       h("div",{class:"row",style:"margin-top:8px"}, h("span",{class:"pill"},p.role||"Student"), s.bucket==="never"?h("span",{class:"pill warn"},"Never engaged"):s.bucket==="quiet"?h("span",{class:"pill warn"},`Quiet for ${s.quietDays} days`):null),
       h("p",{class:"lead"}, contactsOf(p).length?["Looked after by ",h("b",{style:"color:var(--ink)"},contactNames(p))]:"No one assigned yet"),
-      S.myId&&S.canWrite&&(mine||S.staff.includes(S.myId))?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":"+ I'll look after them too"):null),
+      S.myId&&S.canWrite&&(mine||S.staff.includes(S.myId))?h("button",{class:"link small",style:"padding:2px 0",onclick:()=>setContact(p,S.myId,!mine)},mine?"Remove me from their contacts":contactsOf(p).length?"+ I'll look after them too":"+ I'll look after them"):null),
     h("div",{class:"box"}, h("dl",{class:"facts",style:"margin:0"},
       dd("Phone",p.phone?h("span",{class:"stack",style:"gap:6px"},h("span",{style:S.guest?null:"user-select:all"},shownPhone(p.phone)),callLinks(p)):null),
       p.email?dd("Email",S.guest?h("span",null,maskEmail(p.email)):h("span",{style:"user-select:all"},p.email)):null,
@@ -1405,7 +1406,7 @@ function vMeeting(){
 function quickAdd(m){
   const f=h("form",{class:"stack",style:"gap:12px;background:var(--blue-soft);padding:16px;border-radius:12px",onsubmit:async e=>{
     e.preventDefault(); const g=id=>document.getElementById(id).value.trim();
-    const data={name:g("np_name"),phone:g("np_phone"),email:"",schedule:"",birthday:"",role:g("np_role"),contactIds:S.myId&&S.staff.includes(S.myId)?[S.myId]:[],createdAt:new Date().toISOString(),createdBy:S.myId||null,...stamp()};
+    const data={name:g("np_name"),phone:g("np_phone"),email:"",schedule:"",birthday:"",role:g("np_role"),contactIds:[],createdAt:new Date().toISOString(),createdBy:S.myId||null,...stamp()};
     if(!data.name){ toast("Add a name"); return; }
     const k=phoneKey(data.phone), nm=data.name.trim().toLowerCase();
     const ex=k?S.people.find(x=>phoneKey(x.phone)===k):S.people.find(x=>(x.name||"").trim().toLowerCase()===nm);
